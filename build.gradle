@@ -1,0 +1,22 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+
+sourceCompatibility = "1.7"
+targetCompatibility = "1.7"
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+dependencies {
+    compile('org.apache.jena:jena-arq:2.13.0')
+    compile('com.marklogic:java-client-api:4.0-SNAPSHOT') {
+        exclude(group: 'org.slf4j')
+        exclude(group: 'ch.qos.logback')
+    }
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.4'
+}
