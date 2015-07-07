@@ -16,8 +16,6 @@
 build
 
 buildSrc/build
-# static
-public
 .classpath
 .project
 .settings
@@ -25,5 +23,4 @@ public
 *.iml
 *.ipr
 bin
-src/main/resources/test-server.ldif~
 creds
