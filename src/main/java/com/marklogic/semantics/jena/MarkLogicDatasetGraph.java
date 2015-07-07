@@ -28,7 +28,6 @@ import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFFormat;
 import org.apache.jena.riot.WriterGraphRIOT;
 
-import com.hp.hpl.jena.datatypes.RDFDatatype;
 import com.hp.hpl.jena.graph.Graph;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.shared.Lock;
@@ -45,6 +44,11 @@ import com.marklogic.client.semantics.SPARQLBindings;
 import com.marklogic.client.semantics.SPARQLQueryDefinition;
 import com.marklogic.client.semantics.SPARQLQueryManager;
 
+/**
+ * A representation of MarkLogic's triple store as a DatasetGraph,
+ * plus a few extra MarkLogic-specific features.
+ *
+ */
 public class MarkLogicDatasetGraph implements DatasetGraph {
 
 	private static Log log = LogFactory.getLog(MarkLogicDatasetGraph.class);
@@ -135,12 +139,9 @@ public class MarkLogicDatasetGraph implements DatasetGraph {
 
 	@Override
 	public Iterator<Node> listGraphNodes() {
-		// TODO Auto-generated method stub
 		log.debug("listing graphs ");
-		
 		Iterator<String> graphNames = graphManager.listGraphUris();
 		return new WrappingIterator(graphNames);
-		
 	}
 
 	@Override
@@ -250,7 +251,7 @@ public class MarkLogicDatasetGraph implements DatasetGraph {
 	public boolean contains(Node g, Node s, Node p, Node o) {
 		// TODO Auto-generated method stub
 		log.debug("contains node.");
-
+		
 		return false;
 	}
 
