@@ -1,4 +1,4 @@
-package com.marklogic.semantics.jena;
+package com.marklogic.semantics.jena.util;
 
 import java.util.Iterator;
 

@@ -15,7 +15,14 @@
  */
 package com.marklogic.semantics.jena.graph;
 
-public class DatasetGraphTest {
+import com.marklogic.client.DatabaseClient;
 
-	
+public class MarkLogicDatasetGraphFactory {
+
+	public static MarkLogicDatasetGraph createDatasetGraph(DatabaseClient client) {
+		//MarkLogicDatasetGraph datasetGraph = new MarkLogicDatasetGraph(client);
+		MarkLogicDatasetGraph datasetGraph = new MarkLogicDatasetGraph(client);
+		return datasetGraph;
+	}
+
 }
