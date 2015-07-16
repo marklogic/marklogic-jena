@@ -21,5 +21,9 @@ public class WrappingIterator implements Iterator<Node> {
 	public Node next() {
 		return NodeFactory.createURI(iterator.next());
 	}
+	@Override
+	public void remove() {
+		iterator.remove();
+	}
 
 }

@@ -93,6 +93,11 @@ public class MarkLogicDatasetGraph extends DatasetGraphCaching implements Datase
 			Quad quad = new Quad(g, s, p, o);
 			return quad;
 		}
+
+		@Override
+		public void remove() {
+			results.remove();
+		}
 	}
 
 	private static final String DEFAULT_GRAPH_URI = "http://marklogic.com/semantics#default-graph";

@@ -159,7 +159,7 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
 
 		@Override
 		protected Binding moveToNextBinding() {
-			return null;
+			return BindingFactory.binding();
 		}
     }
 
