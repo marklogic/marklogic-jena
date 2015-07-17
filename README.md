@@ -1,11 +1,13 @@
-# marklogic-jena
+# marklogic-jena v1.0.0-SNAPSHOT
 
-## Version 1.0.0-SNAPSHOT
+_IMPORTANT_ - NO RELEASE HAS BEEN MADE YET
 
-This library integrates MarkLogic Semantics feature into the Jena RDF
-Framework as a persistence and query layer.
+## Introduction
 
-## Quick start (draft, for released version)
+This library integrates MarkLogic Semantics feature into the [Jena RDF
+Framework](http://jena.apache.org) as a persistence and query layer.
+
+## Quick start (draft, for future release)
 
 For gradle-based projects include this dependency in `build.gradle`
 ```
@@ -24,26 +26,63 @@ Maven-based projects use this block in `pom.xml`:
 </dependency>
 ```
 
-### To build
+#### Setup Java API Client
 
-Note: To use this library prior to the release of MarkLogic Server 8.0-4 and Java Client API 3.0.4, you must have contacted MarkLogic Product Management for access to an early version of the server.
+1) clone or download Java API client _develop_ branch
 
-To use this code as it's being initially developed, you need:
-
-* A nightly build of MarkLogic 8, installed and running.  (See PM)
-* A built and installed version of the SNAPSHOT Java Client API.  To build the
-   Java Client API you'll need Maven 2.
 ```
-git clone git@github.com:marklogic/java-client-api.git
-cd java-client-api
-git checkout develop
-mvn -Dmaven.test.skip=true -Dmaven.javadoc.skip=true install
+https://github.com/marklogic/java-client-api/tree/develop
 ```
-Now the prerequisites are available
 
-* `./gradlew mlDeploy` installs the test harness on your local MarkLogic Server, on a new database and port.
-* `./gradlew test` runs the tests.
- 
+2) build and deploy Java API client
+
+```
+ mvn -Dmaven.test.skip=true -Dmaven.javadoc.skip=true deploy
+ ```
+
+you should verify that Java API client has been deployed to your local maven repo.
+
+#### Setup Marklogic
+
+Ensure MarkLogic (Nightly) is installed and running;
+
+1) run gradle target that provisions everything needed for MarkLogic
+
+```
+gradle mlDeploy
+```
+
+
+#### Setup  MarkLogic Jena
+
+1) clone or download marklogic-jena _develop_ branch
+
+```
+https://github.com/marklogic/marklogic-jena/tree/develop
+```
+
+2) build MarkLogic Jena
+
+```
+gradle test
+
+```
+
+will build and run unit tests.
+
+### Usage
+
+To use in your own code, deploy into local maven repo or copy snapshot jars from /build directory.
+
+```
+gradle deploy
+
+```
+
+The following examples demonstrate idiomatic usage of the MarkLogic as a Jena DatasetGraph.
+
+(TBD - provide /samples dir)
+
 
 
 

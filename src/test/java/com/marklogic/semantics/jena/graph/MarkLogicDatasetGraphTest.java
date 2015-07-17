@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Iterator;
 
+import org.apache.jena.riot.RDFDataMgr;
 import org.junit.Test;
 
 import com.hp.hpl.jena.graph.Graph;
@@ -149,8 +150,19 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
 	    queryExec = QueryExecutionFactory.create(askQuery, ds);
 		assertFalse("delete nodes deleted the quad", queryExec.execAsk());
 
+		// insert so I can delete
+	    markLogicDatasetGraph.add(newGraph, newSubject, newProperty, newValue);
+	    markLogicDatasetGraph.deleteAny(Node.ANY, Node.ANY, NodeFactory.createURI("blah"), Node.ANY);
+	    // no delete
+	    
+	    queryExec = QueryExecutionFactory.create(askQuery, ds);
+		assertTrue("no delete occurs", queryExec.execAsk());
+		markLogicDatasetGraph.deleteAny(Node.ANY, Node.ANY, newProperty, Node.ANY);
+		assertFalse("delete nodes deleted the quad", queryExec.execAsk());
 
-//	deleteAny(Node, Node, Node, Node)
+	    RDFDataMgr.read(markLogicDatasetGraph, "restData.trig");
+	    
+	    Iterator<Quad> quads = markLogicDatasetGraph.find();
 //	find()
 //	find(Quad)
 //	find(Node, Node, Node, Node)
