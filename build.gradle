@@ -6,6 +6,7 @@ buildscript {
   }
   dependencies {
     classpath "com.marklogic:ml-gradle:2.0a12b"
+	classpath 'org.ajoberstar:gradle-git:1.2.0'
   }
 }
 
@@ -17,6 +18,14 @@ apply plugin: 'me.champeau.gradle.jmh'
 apply plugin: 'ml-gradle'
 apply plugin: 'java'
 apply plugin: 'eclipse'
+apply plugin: 'org.ajoberstar.github-pages'
+
+githubPages {
+  repoUri = 'git@github.com:grechaw/marklogic-jena.git'
+  pages {
+    from javadoc
+  }
+}
 
 
 configure(allprojects){
