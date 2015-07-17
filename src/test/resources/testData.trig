@@ -1,0 +1,16 @@
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> . 
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> . 
+@prefix : <http://example.org/> . 
+{ :r1 a :c1 ; 
+       :p1 "string value 0" ; 
+       :p2 "string value 1" . 
+  :r2 :p1 "string value 2" ; 
+       :p2 "string value 3"@en .  } 
+:g1 { :r1 :p3 "1"^^xsd:int .  } 
+:g2 { :r2 :p4 "p4 string value" .  :r3 a :c2 .  } 
+:g3 { :r3 :p5 :r4 .  } 
+:g4 { :r4 a :c3 .  } 
+:o1 { :p1 rdfs:domain :c1 .  } 
+:o2 { :c2 rdfs:subClassOf :c1 .  } 
+:o3 { :p4 rdfs:subPropertyOf :p1 .  } 
+:o4 { :p5 rdfs:range :c2 .  } 
