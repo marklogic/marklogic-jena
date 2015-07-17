@@ -2,6 +2,8 @@ package com.marklogic.semantics.jena.query;
 
 import java.util.Iterator;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RiotException;
 import org.apache.jena.riot.RiotReader;
@@ -41,6 +43,8 @@ import com.marklogic.semantics.jena.graph.MarkLogicDatasetGraph;
 public class MarkLogicQueryEngine extends QueryEngineMain {
 
 
+	private static Log log = LogFactory.getLog(MarkLogicQueryEngine.class);
+	
 
 	static public QueryEngineFactory getFactory() { return factory ; } 
     static public void register()       { QueryEngineRegistry.addFactory(factory) ; }
@@ -71,7 +75,9 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
         InputStreamHandle handle = new InputStreamHandle();
         
         if (query.isAskType()) {
-			qIter = new BooleanQueryIterator(qIter1, execCxt, sparqlManager.executeAsk(qdef));
+        	boolean answer = sparqlManager.executeAsk(qdef);
+        	log.debug("Answer from server is " + answer);
+			qIter = new BooleanQueryIterator(qIter1, execCxt, answer);
         } else if (query.isConstructType() || query.isDescribeType()) {
         	// what I need to create here is a QueryIterator that contains
         	// bindings of s, p, and o to every triple.
