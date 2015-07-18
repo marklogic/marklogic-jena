@@ -17,11 +17,15 @@ package com.marklogic.semantics.jena.graph;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.Iterator;
 
 import org.apache.jena.riot.RDFDataMgr;
+import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.hp.hpl.jena.graph.Graph;
@@ -32,8 +36,13 @@ import com.hp.hpl.jena.query.Dataset;
 import com.hp.hpl.jena.query.DatasetFactory;
 import com.hp.hpl.jena.query.QueryExecution;
 import com.hp.hpl.jena.query.QueryExecutionFactory;
+import com.hp.hpl.jena.query.ReadWrite;
 import com.hp.hpl.jena.sparql.core.DatasetGraph;
 import com.hp.hpl.jena.sparql.core.Quad;
+import com.hp.hpl.jena.sparql.graph.GraphFactory;
+import com.hp.hpl.jena.update.UpdateAction;
+import com.hp.hpl.jena.update.UpdateExecutionFactory;
+import com.hp.hpl.jena.update.UpdateRequest;
 import com.marklogic.semantics.jena.JenaTestBase;
 
 public class MarkLogicDatasetGraphTest extends JenaTestBase {
@@ -96,9 +105,6 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
 	    markLogicDatasetGraph.removeGraph(g10Node);
 	    assertFalse("MarkLogic no longer contains the graph", markLogicDatasetGraph.containsGraph(g10Node));
 
-	    g10 =  markLogicDatasetGraph.getGraph(g10Node);
-	    assertFalse(g1.isIsomorphicWith(g10));
-
 	    Graph defaultGraph = markLogicDatasetGraph.getDefaultGraph();
 
 	    int graphSize = defaultGraph.size();
@@ -158,11 +164,24 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
 	    queryExec = QueryExecutionFactory.create(askQuery, ds);
 		assertTrue("no delete occurs", queryExec.execAsk());
 		markLogicDatasetGraph.deleteAny(Node.ANY, Node.ANY, newProperty, Node.ANY);
+		
+		queryExec = QueryExecutionFactory.create(askQuery, ds);
 		assertFalse("delete nodes deleted the quad", queryExec.execAsk());
 
-	    RDFDataMgr.read(markLogicDatasetGraph, "restData.trig");
+	    RDFDataMgr.read(markLogicDatasetGraph, "testData.trig");
 	    
 	    Iterator<Quad> quads = markLogicDatasetGraph.find();
+	    
+	    // run through iterator
+	    int i=0;
+	    while (quads.hasNext()) {
+	    	Quad q = quads.next();
+	    	i++;
+	    	assertNotNull(q.getSubject());
+	    	assertNotNull(q.getPredicate());
+	    	assertNotNull(q.getObject());
+	    }
+	    assertEquals("Got back all the quads",19, i);
 //	find()
 //	find(Quad)
 //	find(Node, Node, Node, Node)
@@ -170,7 +189,58 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
 //	contains(Node, Node, Node, Node)
 //	contains(Quad)
 	}
+
+	@Test
+	@Ignore
+	public void testGraphPermissions() {
+		
+	}
 	
+	@Test
+	public void testTransactions() {
+		MarkLogicDatasetGraph markLogicDatasetGraph = getMarkLogicDatasetGraph();
+		
+		Node g1 = NodeFactory.createURI("transact1");
+		Triple triple = new Triple(NodeFactory.createURI("s10"),
+				NodeFactory.createURI("p10"), NodeFactory.createURI("o10"));
+		Graph transGraph = GraphFactory.createGraphMem();
+		transGraph.add(triple);
+		
+		// insert a graph within a transaction, rollback
+		try {
+			markLogicDatasetGraph.begin(ReadWrite.READ);
+			fail("MarkLogic only supports write transactions");
+		} catch (MarkLogicTransactionException e) {
+			// pass
+		}
+		assertFalse(markLogicDatasetGraph.isInTransaction());
+		markLogicDatasetGraph.begin(ReadWrite.WRITE);
+		assertTrue(markLogicDatasetGraph.isInTransaction());
+		markLogicDatasetGraph.addGraph(g1, transGraph);
+		markLogicDatasetGraph.abort();
+		assertFalse(markLogicDatasetGraph.isInTransaction());
+
+    	QueryExecution queryExec = QueryExecutionFactory.create("ASK WHERE { ?s ?p ?o }",
+    			markLogicDatasetGraph.toDataset());
+		assertFalse("transact1 graph must not exist after rollback", queryExec.execAsk());
+		
+		markLogicDatasetGraph.begin(ReadWrite.WRITE);
+		assertTrue(markLogicDatasetGraph.isInTransaction());
+		markLogicDatasetGraph.addGraph(g1, transGraph);
+		markLogicDatasetGraph.commit();
+		assertFalse(markLogicDatasetGraph.isInTransaction());
+
+    	queryExec = QueryExecutionFactory.create("ASK WHERE { ?s ?p ?o }",
+    			markLogicDatasetGraph.toDataset());
+		assertTrue("transact1 graph exists after commit", queryExec.execAsk());
+		
+	}
 	
+	@After
+	public void cleanTrans() {
+		MarkLogicDatasetGraph markLogicDatasetGraph = getMarkLogicDatasetGraph();
+		
+		UpdateAction.execute(new UpdateRequest().add("DROP GRAPH <transact1>"), markLogicDatasetGraph);
+	}
 	
 }

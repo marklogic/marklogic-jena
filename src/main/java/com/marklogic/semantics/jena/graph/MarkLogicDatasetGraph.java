@@ -25,6 +25,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.WriterGraphRIOT;
 
 import com.hp.hpl.jena.graph.Graph;
 import com.hp.hpl.jena.graph.Node;
@@ -36,18 +37,23 @@ import com.hp.hpl.jena.query.ReadWrite;
 import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.sparql.core.DatasetGraph;
 import com.hp.hpl.jena.sparql.core.DatasetGraphCaching;
+import com.hp.hpl.jena.sparql.core.DatasetGraphTriplesQuads;
 import com.hp.hpl.jena.sparql.core.Quad;
 import com.hp.hpl.jena.sparql.core.Transactional;
 import com.hp.hpl.jena.sparql.graph.GraphFactory;
 import com.hp.hpl.jena.sparql.resultset.JSONInput;
 import com.hp.hpl.jena.update.GraphStore;
 import com.marklogic.client.DatabaseClient;
+import com.marklogic.client.ResourceNotFoundException;
+import com.marklogic.client.Transaction;
 import com.marklogic.client.io.InputStreamHandle;
+import com.marklogic.client.io.OutputStreamHandle;
 import com.marklogic.client.semantics.GraphManager;
 import com.marklogic.client.semantics.RDFMimeTypes;
 import com.marklogic.client.semantics.SPARQLBindings;
 import com.marklogic.client.semantics.SPARQLQueryDefinition;
 import com.marklogic.client.semantics.SPARQLQueryManager;
+import com.marklogic.semantics.jena.util.OutputStreamRIOTSender;
 import com.marklogic.semantics.jena.util.WrappingIterator;
 
 /**
@@ -55,7 +61,7 @@ import com.marklogic.semantics.jena.util.WrappingIterator;
  * plus a few extra MarkLogic-specific features.
  *
  */
-public class MarkLogicDatasetGraph extends DatasetGraphCaching implements DatasetGraph, GraphStore, Transactional {
+public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements DatasetGraph, GraphStore, Transactional {
 
 	public class QuadsIterator implements Iterator<Quad> {
 
@@ -106,6 +112,9 @@ public class MarkLogicDatasetGraph extends DatasetGraphCaching implements Datase
 	
 	private GraphManager graphManager;
 	private SPARQLQueryManager sparqlQueryManager;
+	private DatabaseClient client;
+
+	private Transaction currentTransaction;
 	
 	/**
 	 * Creates a new MarkLogicDatasetGraph using the supplied DatabaseClient.  If this client can write to
@@ -113,7 +122,9 @@ public class MarkLogicDatasetGraph extends DatasetGraphCaching implements Datase
 	 * @param client specifies the connection to the MarkLogic server.  Obtain from DatabaseClientFactory.
 	 */
 	public MarkLogicDatasetGraph(DatabaseClient client) {
+		this.client = client;
 		this.graphManager = client.newGraphManager();
+		graphManager.setDefaultMimetype(RDFMimeTypes.NTRIPLES);
 		this.sparqlQueryManager = client.newSPARQLQueryManager();
 	}
 
@@ -141,40 +152,8 @@ public class MarkLogicDatasetGraph extends DatasetGraphCaching implements Datase
 		sparqlQueryManager.executeUpdate(qdef);
 	}
 	
-	@Override
-	protected void _close() {
-		// TODO Auto-generated method stub
-		
-	}
 
-	@Override
-	protected Graph _createNamedGraph(Node graphNode) {
-		// can't bind graph name, so this is a surrogate for
-	    // CREATE GRAPH ?g
-	    String query = "CONSTRUCT {?s ?p ?o} WHERE { ?s ?p ?o }";
-		SPARQLQueryDefinition qdef = sparqlQueryManager.newQueryDefinition(query);
-		qdef.setDefaultGraphUris(graphNode.getURI());
-		InputStreamHandle handle = sparqlQueryManager.executeConstruct(qdef, new InputStreamHandle().withMimetype(RDFMimeTypes.NTRIPLES));
-		return toJenaGraph(handle);
-	}
-
-	@Override
-	protected Graph _createDefaultGraph() {
-		String query = "CONSTRUCT {?s ?p ?o}  WHERE { ?s ?p ?o }";
-		SPARQLQueryDefinition qdef = sparqlQueryManager.newQueryDefinition(query);
-		qdef.setDefaultGraphUris(DEFAULT_GRAPH_URI);
-		InputStreamHandle handle = sparqlQueryManager.executeConstruct(qdef, new InputStreamHandle().withMimetype(RDFMimeTypes.NTRIPLES));
-		return toJenaGraph(handle);
-	}
-
-	@Override
-	protected boolean _containsGraph(Node graphNode) {
-		String query = "ASK WHERE { ?s ?p ?o  }";
-		SPARQLQueryDefinition qdef = sparqlQueryManager.newQueryDefinition(query);
-		qdef.setDefaultGraphUris(graphNode.getURI());
-        return sparqlQueryManager.executeAsk(qdef);
-	}
-
+	
 	private SPARQLQueryDefinition bindObject(SPARQLQueryDefinition qdef, String nodeName, Node objectNode) {
 		SPARQLBindings bindings = qdef.getBindings();
 		if (objectNode.isURI()) {
@@ -251,14 +230,24 @@ public class MarkLogicDatasetGraph extends DatasetGraphCaching implements Datase
 	}
 
 	private InputStream selectTriplesInGraph(String graphName, Node s, Node p, Node o) {
-		String query = "SELECT ?s ?p ?o where { ?s ?p ?o }";
-		SPARQLQueryDefinition qdef = sparqlQueryManager.newQueryDefinition(query);
-		if (s != Node.ANY) { qdef.withBinding("s", s.getURI()); }
-		if (p != Node.ANY) { qdef.withBinding("p", p.getURI()); }
-		if (o != Node.ANY) { qdef = bindObject(qdef, "o", o); }
-		// bug 33167 prevents binding ?g 
-		// qdef.withBinding("g", DEFAULT_GRAPH_URI);
-		qdef.setDefaultGraphUris(DEFAULT_GRAPH_URI);
+		SPARQLQueryDefinition qdef = sparqlQueryManager.newQueryDefinition("");
+		StringBuffer sb = new StringBuffer();
+		sb.append("SELECT ?s ?p ?o where { ?s ?p ?o .");
+		if (s != Node.ANY) { 
+			qdef.withBinding("a", s.getURI());
+			sb.append("FILTER (?s = ?a) ");
+		}
+		if (p != Node.ANY) { 
+			qdef.withBinding("b", p.getURI()); 
+			sb.append("FILTER (?p = ?b) ");
+		}
+		if (o != Node.ANY) { 
+			qdef = bindObject(qdef, "c", o);
+			sb.append("FILTER (?o = ?c) ");
+		}
+		sb.append("}");
+		qdef.setSparql(sb.toString());
+		qdef.setDefaultGraphUris(graphName);
 		InputStreamHandle results = sparqlQueryManager.executeSelect(qdef, new InputStreamHandle());
 		return results.get();
 	}
@@ -278,11 +267,23 @@ public class MarkLogicDatasetGraph extends DatasetGraphCaching implements Datase
 
 	@Override
 	protected Iterator<Quad> findInAnyNamedGraphs(Node s, Node p, Node o) {
-		String query = "SELECT ?g ?s ?p ?o where {GRAPH ?g { ?s ?p ?o }}";
-		SPARQLQueryDefinition qdef = sparqlQueryManager.newQueryDefinition(query);
-		if (s != Node.ANY) { qdef.withBinding("s", s.getURI()); }
-		if (p != Node.ANY) { qdef.withBinding("p", p.getURI()); }
-		if (o != Node.ANY) { qdef = bindObject(qdef, "o", o); }
+		SPARQLQueryDefinition qdef = sparqlQueryManager.newQueryDefinition("");
+		StringBuffer sb = new StringBuffer();
+		sb.append("SELECT ?g ?s ?p ?o where {GRAPH ?g { ?s ?p ?o }");
+		if (s != Node.ANY) { 
+			qdef.withBinding("a", s.getURI());
+			sb.append("FILTER (?s = ?a) ");
+		}
+		if (p != Node.ANY) { 
+			qdef.withBinding("b", p.getURI()); 
+			sb.append("FILTER (?p = ?b) ");
+		}
+		if (o != Node.ANY) { 
+			qdef = bindObject(qdef, "c", o);
+			sb.append("FILTER (?o = ?c) ");
+		}
+		sb.append("}");
+		qdef.setSparql(sb.toString());
 		InputStreamHandle results = sparqlQueryManager.executeSelect(qdef, new InputStreamHandle());
 		return new QuadsIterator(results.get());
 	}
@@ -293,34 +294,46 @@ public class MarkLogicDatasetGraph extends DatasetGraphCaching implements Datase
 	    this.addGraph(NodeFactory.createURI(DEFAULT_GRAPH_URI), g);
 	}
 
+	private void checkCurrentTransaction() {
+		if (this.currentTransaction == null) {
+			throw new MarkLogicTransactionException("No open transaction");
+		}
+	}
+	
 	@Override
 	public void begin(ReadWrite readWrite) {
-		// TODO Auto-generated method stub
-		
+		if (readWrite == ReadWrite.READ) {
+			throw new MarkLogicTransactionException("MarkLogic only supports write transactions");
+		} else {
+			if (this.currentTransaction != null) {
+				throw new MarkLogicTransactionException("Only one open transaction per MarkLogicDatasetGraph instance.");
+			}
+			this.currentTransaction = client.openTransaction();
+		}
 	}
 
 	@Override
 	public void commit() {
-		// TODO Auto-generated method stub
-		
+		checkCurrentTransaction();
+		this.currentTransaction.commit();
+		this.currentTransaction = null;
 	}
 
 	@Override
 	public void abort() {
-		// TODO Auto-generated method stub
-		
+		checkCurrentTransaction();
+		this.currentTransaction.rollback();
+		this.currentTransaction = null;
 	}
 
 	@Override
 	public boolean isInTransaction() {
-		// TODO Auto-generated method stub
-		return false;
+		return (this.currentTransaction != null);
 	}
 
 	@Override
 	public void end() {
-		// TODO Auto-generated method stub
-		
+		abort();
 	}
 
 	@Override
@@ -343,4 +356,45 @@ public class MarkLogicDatasetGraph extends DatasetGraphCaching implements Datase
 	public SPARQLQueryManager getSPARQLQueryManager() {
 		return this.sparqlQueryManager;
 	}
+	
+	@Override
+	public Graph getDefaultGraph() {
+		InputStreamHandle handle = new InputStreamHandle();
+		Graph graph = GraphFactory.createDefaultGraph();
+		try {
+			graphManager.read(DEFAULT_GRAPH_URI, handle, this.currentTransaction);
+			RDFDataMgr.read(graph, handle.get(), Lang.NTRIPLES);
+		} catch (ResourceNotFoundException e) {
+			// empty or non-existent.
+		}
+		return graph;
+	}
+
+	@Override
+	public Graph getGraph(Node graphNode) {
+		InputStreamHandle handle = new InputStreamHandle();
+		graphManager.read(graphNode.getURI(), handle, currentTransaction);
+		Graph graph = GraphFactory.createDefaultGraph();
+		try {
+			RDFDataMgr.read(graph, handle.get(), Lang.NTRIPLES);
+		} catch (NullPointerException e) {
+			
+		}
+		return graph;
+	}
+
+	@Override
+	public void addGraph(Node graphName, Graph graph) {
+		WriterGraphRIOT writer = RDFDataMgr.createGraphWriter(Lang.NTRIPLES);
+		OutputStreamRIOTSender sender = new OutputStreamRIOTSender(writer);
+		sender.setGraph(graph);
+		OutputStreamHandle handle = new OutputStreamHandle(sender);
+		graphManager.write(graphName.getURI(), handle, currentTransaction);
+	}
+
+	@Override
+	public void removeGraph(Node graphName) {
+		graphManager.delete(graphName.getURI(), currentTransaction);
+	}
+
 }
