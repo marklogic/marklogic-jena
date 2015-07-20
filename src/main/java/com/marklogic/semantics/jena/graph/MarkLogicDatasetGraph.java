@@ -21,11 +21,11 @@ import java.net.URISyntaxException;
 import java.util.Iterator;
 import java.util.Locale;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.WriterGraphRIOT;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.hp.hpl.jena.graph.Graph;
 import com.hp.hpl.jena.graph.Node;
@@ -36,7 +36,6 @@ import com.hp.hpl.jena.query.QuerySolution;
 import com.hp.hpl.jena.query.ReadWrite;
 import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.sparql.core.DatasetGraph;
-import com.hp.hpl.jena.sparql.core.DatasetGraphCaching;
 import com.hp.hpl.jena.sparql.core.DatasetGraphTriplesQuads;
 import com.hp.hpl.jena.sparql.core.Quad;
 import com.hp.hpl.jena.sparql.core.Transactional;
@@ -53,6 +52,7 @@ import com.marklogic.client.semantics.RDFMimeTypes;
 import com.marklogic.client.semantics.SPARQLBindings;
 import com.marklogic.client.semantics.SPARQLQueryDefinition;
 import com.marklogic.client.semantics.SPARQLQueryManager;
+import com.marklogic.semantics.jena.MarkLogicTransactionException;
 import com.marklogic.semantics.jena.util.OutputStreamRIOTSender;
 import com.marklogic.semantics.jena.util.WrappingIterator;
 
@@ -63,6 +63,7 @@ import com.marklogic.semantics.jena.util.WrappingIterator;
  */
 public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements DatasetGraph, GraphStore, Transactional {
 
+	
 	public class QuadsIterator implements Iterator<Quad> {
 
 		private ResultSet results;
@@ -108,7 +109,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 
 	private static final String DEFAULT_GRAPH_URI = "http://marklogic.com/semantics#default-graph";
 	
-	private static Log log = LogFactory.getLog(MarkLogicDatasetGraph.class);
+	private static Logger log = LoggerFactory.getLogger(MarkLogicDatasetGraph.class);
 	
 	private GraphManager graphManager;
 	private SPARQLQueryManager sparqlQueryManager;
@@ -126,15 +127,6 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 		this.graphManager = client.newGraphManager();
 		graphManager.setDefaultMimetype(RDFMimeTypes.NTRIPLES);
 		this.sparqlQueryManager = client.newSPARQLQueryManager();
-	}
-
-	private Graph toJenaGraph(InputStreamHandle handle) {
-		Graph graph = GraphFactory.createDefaultGraph();
-		InputStream is = handle.get();
-		if (is != null) {
-			RDFDataMgr.read(graph, is, Lang.NTRIPLES);
-		}
-		return graph;
 	}
 
 	@Override
@@ -164,7 +156,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 				try {
 					String xsdType = objectNode.getLiteralDatatypeURI();
 					String fragment = new URI(xsdType).getFragment();
-					bindings.bind("o", objectNode.getLiteralLexicalForm(), fragment);
+					bindings.bind(nodeName, objectNode.getLiteralLexicalForm(), fragment);
 					log.debug("found " + xsdType);
 				} catch (URISyntaxException e) {
 					log.info("Is this an error");
@@ -185,15 +177,30 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	protected void addToDftGraph(Node s, Node p, Node o) {
 		String query = "INSERT DATA { ?s ?p ?o }";
 		SPARQLQueryDefinition qdef = sparqlQueryManager.newQueryDefinition(query);
+		log.debug(s.toString());
+		s = skolemize(s);
+		p = skolemize(p);
+		o = skolemize(o);
 		qdef.withBinding("s", s.getURI());
 		qdef.withBinding("p", p.getURI());
 		qdef = bindObject(qdef, "o", o);
 		sparqlQueryManager.executeUpdate(qdef);
 	}
 
+	private Node skolemize(Node s) {
+		if (s.isBlank()) {
+			return NodeFactory.createURI("http://marklogic.com/semantics/blank/" + s.toString());
+		} else {
+			return s;
+		}
+	}
+
 	@Override
 	protected void addToNamedGraph(Node g, Node s, Node p, Node o) {
 		// workaround -- use graph inline. insecure.
+		s = skolemize(s);
+		p = skolemize(p);
+		o = skolemize(o);
 		String query = "INSERT DATA { GRAPH <" + g.getURI() + "> { ?s ?p ?o } }";
 		SPARQLQueryDefinition qdef = sparqlQueryManager.newQueryDefinition(query);
 		//qdef.withBinding("g", g.getURI());
@@ -206,6 +213,9 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	@Override
 	protected void deleteFromDftGraph(Node s, Node p, Node o) {
 		String query = "DELETE  WHERE { ?s ?p ?o }";
+		s = skolemize(s);
+		p = skolemize(p);
+		o = skolemize(o);
 		SPARQLQueryDefinition qdef = sparqlQueryManager.newQueryDefinition(query);
 		qdef.withBinding("s", s.getURI());
 		qdef.withBinding("p", p.getURI());
@@ -216,6 +226,9 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	@Override
 	protected void deleteFromNamedGraph(Node g, Node s, Node p, Node o) {
 		// workaround -- use graph inline. insecure.
+		s = skolemize(s);
+		p = skolemize(p);
+		o = skolemize(o);
 		String gString = "?g";
 		if (g != null) {
 			gString = g.getURI();
@@ -230,6 +243,9 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	}
 
 	private InputStream selectTriplesInGraph(String graphName, Node s, Node p, Node o) {
+		s = skolemize(s);
+		p = skolemize(p);
+		o = skolemize(o);
 		SPARQLQueryDefinition qdef = sparqlQueryManager.newQueryDefinition("");
 		StringBuffer sb = new StringBuffer();
 		sb.append("SELECT ?s ?p ?o where { ?s ?p ?o .");
@@ -267,6 +283,10 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 
 	@Override
 	protected Iterator<Quad> findInAnyNamedGraphs(Node s, Node p, Node o) {
+		s =  s != null ? s : Node.ANY;
+		p =  p != null ? p : Node.ANY;
+		o =  o != null ? o : Node.ANY;
+		
 		SPARQLQueryDefinition qdef = sparqlQueryManager.newQueryDefinition("");
 		StringBuffer sb = new StringBuffer();
 		sb.append("SELECT ?g ?s ?p ?o where {GRAPH ?g { ?s ?p ?o }");

@@ -11,7 +11,7 @@ buildscript {
 }
 
 plugins {
-	id 'me.champeau.gradle.jmh' version '0.2.0'
+    id 'me.champeau.gradle.jmh' version '0.1.3'
 }
 
 apply plugin: 'me.champeau.gradle.jmh'
@@ -21,7 +21,7 @@ apply plugin: 'eclipse'
 apply plugin: 'org.ajoberstar.github-pages'
 
 githubPages {
-  repoUri = 'git@github.com:grechaw/marklogic-jena.git'
+  repoUri = 'git@github.com:marklogic/marklogic-jena.git'
   pages {
     from javadoc
   }
@@ -62,13 +62,9 @@ dependencies {
 sourceSets {
 	test {
 		java {
-			srcDir 'main/test/java'
+			srcDir 'src/test/resources'
 		}
 	}
-}
-
-jmh {
-	jmhVersion = '1.3.2'
 }
 
 task wrapper(type: Wrapper) {

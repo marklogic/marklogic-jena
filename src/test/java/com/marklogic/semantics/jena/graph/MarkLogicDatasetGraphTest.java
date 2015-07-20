@@ -13,6 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/*
+ * Copyright 2015 MarkLogic Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.marklogic.semantics.jena.graph;
 
 import static org.junit.Assert.assertEquals;
@@ -27,7 +42,10 @@ import org.apache.jena.riot.RDFDataMgr;
 import org.junit.After;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
 import com.hp.hpl.jena.graph.Graph;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.NodeFactory;
@@ -41,16 +59,18 @@ import com.hp.hpl.jena.sparql.core.DatasetGraph;
 import com.hp.hpl.jena.sparql.core.Quad;
 import com.hp.hpl.jena.sparql.graph.GraphFactory;
 import com.hp.hpl.jena.update.UpdateAction;
-import com.hp.hpl.jena.update.UpdateExecutionFactory;
 import com.hp.hpl.jena.update.UpdateRequest;
 import com.marklogic.semantics.jena.JenaTestBase;
+import com.marklogic.semantics.jena.MarkLogicTransactionException;
 
 public class MarkLogicDatasetGraphTest extends JenaTestBase {
 
+	private static Logger log = LoggerFactory.getLogger(MarkLogicDatasetGraphTest.class);
+
 	@Test
 	public void testFirstRead() {
-		DatasetGraph datasetGraph = getJenaDatasetGraph("testData.trig");
-		DatasetGraph markLogicDatasetGraph = getMarkLogicDatasetGraph("testData.trig");
+		DatasetGraph datasetGraph = getJenaDatasetGraph("testdata/testData.trig");
+		DatasetGraph markLogicDatasetGraph = getMarkLogicDatasetGraph("testdata/testData.trig");
 
 		Iterator<Node> jenaGraphs = datasetGraph.listGraphNodes();
 		Iterator<Node> markLogicGraphs = markLogicDatasetGraph.listGraphNodes();
@@ -60,6 +80,7 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
 			assertTrue(markLogicGraphs.hasNext());
 
 			// list must be at least as long as jena's
+			@SuppressWarnings("unused")
 			Node markLogicNode = markLogicGraphs.next();
 
 			Graph jenaGraph = datasetGraph.getGraph(jenaGraphNode);
@@ -75,7 +96,7 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
 	@Test
 	public void testGraphCRUD() {
 	    // initialize MarkLogic
-	    DatasetGraph markLogicDatasetGraph = getMarkLogicDatasetGraph("testData.trig");
+	    DatasetGraph markLogicDatasetGraph = getMarkLogicDatasetGraph("testdata/testData.trig");
 
 	    Graph g1 = markLogicDatasetGraph.getGraph(NodeFactory.createURI("http://example.org/g1"));
 
@@ -84,26 +105,26 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
 	            NodeFactory.createURI("o10"));
 	    g1.add(triple);
 
-	    Node g10Node = NodeFactory.createURI("http://example.org/g10");
+	    Node n10Node = NodeFactory.createURI("http://example.org/n10");
 
 	    // add modified graph to new name
-	    markLogicDatasetGraph.addGraph(g10Node, g1);
-	    assertTrue("MarkLogic contains the graph", markLogicDatasetGraph.containsGraph(g10Node));
+	    markLogicDatasetGraph.addGraph(n10Node, g1);
+	    assertTrue("MarkLogic contains the graph", markLogicDatasetGraph.containsGraph(n10Node));
 	    
-	    Graph g10 =  markLogicDatasetGraph.getGraph(g10Node);
+	    Graph n10 =  markLogicDatasetGraph.getGraph(n10Node);
 
-	    assertTrue(g1.isIsomorphicWith(g10));
+	    assertTrue(g1.isIsomorphicWith(n10));
 	    //verify two tripes
-	    assertEquals("G10 has two triples", 2, g10.size());
+	    assertEquals("G10 has two triples", 2, n10.size());
 	    
-	    markLogicDatasetGraph.delete(new Quad(g10Node, triple));
-	    g10 =  markLogicDatasetGraph.getGraph(g10Node);
+	    markLogicDatasetGraph.delete(new Quad(n10Node, triple));
+	    n10 =  markLogicDatasetGraph.getGraph(n10Node);
 	    g1 = markLogicDatasetGraph.getGraph(NodeFactory.createURI("http://example.org/g1"));
 
-	    assertTrue(g1.isIsomorphicWith(g10));
+	    assertTrue(g1.isIsomorphicWith(n10));
 
-	    markLogicDatasetGraph.removeGraph(g10Node);
-	    assertFalse("MarkLogic no longer contains the graph", markLogicDatasetGraph.containsGraph(g10Node));
+	    markLogicDatasetGraph.removeGraph(n10Node);
+	    assertFalse("MarkLogic no longer contains the graph", markLogicDatasetGraph.containsGraph(n10Node));
 
 	    Graph defaultGraph = markLogicDatasetGraph.getDefaultGraph();
 
@@ -114,6 +135,9 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
 	    markLogicDatasetGraph.setDefaultGraph(defaultGraph);
 	    defaultGraph = markLogicDatasetGraph.getDefaultGraph();
         assertEquals(graphSize + 1, defaultGraph.size());
+        
+		markLogicDatasetGraph.deleteAny(Node.ANY, triple.getSubject(), triple.getPredicate(), triple.getObject());
+
 	}
 	
 	@Test
@@ -121,7 +145,8 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
 	
 		Node newSubject = NodeFactory.createURI("newSubject");
 		Node newProperty = NodeFactory.createURI("newProperty");
-		Node newValue = NodeFactory.createLiteral("All New Value!");
+		// note, untyped literals are rdf 1.0 and do not round-trip
+		Node newValue = NodeFactory.createLiteral("All New Value!", XSDDatatype.XSDstring);
 		Node newGraph = NodeFactory.createURI("newGraph");
 		Quad newQuad = new Quad(newGraph, 
 				new Triple(newSubject,
@@ -135,12 +160,14 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
 	    
 	    QueryExecution queryExec = QueryExecutionFactory.create(askQuery, ds);
 	    assertTrue("add quad inserted a graph", queryExec.execAsk());
-	    
+	    assertTrue(markLogicDatasetGraph.contains(newQuad));
+	
 	    markLogicDatasetGraph.delete(newQuad);
 	    
 	    queryExec = QueryExecutionFactory.create(askQuery, ds);
 	    assertFalse("delete quad deleted the quad", queryExec.execAsk());
-	    
+	    assertFalse(markLogicDatasetGraph.contains(newQuad));
+
 	    markLogicDatasetGraph.add(newGraph, newSubject, newProperty, newValue);
 	    
 	    queryExec = QueryExecutionFactory.create(askQuery, ds);
@@ -150,9 +177,11 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
 	    
 	    queryExec = QueryExecutionFactory.create(askQuery, ds);
 	    assertTrue("add node still there inserted", queryExec.execAsk());
-	    
+	    assertTrue(markLogicDatasetGraph.contains(newGraph, newSubject, newProperty, newValue));
+
 	    markLogicDatasetGraph.delete(newGraph, newSubject, newProperty, newValue);
-	    
+	    assertFalse(markLogicDatasetGraph.contains(newGraph, newSubject, newProperty, newValue));
+
 	    queryExec = QueryExecutionFactory.create(askQuery, ds);
 		assertFalse("delete nodes deleted the quad", queryExec.execAsk());
 
@@ -168,26 +197,69 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
 		queryExec = QueryExecutionFactory.create(askQuery, ds);
 		assertFalse("delete nodes deleted the quad", queryExec.execAsk());
 
-	    RDFDataMgr.read(markLogicDatasetGraph, "testData.trig");
+	    RDFDataMgr.read(markLogicDatasetGraph, "testdata/testData.trig");
 	    
 	    Iterator<Quad> quads = markLogicDatasetGraph.find();
-	    
+
 	    // run through iterator
 	    int i=0;
 	    while (quads.hasNext()) {
+	    	// filter for just the test corpus.
 	    	Quad q = quads.next();
-	    	i++;
-	    	assertNotNull(q.getSubject());
-	    	assertNotNull(q.getPredicate());
-	    	assertNotNull(q.getObject());
+	    	if (q.getGraph() != null) {
+	    		String gName = q.getGraph().getURI();
+		    	if (gName != null) {
+		    		if (gName.equals("http://marklogic.com/semantics#default-graph") ||
+		    			gName.matches("^http:\\/\\/example.org\\/[go].*")) {
+		    			i++;
+		    			assertNotNull(q.getSubject());
+		    			assertNotNull(q.getPredicate());
+		    			assertNotNull(q.getObject());
+		    		}
+		    	}
+		    	else {
+		    		log.debug("Some test didn't clean up " + gName);
+	    		}
+	    	}
 	    }
-	    assertEquals("Got back all the quads",19, i);
-//	find()
-//	find(Quad)
-//	find(Node, Node, Node, Node)
-//	findNG(Node, Node, Node, Node)
-//	contains(Node, Node, Node, Node)
-//	contains(Quad)
+	    assertEquals("Got back all the quads",14, i);
+	    
+	    // find(*)
+	    markLogicDatasetGraph.add(newGraph, newSubject, newProperty, newValue);
+	    quads = markLogicDatasetGraph.find(newQuad);
+	    assertTrue(quads.hasNext());
+	    Quad q = quads.next();
+	    assertEquals("find() returns proper quad with identity match", newQuad, q);
+	    assertFalse(quads.hasNext());
+	
+	    quads = markLogicDatasetGraph.find(newGraph, newSubject, newProperty, newValue);
+	    assertTrue(quads.hasNext());
+	    q = quads.next();
+	    assertEquals("Found the right quad.", q, newQuad);
+	    assertFalse(quads.hasNext());
+	    
+		
+	    quads = markLogicDatasetGraph.findNG(null, null, null, null);
+	    i=0;
+	    while (quads.hasNext()) {
+	    	// filter for just the test corpus.
+	    	q = quads.next();
+	    	if (q.getGraph() != null) {
+	    		String gName = q.getGraph().getURI();
+		    	if (gName != null) {
+		    		if (gName.matches("^http:\\/\\/example.org\\/[go].*")) {
+		    			i++;
+		    			assertNotNull(q.getSubject());
+		    			assertNotNull(q.getPredicate());
+		    			assertNotNull(q.getObject());
+		    		}
+		    	}
+		    	else {
+		    		log.debug("Some test didn't clean up " + gName);
+	    		}
+	    	}
+	    }
+	    assertEquals("Got back all the quads except default", 9, i);
 	}
 
 	@Test
@@ -205,7 +277,6 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
 				NodeFactory.createURI("p10"), NodeFactory.createURI("o10"));
 		Graph transGraph = GraphFactory.createGraphMem();
 		transGraph.add(triple);
-		
 		// insert a graph within a transaction, rollback
 		try {
 			markLogicDatasetGraph.begin(ReadWrite.READ);
@@ -220,7 +291,7 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
 		markLogicDatasetGraph.abort();
 		assertFalse(markLogicDatasetGraph.isInTransaction());
 
-    	QueryExecution queryExec = QueryExecutionFactory.create("ASK WHERE { ?s ?p ?o }",
+    	QueryExecution queryExec = QueryExecutionFactory.create("ASK WHERE { graph <transact1> { ?s ?p ?o }}",
     			markLogicDatasetGraph.toDataset());
 		assertFalse("transact1 graph must not exist after rollback", queryExec.execAsk());
 		
@@ -230,9 +301,11 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
 		markLogicDatasetGraph.commit();
 		assertFalse(markLogicDatasetGraph.isInTransaction());
 
-    	queryExec = QueryExecutionFactory.create("ASK WHERE { ?s ?p ?o }",
+    	queryExec = QueryExecutionFactory.create("ASK WHERE {  graph <transact1> { ?s ?p ?o }}",
     			markLogicDatasetGraph.toDataset());
 		assertTrue("transact1 graph exists after commit", queryExec.execAsk());
+		
+		markLogicDatasetGraph.deleteAny(Node.ANY, triple.getSubject(), triple.getPredicate(), triple.getObject());
 		
 	}
 	
@@ -243,4 +316,15 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
 		UpdateAction.execute(new UpdateRequest().add("DROP GRAPH <transact1>"), markLogicDatasetGraph);
 	}
 	
+	@Test
+	@Ignore
+	public void testLargerDataset() {
+		MarkLogicDatasetGraph dsg = getMarkLogicDatasetGraph("testdata/sp2b.n3");
+		
+		Iterator<Quad> quads = dsg.find();
+		while (quads.hasNext()) {
+			Quad q = quads.next();
+			System.out.println(q);
+		}
+	}
 }

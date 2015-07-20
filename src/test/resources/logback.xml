@@ -20,10 +20,18 @@
     <logger name="com.marklogic.semantics.jena.query.*" level="DEBUG" additivity="false">
         <appender-ref ref="STDOUT" />
     </logger>
-
-    <!-- By default, the level of the root level is set to DEBUG -->
+    
+    <logger name="com.marklogic.semantics.jena.*" level="DEBUG" additivity="false">
+        <appender-ref ref="STDOUT" />
+    </logger>
+    
+    
+    <logger name="o.a.h.headers" level="INFO" additivity="false">
+        <appender-ref ref="STDOUT" />
+    </logger>
+    
     <root level="DEBUG">
         <appender-ref ref="STDOUT" />
-
     </root>
+    
 </configuration>

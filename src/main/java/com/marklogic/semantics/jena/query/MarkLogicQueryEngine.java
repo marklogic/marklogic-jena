@@ -1,14 +1,28 @@
+/*
+ * Copyright 2015 MarkLogic Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.marklogic.semantics.jena.query;
 
 import java.util.Iterator;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RiotException;
 import org.apache.jena.riot.RiotReader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.hp.hpl.jena.graph.NodeFactory;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.ResultSet;
@@ -43,7 +57,7 @@ import com.marklogic.semantics.jena.graph.MarkLogicDatasetGraph;
 public class MarkLogicQueryEngine extends QueryEngineMain {
 
 
-	private static Log log = LogFactory.getLog(MarkLogicQueryEngine.class);
+	private static Logger log = LoggerFactory.getLogger(MarkLogicQueryEngine.class);
 	
 
 	static public QueryEngineFactory getFactory() { return factory ; } 
