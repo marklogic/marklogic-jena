@@ -34,6 +34,7 @@ public class JenaTestBase {
     public static DatabaseClient writerClient;
     public static DatabaseClient adminClient;
     
+    
     static {
         Properties props = new Properties();
         try {
@@ -54,8 +55,6 @@ public class JenaTestBase {
         adminClient = DatabaseClientFactory.newClient(host, port, adminUser, adminPassword, Authentication.DIGEST);
         writerClient = DatabaseClientFactory.newClient(host, port, writerUser, writerPassword, Authentication.DIGEST);
         readerClient = DatabaseClientFactory.newClient(host, port, readerUser, readerPassword, Authentication.DIGEST);
-    
-        MarkLogicQueryEngine.register(readerClient);
     }
     
     protected static DatasetGraph getJenaDatasetGraph(String fileName) {

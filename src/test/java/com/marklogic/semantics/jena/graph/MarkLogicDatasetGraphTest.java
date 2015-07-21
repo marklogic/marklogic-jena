@@ -60,6 +60,8 @@ import com.hp.hpl.jena.sparql.core.Quad;
 import com.hp.hpl.jena.sparql.graph.GraphFactory;
 import com.hp.hpl.jena.update.UpdateAction;
 import com.hp.hpl.jena.update.UpdateRequest;
+import com.marklogic.client.semantics.Capability;
+import com.marklogic.client.semantics.GraphPermissions;
 import com.marklogic.semantics.jena.JenaTestBase;
 import com.marklogic.semantics.jena.MarkLogicTransactionException;
 
@@ -264,7 +266,32 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
 
 	@Test
 	@Ignore
+	// TODO not ready yet in java api.
 	public void testGraphPermissions() {
+		MarkLogicDatasetGraph markLogicDatasetGraph = getMarkLogicDatasetGraph();
+
+		Node g1 = NodeFactory.createURI("perms1");
+		Triple triple = new Triple(NodeFactory.createURI("s232"),
+				NodeFactory.createURI("p232"), NodeFactory.createURI("o232"));
+		Graph transGraph = GraphFactory.createGraphMem();
+		transGraph.add(triple);
+		markLogicDatasetGraph.addGraph(g1, transGraph);
+		
+		GraphPermissions graphPermissions = markLogicDatasetGraph.getPermissions(g1);
+		assertTrue(graphPermissions.get("rest-reader").contains(Capability.READ));
+		assertTrue(graphPermissions.get("rest-writer").contains(Capability.UPDATE));
+		
+		//markLogicDatasetGraph.addPermissions(g1, GraphPermissions.permission("semantics-peon-role", { Capability.READ }));
+		
+		graphPermissions = markLogicDatasetGraph.getPermissions(g1);
+		assertTrue(graphPermissions.get("rest-reader").contains(Capability.READ));
+		assertTrue(graphPermissions.get("rest-writer").contains(Capability.UPDATE));
+		assertTrue(graphPermissions.get("semantics-peon-role").contains(Capability.READ));
+
+		markLogicDatasetGraph.clearPermissions(g1);
+		graphPermissions = markLogicDatasetGraph.getPermissions(g1);
+		assertFalse(graphPermissions.get("semantics-peon-role").contains(Capability.READ));
+
 	}
 	
 	@Test

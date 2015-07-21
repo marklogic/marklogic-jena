@@ -48,6 +48,7 @@ import com.marklogic.client.Transaction;
 import com.marklogic.client.io.InputStreamHandle;
 import com.marklogic.client.io.OutputStreamHandle;
 import com.marklogic.client.semantics.GraphManager;
+import com.marklogic.client.semantics.GraphPermissions;
 import com.marklogic.client.semantics.RDFMimeTypes;
 import com.marklogic.client.semantics.SPARQLBindings;
 import com.marklogic.client.semantics.SPARQLQueryDefinition;
@@ -417,4 +418,19 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 		graphManager.delete(graphName.getURI(), currentTransaction);
 	}
 
+	public GraphPermissions getPermissions(Node g1) {
+		return graphManager.getPermissions(g1.getURI());
+	}
+
+	public void addPermissions(Node g1, GraphPermissions permissions) {
+		graphManager.mergePermissions(g1.getURI(), permissions);
+	}
+	
+	public void clearPermissions(Node g1) {
+		//graphManager.deletePermissions(uri);
+	}
+
+	public Transaction getCurrentTransaction() {
+		return this.currentTransaction;
+	}
 }

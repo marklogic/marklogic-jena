@@ -48,6 +48,7 @@ import com.hp.hpl.jena.sparql.resultset.JSONInput;
 import com.hp.hpl.jena.sparql.syntax.Template;
 import com.hp.hpl.jena.sparql.util.Context;
 import com.marklogic.client.DatabaseClient;
+import com.marklogic.client.Transaction;
 import com.marklogic.client.io.InputStreamHandle;
 import com.marklogic.client.semantics.SPARQLQueryDefinition;
 import com.marklogic.client.semantics.SPARQLQueryManager;
@@ -78,7 +79,11 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
     public QueryIterator eval(Op op, DatasetGraph dsg, Binding initial, Context context)
     {
     	// see if this can be null
-    	ExecutionContext execCxt = new ExecutionContext(context, dsg.getDefaultGraph(), dsg, null);
+    	ExecutionContext execCxt = new ExecutionContext(context, null, dsg, null);
+        if (! (dsg instanceof MarkLogicDatasetGraph))
+    		throw new MarkLogicJenaException("This query engine only works for MarkLogic-backed triple stores");
+    	MarkLogicDatasetGraph markLogicDatasetGraph = (MarkLogicDatasetGraph) dsg;
+    	Transaction tx = markLogicDatasetGraph.getCurrentTransaction();
         QueryIterator qIter1 = QueryIterRoot.create(initial, execCxt) ;
         QueryIterator qIter = null;
         
@@ -89,14 +94,14 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
         InputStreamHandle handle = new InputStreamHandle();
         
         if (query.isAskType()) {
-        	boolean answer = sparqlManager.executeAsk(qdef);
+        	boolean answer = sparqlManager.executeAsk(qdef, tx);
         	log.debug("Answer from server is " + answer);
 			qIter = new BooleanQueryIterator(qIter1, execCxt, answer);
         } else if (query.isConstructType() || query.isDescribeType()) {
         	// what I need to create here is a QueryIterator that contains
         	// bindings of s, p, and o to every triple.
-        	if (query.isConstructType()) sparqlManager.executeConstruct(qdef, handle);
-        	if (query.isDescribeType()) sparqlManager.executeDescribe(qdef, handle);
+        	if (query.isConstructType()) sparqlManager.executeConstruct(qdef, handle, tx);
+        	if (query.isDescribeType()) sparqlManager.executeDescribe(qdef, handle, tx);
         	Iterator<Triple> triples = RiotReader.createIteratorTriples(handle.get(), Lang.NTRIPLES, null);
         	qIter = new TripleQueryIterator(qIter1, execCxt, triples);
         	BasicPattern bgp = new BasicPattern();
@@ -107,7 +112,7 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
         	query.setConstructTemplate(new Template(bgp));
         	//throw new MarkLogicJenaException("Construct Type Supported by Engine Layer");
         } else if (query.isSelectType()) {
-        	sparqlManager.executeSelect(qdef, handle);
+        	sparqlManager.executeSelect(qdef, handle, tx);
             ResultSet results = JSONInput.fromJSON(handle.get());
             qIter = new QueryIteratorResultSet(results);
         } else {
