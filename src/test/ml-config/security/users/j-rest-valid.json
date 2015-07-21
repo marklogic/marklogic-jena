@@ -1,0 +1,6 @@
+{
+  "user-name":"j-rest-valid", 
+  "password": "x",
+  "description":"User that has a rest-reader privilege but not rest-reader role", 
+  "role": ["semantics-peon-role"]
+}

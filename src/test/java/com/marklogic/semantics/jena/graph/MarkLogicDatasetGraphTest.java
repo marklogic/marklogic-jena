@@ -265,7 +265,6 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
 	@Test
 	@Ignore
 	public void testGraphPermissions() {
-		
 	}
 	
 	@Test
