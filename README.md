@@ -28,6 +28,8 @@ Maven-based projects use this block in `pom.xml`:
 
 #### Setup Java API Client
 
+These instructions are for pre-release builds of this project.
+
 1) clone or download Java API client _develop_ branch
 
 ```
@@ -78,6 +80,12 @@ To use in your own code, deploy into local maven repo or copy snapshot jars from
 gradle deploy
 
 ```
+
+### Javadocs
+
+http://marklogic.github.io/marklogic-jena/build/docs/javadoc/
+
+### Examples
 
 The following examples demonstrate idiomatic usage of the MarkLogic as a Jena DatasetGraph.
 
