@@ -30,9 +30,9 @@ public class MarkLogicUpdatesTest extends JenaTestBase {
 		UpdateRequest update = new UpdateRequest();
 		update.add("INSERT DATA { <s2> <p1> <o1> }");
 		update.add("DROP ALL")
-	       .add("CREATE GRAPH <http://example/g2>")
-	       .add("BASE <http://example.org/> INSERT DATA { GRAPH <http://example/g3> { <s1> <p1> <o1>  } }")
-	       .add("BASE <http://example.org/> INSERT DATA { GRAPH <http://example/g2> { <s1> <p1> <o1>  } }") ;
+	       .add("CREATE GRAPH <http://example/update1>")
+	       .add("BASE <http://example.org/> INSERT DATA { GRAPH <http://example.org/update2> { <s1> <p1> <o1>  } }")
+	       .add("BASE <http://example.org/> INSERT DATA { GRAPH <http://example.org/update3> { <s1> <p1> <o1>  } }") ;
 
 
 		UpdateAction.execute(update,  gs);

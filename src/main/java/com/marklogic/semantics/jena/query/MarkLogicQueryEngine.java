@@ -92,6 +92,7 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
         if (! (dsg instanceof MarkLogicDatasetGraph))
     		throw new MarkLogicJenaException("This query engine only works for MarkLogic-backed triple stores");
     	MarkLogicDatasetGraph markLogicDatasetGraph = (MarkLogicDatasetGraph) dsg;
+    	markLogicDatasetGraph.sync();
     	Transaction tx = markLogicDatasetGraph.getCurrentTransaction();
         QueryIterator qIter = null;
         

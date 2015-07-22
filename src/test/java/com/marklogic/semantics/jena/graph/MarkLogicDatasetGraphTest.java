@@ -159,6 +159,7 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
 	    Dataset ds = DatasetFactory.create(markLogicDatasetGraph);
 	    String askQuery = "ASK WHERE { GRAPH <newGraph> { <newSubject> ?p ?o } }";
 	    markLogicDatasetGraph.add(newQuad);
+	    ((MarkLogicDatasetGraph) markLogicDatasetGraph).sync();
 	    
 	    QueryExecution queryExec = QueryExecutionFactory.create(askQuery, ds);
 	    assertTrue("add quad inserted a graph", queryExec.execAsk());
@@ -167,7 +168,7 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
 	    markLogicDatasetGraph.delete(newQuad);
 	    
 	    queryExec = QueryExecutionFactory.create(askQuery, ds);
-	    assertFalse("delete quad deleted the quad", queryExec.execAsk());
+	    assertFalse("delete quad must delete quad", queryExec.execAsk());
 	    assertFalse(markLogicDatasetGraph.contains(newQuad));
 
 	    markLogicDatasetGraph.add(newGraph, newSubject, newProperty, newValue);
@@ -218,12 +219,15 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
 		    			assertNotNull(q.getPredicate());
 		    			assertNotNull(q.getObject());
 		    		}
+
+	                log.debug("" + q);
 		    	}
 		    	else {
 		    		log.debug("Some test didn't clean up " + gName);
 	    		}
 	    	}
 	    }
+	    
 	    assertEquals("Got back all the quads",14, i);
 	    
 	    // find(*)
@@ -336,16 +340,15 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
 	}
 	
 	@After
-	public void cleanTrans() {
+	public void clearGraphs() {
 		MarkLogicDatasetGraph markLogicDatasetGraph = getMarkLogicDatasetGraph();
 		
-		UpdateAction.execute(new UpdateRequest().add("DROP GRAPH <transact1>"), markLogicDatasetGraph);
+		UpdateAction.execute(new UpdateRequest().add("DROP SILENT ALL"), markLogicDatasetGraph);
 	}
 	
 	@Test
-	@Ignore
 	public void testLargerDataset() {
-		MarkLogicDatasetGraph dsg = getMarkLogicDatasetGraph("testdata/sp2b.n3");
+		MarkLogicDatasetGraph dsg = getMarkLogicDatasetGraph("testdata/test.owl");
 		
 		Iterator<Quad> quads = dsg.find();
 		while (quads.hasNext()) {

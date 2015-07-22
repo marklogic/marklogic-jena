@@ -27,7 +27,6 @@ import com.marklogic.client.DatabaseClientFactory;
 import com.marklogic.client.DatabaseClientFactory.Authentication;
 import com.marklogic.semantics.jena.graph.MarkLogicDatasetGraph;
 import com.marklogic.semantics.jena.graph.MarkLogicDatasetGraphFactory;
-import com.marklogic.semantics.jena.query.MarkLogicQueryEngine;
 
 public class JenaTestBase {
     public static DatabaseClient readerClient;
@@ -70,6 +69,8 @@ public class JenaTestBase {
         if (fileName != null) {
         	RDFDataMgr.read(markLogicDatasetGraph,  fileName);
         }
+        // wait for read op to finish
+        markLogicDatasetGraph.sync();
         return markLogicDatasetGraph;
     }
 }
