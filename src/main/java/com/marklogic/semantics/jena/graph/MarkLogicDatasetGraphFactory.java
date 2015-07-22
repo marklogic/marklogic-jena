@@ -23,6 +23,7 @@ public class MarkLogicDatasetGraphFactory {
 	public static MarkLogicDatasetGraph createDatasetGraph(DatabaseClient client) {
 		//MarkLogicDatasetGraph datasetGraph = new MarkLogicDatasetGraph(client);
 		MarkLogicDatasetGraph datasetGraph = new MarkLogicDatasetGraph(client);
+		MarkLogicQueryEngine.unregister();
 		MarkLogicQueryEngine.register(client);
 		return datasetGraph;
 	}

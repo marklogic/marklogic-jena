@@ -65,10 +65,18 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
     static public void register()       { QueryEngineRegistry.addFactory(factory) ; }
     static public void unregister()     { QueryEngineRegistry.removeFactory(factory) ; }
     static public SPARQLQueryManager sparqlManager;
-    
+    private BasicPattern bgp = null;
+    private Template template = null;
+   
     public MarkLogicQueryEngine(Query query, DatasetGraph dataset,
             Binding initial, Context context) {
         super(query, dataset, initial, context);
+        bgp = new BasicPattern();
+        bgp.add(new Triple(
+                Var.alloc("s"), 
+                Var.alloc("p"), 
+                Var.alloc("o")));
+        template = new Template(bgp);
     }
     
     public MarkLogicQueryEngine(Query query, DatasetGraph dataset) {
@@ -84,7 +92,6 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
     		throw new MarkLogicJenaException("This query engine only works for MarkLogic-backed triple stores");
     	MarkLogicDatasetGraph markLogicDatasetGraph = (MarkLogicDatasetGraph) dsg;
     	Transaction tx = markLogicDatasetGraph.getCurrentTransaction();
-        QueryIterator qIter1 = QueryIterRoot.create(initial, execCxt) ;
         QueryIterator qIter = null;
         
         Query query = (Query)context.get(ARQConstants.sysCurrentQuery);
@@ -96,6 +103,7 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
         if (query.isAskType()) {
         	boolean answer = sparqlManager.executeAsk(qdef, tx);
         	log.debug("Answer from server is " + answer);
+        	QueryIterator qIter1 = QueryIterRoot.create(initial, execCxt) ;
 			qIter = new BooleanQueryIterator(qIter1, execCxt, answer);
         } else if (query.isConstructType() || query.isDescribeType()) {
         	// what I need to create here is a QueryIterator that contains
@@ -103,13 +111,9 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
         	if (query.isConstructType()) sparqlManager.executeConstruct(qdef, handle, tx);
         	if (query.isDescribeType()) sparqlManager.executeDescribe(qdef, handle, tx);
         	Iterator<Triple> triples = RiotReader.createIteratorTriples(handle.get(), Lang.NTRIPLES, null);
-        	qIter = new TripleQueryIterator(qIter1, execCxt, triples);
-        	BasicPattern bgp = new BasicPattern();
-        	bgp.add(new Triple(
-        			Var.alloc("s"), 
-        			Var.alloc("p"), 
-        			Var.alloc("o")));
-        	query.setConstructTemplate(new Template(bgp));
+        	QueryIterator qIter1 = QueryIterRoot.create(initial, execCxt) ;
+            qIter = new TripleQueryIterator(qIter1, execCxt, triples);
+        	query.setConstructTemplate(template);
         	//throw new MarkLogicJenaException("Construct Type Supported by Engine Layer");
         } else if (query.isSelectType()) {
         	sparqlManager.executeSelect(qdef, handle, tx);

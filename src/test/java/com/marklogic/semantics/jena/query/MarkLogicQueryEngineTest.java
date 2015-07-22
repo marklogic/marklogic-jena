@@ -97,7 +97,6 @@ public class MarkLogicQueryEngineTest extends JenaTestBase {
                 .create("PREFIX : <http://example.org/> CONSTRUCT { :r100 ?p ?o } WHERE { :r1 ?p ?o }",
                         ds);
         Model solution = queryExec.execConstruct();
-        System.out.println(solution.getGraph().size());
         assertTrue("Got a solution with four triples", solution.getGraph()
                 .size() > 0);
     }

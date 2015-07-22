@@ -25,12 +25,11 @@
         <appender-ref ref="STDOUT" />
     </logger>
     
-    
-    <logger name="o.a.h.headers" level="INFO" additivity="false">
+    <logger name="org.apache.http.*" level="DEBUG" additivity="false">
         <appender-ref ref="STDOUT" />
     </logger>
     
-    <root level="DEBUG">
+    <root level="INFO">
         <appender-ref ref="STDOUT" />
     </root>
     
