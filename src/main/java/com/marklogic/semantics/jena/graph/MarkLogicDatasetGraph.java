@@ -139,7 +139,6 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 
 	@Override
 	public void clear() {
-		super.clear();
 		String query = "DROP SILENT ALL";
 		SPARQLQueryDefinition qdef = sparqlQueryManager.newQueryDefinition(query);
 		sparqlQueryManager.executeUpdate(qdef);
