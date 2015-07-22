@@ -145,9 +145,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 		sparqlQueryManager.executeUpdate(qdef);
 	}
 	
-
-	
-	private SPARQLQueryDefinition bindObject(SPARQLQueryDefinition qdef, String nodeName, Node objectNode) {
+	public static SPARQLQueryDefinition bindObject(SPARQLQueryDefinition qdef, String nodeName, Node objectNode) {
 		SPARQLBindings bindings = qdef.getBindings();
 		if (objectNode.isURI()) {
 			bindings.bind(nodeName, objectNode.getURI());

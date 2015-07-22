@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configuration>
+<configuration debug="true">
 
     <!-- Send debug messages to System.out -->
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
@@ -9,23 +9,15 @@
         </encoder>
     </appender>
 
-    <logger name="com.marklogic.client.*" level="INFO" additivity="false">
-        <appender-ref ref="BUFFER" />
-    </logger>
-
-    <logger name="com.marklogic.semantics.jena.graph.*" level="DEBUG" additivity="false">
+    <logger name="com.marklogic.client" level="DEBUG" additivity="false">
         <appender-ref ref="STDOUT" />
     </logger>
 
-    <logger name="com.marklogic.semantics.jena.query.*" level="DEBUG" additivity="false">
+    <logger name="com.marklogic.semantics" level="DEBUG" additivity="false">
         <appender-ref ref="STDOUT" />
     </logger>
     
-    <logger name="com.marklogic.semantics.jena.*" level="DEBUG" additivity="false">
-        <appender-ref ref="STDOUT" />
-    </logger>
-    
-    <logger name="org.apache.http.*" level="DEBUG" additivity="false">
+    <logger name="org.apache.http" level="INFO" additivity="false">
         <appender-ref ref="STDOUT" />
     </logger>
     

@@ -23,6 +23,7 @@ import org.apache.jena.riot.RiotReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.ResultSet;
@@ -99,6 +100,13 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
         SPARQLQueryDefinition qdef = sparqlManager.newQueryDefinition(query.toString());
         
         InputStreamHandle handle = new InputStreamHandle();
+        
+        Iterator<Var> varsIterator = initial.vars();
+        while (initial != null && varsIterator.hasNext()) {
+            Var v = varsIterator.next();
+            Node bindingValue = initial.get(v);
+            MarkLogicDatasetGraph.bindObject(qdef, v.getName(), bindingValue);
+        }
         
         if (query.isAskType()) {
         	boolean answer = sparqlManager.executeAsk(qdef, tx);

@@ -32,10 +32,13 @@ import com.hp.hpl.jena.query.DatasetFactory;
 import com.hp.hpl.jena.query.QueryExecution;
 import com.hp.hpl.jena.query.QueryExecutionFactory;
 import com.hp.hpl.jena.query.QuerySolution;
+import com.hp.hpl.jena.query.QuerySolutionMap;
 import com.hp.hpl.jena.query.ReadWrite;
 import com.hp.hpl.jena.query.ResultSet;
+import com.hp.hpl.jena.query.ResultSetFormatter;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.ResourceFactory;
 import com.hp.hpl.jena.sparql.graph.GraphFactory;
 import com.marklogic.client.ResourceNotFoundException;
 import com.marklogic.semantics.jena.JenaTestBase;
@@ -112,7 +115,6 @@ public class MarkLogicQueryEngineTest extends JenaTestBase {
         // add a graph during transaction
         try {
             ds.begin(ReadWrite.WRITE);
-            Node g1 = NodeFactory.createURI("duringtransaction");
             Triple triple = new Triple(NodeFactory.createURI("s529"),
                     NodeFactory.createURI("p104"), NodeFactory.createURI("o22"));
             Graph transGraph = GraphFactory.createGraphMem();
@@ -145,7 +147,7 @@ public class MarkLogicQueryEngineTest extends JenaTestBase {
             assertEquals("Query worked during transaction", "o22", qs.get("o").toString());
             ds.commit();
 
-            setupDataset();
+            //setupDataset();
             qe = QueryExecutionFactory.create("select ?o where {<s529> ?p ?o}", ds);
             results = qe.execSelect();
             assertTrue("Query should execute against committed data",
@@ -163,10 +165,24 @@ public class MarkLogicQueryEngineTest extends JenaTestBase {
         }
     }
 
-    // customizations, obtainable with MarkLogicQueryExecution directly? TODO
     @Test
-    @Ignore
     public void testBindings() {
+        String query = "SELECT ?s ?o where { ?s <http://example.org/p1> ?o }";
+        QuerySolutionMap binding = new QuerySolutionMap();
+        binding.add("s", ResourceFactory.createResource("http://example.org/r1"));
+        QueryExecution exec = QueryExecutionFactory.create(query, ds, binding);
+        ResultSet results = exec.execSelect();
+        QuerySolution result = results.next();
+        assertFalse("Only one result for bound query", results.hasNext());
+        assertEquals("string value 0", result.get("o").asLiteral().getValue());
+        
+        binding = new QuerySolutionMap();
+        binding.add("s", ResourceFactory.createResource("http://example.org/r2"));
+        exec = QueryExecutionFactory.create(query, ds, binding);
+        results = exec.execSelect();
+        result = results.next();
+        assertFalse("Only one result for bound query", results.hasNext());
+        assertEquals( "string value 2", result.get("o").asLiteral().getValue());
 
     }
 
