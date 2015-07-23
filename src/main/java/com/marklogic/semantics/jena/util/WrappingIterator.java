@@ -20,6 +20,10 @@ import java.util.Iterator;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.NodeFactory;
 
+/**
+ * Adapting iterator from MarkLogic's Iterator<String>
+ * to Jena's Iterator<Node>
+ */
 public class WrappingIterator implements Iterator<Node> {
 
 	private Iterator<String> iterator;

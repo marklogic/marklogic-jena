@@ -17,14 +17,16 @@ package com.marklogic.semantics.jena.graph;
 
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.semantics.jena.query.MarkLogicQueryEngine;
+import com.marklogic.semantics.jena.query.MarkLogicUpdateEngine;
 
 public class MarkLogicDatasetGraphFactory {
 
 	public static MarkLogicDatasetGraph createDatasetGraph(DatabaseClient client) {
-		//MarkLogicDatasetGraph datasetGraph = new MarkLogicDatasetGraph(client);
 		MarkLogicDatasetGraph datasetGraph = new MarkLogicDatasetGraph(client);
 		MarkLogicQueryEngine.unregister();
 		MarkLogicQueryEngine.register(client);
+		MarkLogicUpdateEngine.unregister();
+		MarkLogicUpdateEngine.register(client);
 		return datasetGraph;
 	}
 

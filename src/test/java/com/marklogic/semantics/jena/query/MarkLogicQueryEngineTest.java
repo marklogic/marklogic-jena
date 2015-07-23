@@ -19,6 +19,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -39,7 +42,9 @@ import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.ResourceFactory;
 import com.hp.hpl.jena.sparql.graph.GraphFactory;
 import com.marklogic.client.ResourceNotFoundException;
+import com.marklogic.client.semantics.SPARQLRuleset;
 import com.marklogic.semantics.jena.JenaTestBase;
+import com.marklogic.semantics.jena.graph.MarkLogicDatasetGraph;
 
 public class MarkLogicQueryEngineTest extends JenaTestBase {
 
@@ -184,9 +189,34 @@ public class MarkLogicQueryEngineTest extends JenaTestBase {
 
     }
 
+    private List<String> project(ResultSet results, String key) {
+        List<String> strings = new ArrayList<String>();
+        while (results.hasNext()) {
+            QuerySolution qs = results.next();
+            strings.add((String) qs.get(key).asNode().getURI());
+        }
+        return strings;
+    }
+    
     @Test
-    @Ignore
     public void testRulesets() {
+        MarkLogicDatasetGraph infTestDsg = getMarkLogicDatasetGraph();
+        Dataset ds = DatasetFactory.create(infTestDsg);
+        String query = "prefix : <http://example.org/> select ?o where { :r3 a ?o }";
+        QueryExecution exec = QueryExecutionFactory.create(query, ds);
+        ResultSet results = exec.execSelect();
+        
+        List<String> subjects = project(results, "o");
+        assertEquals("No inference, got back list of size 1", 1, subjects.size());
+        
+        infTestDsg.withRulesets(SPARQLRuleset.RDFS);
+         // MarkLogicQuery inferringQuery = MarkLogicQuery.create(query);
+        // inferringQuery.setRulesets(SPARQLRuleset.RDFS);
+        exec = QueryExecutionFactory.create(query, ds);
+        results = exec.execSelect();
+        subjects = project(results, "o");
+        System.out.println(subjects);
+        assertEquals("Using RDFs got back two class assertions", 2, subjects.size());
 
     }
 

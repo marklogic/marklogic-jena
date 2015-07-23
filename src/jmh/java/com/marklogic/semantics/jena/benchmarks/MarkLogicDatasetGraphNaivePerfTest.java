@@ -31,7 +31,7 @@ public class MarkLogicDatasetGraphNaivePerfTest {
     private static Logger log = LoggerFactory.getLogger(MarkLogicDatasetGraphNaivePerfTest.class);
 	private MarkLogicDatasetGraph markLogicDatasetGraph;
 	
-	Dataset dataset;
+	private static Dataset dataset;
 	
 	@Setup
 	public void loadData() {
@@ -52,7 +52,7 @@ public class MarkLogicDatasetGraphNaivePerfTest {
                 user, pass, Authentication.DIGEST);
         DatasetGraph dg = MarkLogicDatasetGraphFactory
                 .createDatasetGraph(client);
-        Dataset ds = DatasetFactory.create(dg);
+        dataset = DatasetFactory.create(dg);
 
         markLogicDatasetGraph = MarkLogicDatasetGraphFactory
                 .createDatasetGraph(client);

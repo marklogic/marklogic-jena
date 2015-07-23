@@ -14,6 +14,10 @@ import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.sparql.graph.GraphFactory;
 import com.marklogic.semantics.jena.graph.MarkLogicDatasetGraph;
 
+/**
+ * A timer task that flushes a cache of pending triple add statements
+ * periodically.
+ */
 public class WriteCacheTimerTask extends TimerTask {
 
     private ConcurrentHashMap<Node, Graph> cache;

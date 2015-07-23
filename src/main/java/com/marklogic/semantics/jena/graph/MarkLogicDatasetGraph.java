@@ -18,6 +18,9 @@ package com.marklogic.semantics.jena.graph;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Timer;
@@ -51,6 +54,7 @@ import com.marklogic.client.semantics.RDFMimeTypes;
 import com.marklogic.client.semantics.SPARQLBindings;
 import com.marklogic.client.semantics.SPARQLQueryDefinition;
 import com.marklogic.client.semantics.SPARQLQueryManager;
+import com.marklogic.client.semantics.SPARQLRuleset;
 import com.marklogic.semantics.jena.MarkLogicTransactionException;
 import com.marklogic.semantics.jena.util.OutputStreamRIOTSender;
 import com.marklogic.semantics.jena.util.QuadsIterator;
@@ -101,7 +105,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	public void clear() {
 		String query = "DROP SILENT ALL";
 		SPARQLQueryDefinition qdef = sparqlQueryManager.newQueryDefinition(query);
-		sparqlQueryManager.executeUpdate(qdef);
+		sparqlQueryManager.executeUpdate(qdef, currentTransaction);
 	}
 	
 	public static SPARQLQueryDefinition bindObject(SPARQLQueryDefinition qdef, String nodeName, Node objectNode) {
@@ -138,13 +142,6 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
         p = skolemize(p);
         o = skolemize(o);
 	    cache.add(null, s, p, o);
-//		String query = "INSERT DATA { ?s ?p ?o }";
-//		SPARQLQueryDefinition qdef = sparqlQueryManager.newQueryDefinition(query);
-//		log.debug(s.toString());
-//		qdef.withBinding("s", s.getURI());
-//		qdef.withBinding("p", p.getURI());
-//		qdef = bindObject(qdef, "o", o);
-//		sparqlQueryManager.executeUpdate(qdef);
 	}
 
 	private Node skolemize(Node s) {
@@ -162,13 +159,6 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 		p = skolemize(p);
 		o = skolemize(o);
 		cache.add(g, s, p, o);
-//		String query = "INSERT DATA { GRAPH <" + g.getURI() + "> { ?s ?p ?o } }";
-//		SPARQLQueryDefinition qdef = sparqlQueryManager.newQueryDefinition(query);
-//		//qdef.withBinding("g", g.getURI());
-//		qdef.withBinding("s", s.getURI());
-//		qdef.withBinding("p", p.getURI());
-//		qdef = bindObject(qdef, "o", o);
-//		sparqlQueryManager.executeUpdate(qdef);
 	}
 
 	@Override
@@ -183,7 +173,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 		qdef.withBinding("s", s.getURI());
 		qdef.withBinding("p", p.getURI());
 		qdef = bindObject(qdef, "o", o);
-		sparqlQueryManager.executeUpdate(qdef);
+		sparqlQueryManager.executeUpdate(qdef, currentTransaction);
 	}
 
 	@Override
@@ -203,7 +193,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 		qdef.withBinding("s", s.getURI());
 		qdef.withBinding("p", p.getURI());
 		qdef = bindObject(qdef, "o", o);
-		sparqlQueryManager.executeUpdate(qdef);
+		sparqlQueryManager.executeUpdate(qdef, currentTransaction);
 	}
 
 	private InputStream selectTriplesInGraph(String graphName, Node s, Node p, Node o) {
@@ -228,7 +218,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 		sb.append("}");
 		qdef.setSparql(sb.toString());
 		qdef.setDefaultGraphUris(graphName);
-		InputStreamHandle results = sparqlQueryManager.executeSelect(qdef, new InputStreamHandle());
+		InputStreamHandle results = sparqlQueryManager.executeSelect(qdef, new InputStreamHandle(), currentTransaction);
 		return results.get();
 	}
 	@Override
@@ -349,7 +339,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 		InputStreamHandle handle = new InputStreamHandle();
 		Graph graph = GraphFactory.createDefaultGraph();
 		try {
-			graphManager.read(DEFAULT_GRAPH_URI, handle, this.currentTransaction);
+			graphManager.read(DEFAULT_GRAPH_URI, handle, currentTransaction);
 			RDFDataMgr.read(graph, handle.get(), Lang.NTRIPLES);
 		} catch (ResourceNotFoundException e) {
 			// empty or non-existent.
@@ -379,7 +369,12 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 		graphManager.merge(graphName.getURI(), handle, currentTransaction);
 	}
 	
-	// NOT override
+	/**
+	 * Merges triples into a graph on the MarkLogic server.  mergeGraph()
+	 * is not part of Jena's DatasetGraph interface.
+	 * @param graphName The graph to merge with server state.
+	 * @param graph The graph data.
+	 */
 	public void mergeGraph(Node graphName, Graph graph) {
         WriterGraphRIOT writer = RDFDataMgr.createGraphWriter(Lang.NTRIPLES);
         OutputStreamRIOTSender sender = new OutputStreamRIOTSender(writer);
@@ -405,11 +400,45 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 		//graphManager.deletePermissions(uri);
 	}
 
+	/**
+	 * Returns the current transaction for this dataset connection, or null
+	 * if there is no currently-running transaction.
+	 * @return The Transaction, or null.
+	 */
 	public Transaction getCurrentTransaction() {
 		return this.currentTransaction;
 	}
 	
+	
+	/**
+	 * Forces the quads cache to flush to the server.
+	 */
 	public void sync() {
 	    cache.forceRun();
 	}
+	
+	/**
+	 * An inferencing datasetGraph will add ruleset config to each query
+	 */
+    private SPARQLRuleset[] rulesets;
+    
+    public void setRulesets(SPARQLRuleset... rulesets) {
+        this.rulesets = rulesets;
+    }
+    public SPARQLRuleset[] getRulesets() {
+        return this.rulesets;
+    }
+    
+    public MarkLogicDatasetGraph withRulesets(SPARQLRuleset... rulesets) {
+        if (this.rulesets == null) {
+            this.rulesets = rulesets;
+        }
+        else {
+            Collection<SPARQLRuleset> collection = new ArrayList<SPARQLRuleset>();
+            collection.addAll(Arrays.asList(this.rulesets));
+            collection.addAll(Arrays.asList(rulesets));
+            this.rulesets = collection.toArray(new SPARQLRuleset[] {});
+        }
+        return this;
+    }
 }

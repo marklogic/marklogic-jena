@@ -60,30 +60,88 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
 
 
 	private static Logger log = LoggerFactory.getLogger(MarkLogicQueryEngine.class);
-	
+	private BasicPattern bgp = null;
+	private Template template = null;
+	private MarkLogicDatasetGraph markLogicDatasetGraph;
+	private Binding initial;
 
+	/**
+	 * gets the factory for making MarkLogicQueryEngine.
+	 * @return a QueryEngineFactory that makes MarkLogicQueryEngine instances.
+	 */
 	static public QueryEngineFactory getFactory() { return factory ; } 
-    static public void register()       { QueryEngineRegistry.addFactory(factory) ; }
-    static public void unregister()     { QueryEngineRegistry.removeFactory(factory) ; }
-    static public SPARQLQueryManager sparqlManager;
-    private BasicPattern bgp = null;
-    private Template template = null;
+	
+	/**
+	 * Registers the factory with Jena's QueryEngineRegistry.
+	 */
+    public static void register(DatabaseClient client) {
+        QueryEngineRegistry.addFactory(factory) ;
+        sparqlManager = client.newSPARQLQueryManager();
+    }
+    
+    /**
+     * Removes the factory from Jena's QueryEngineRegistry.
+     */
+    static public void unregister()     { 
+        QueryEngineRegistry.removeFactory(factory);
+        sparqlManager = null;
+    }
+    
+    static private SPARQLQueryManager sparqlManager;
    
-    public MarkLogicQueryEngine(Query query, DatasetGraph dataset,
+    /**
+     * Constructor.
+     * @param query A Jena Query.  This engine does not use all parts of the Query hierarchy.
+     * @param datasetGraph The MarkLogic instance viewed through Jena. Must be a MarkLogicDatasetGraph. 
+     * @param initial Bindings for the query.
+     * @param context
+     */
+    private MarkLogicQueryEngine(Query query, DatasetGraph datasetGraph,
             Binding initial, Context context) {
-        super(query, dataset, initial, context);
+        super(query, datasetGraph, initial, context);
         bgp = new BasicPattern();
         bgp.add(new Triple(
                 Var.alloc("s"), 
                 Var.alloc("p"), 
                 Var.alloc("o")));
         template = new Template(bgp);
+        this.markLogicDatasetGraph = (MarkLogicDatasetGraph) datasetGraph;
+        this.initial = initial;
     }
     
-    public MarkLogicQueryEngine(Query query, DatasetGraph dataset) {
-        super(query, dataset, null, null);
+    /**
+     * Constructor.
+     * @param query A Jena Query.  This engine does not use all parts of the Query hierarchy.
+     * @param datasetGraph The MarkLogic instance viewed through Jena. Must be a MarkLogicDatasetGraph. 
+     * @param initial Bindings for the query.
+     * @param context
+     */
+    private MarkLogicQueryEngine(Query query, DatasetGraph dataset) {
+        this(query, dataset, null, null);
     }
-   
+
+    private SPARQLQueryDefinition prepareQueryDefinition(Query query) {
+        SPARQLQueryDefinition qdef = sparqlManager.newQueryDefinition(query.toString());
+        if (markLogicDatasetGraph.getRulesets() != null) {
+            qdef.setRulesets(markLogicDatasetGraph.getRulesets());
+        }
+        bindVariables(qdef, this.initial, markLogicDatasetGraph);
+        return qdef;
+    }
+    
+    static void bindVariables(SPARQLQueryDefinition qdef, Binding initial, MarkLogicDatasetGraph markLogicDatasetGraph) {
+        if (initial == null) {
+        }
+        else {
+            Iterator<Var> varsIterator = initial.vars();
+            while (initial != null && varsIterator.hasNext()) {
+                Var v = varsIterator.next();
+                Node bindingValue = initial.get(v);
+                MarkLogicDatasetGraph.bindObject(qdef, v.getName(), bindingValue);
+            }
+        }
+    }
+    
     @Override
     public QueryIterator eval(Op op, DatasetGraph dsg, Binding initial, Context context)
     {
@@ -95,19 +153,12 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
     	markLogicDatasetGraph.sync();
     	Transaction tx = markLogicDatasetGraph.getCurrentTransaction();
         QueryIterator qIter = null;
-        
+
         Query query = (Query)context.get(ARQConstants.sysCurrentQuery);
-        
-        SPARQLQueryDefinition qdef = sparqlManager.newQueryDefinition(query.toString());
-        
+
+        SPARQLQueryDefinition qdef = prepareQueryDefinition(query);
+       
         InputStreamHandle handle = new InputStreamHandle();
-        
-        Iterator<Var> varsIterator = initial.vars();
-        while (initial != null && varsIterator.hasNext()) {
-            Var v = varsIterator.next();
-            Node bindingValue = initial.get(v);
-            MarkLogicDatasetGraph.bindObject(qdef, v.getName(), bindingValue);
-        }
         
         if (query.isAskType()) {
         	boolean answer = sparqlManager.executeAsk(qdef, tx);
@@ -167,10 +218,6 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
     }
 
 
-    public static void register(DatabaseClient client) {
-        register();
-        sparqlManager = client.newSPARQLQueryManager();
-    }
     
     public class BooleanQueryIterator extends QueryIter1 implements QueryIterator {
     	private boolean answer;
@@ -234,14 +281,12 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
 
 		@Override
 		protected void requestSubCancel() {
-			// TODO Auto-generated method stub
-			
+			// not needed?
 		}
 
 		@Override
 		protected void closeSubIterator() {
-			// TODO Auto-generated method stub
-			
+			// not needed?
 		}
 
 	}
