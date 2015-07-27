@@ -31,8 +31,10 @@ import com.hp.hpl.jena.graph.NodeFactory;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.query.Dataset;
 import com.hp.hpl.jena.query.DatasetFactory;
+import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QueryExecution;
 import com.hp.hpl.jena.query.QueryExecutionFactory;
+import com.hp.hpl.jena.query.QueryFactory;
 import com.hp.hpl.jena.query.QuerySolution;
 import com.hp.hpl.jena.query.QuerySolutionMap;
 import com.hp.hpl.jena.query.ReadWrite;
@@ -108,8 +110,36 @@ public class MarkLogicQueryEngineTest extends JenaTestBase {
     }
 
     @Test
-    @Ignore
     public void testPagination() {
+        Query query = QueryFactory.create("prefix : <http://example.org/> select ?p ?o where { :r1 ?p ?o}");
+        query.setLimit(5);
+        query.setOffset(0);
+        QueryExecution queryExec = QueryExecutionFactory.create(query, ds);
+        ResultSet results = queryExec.execSelect();
+        int i;
+        for (i=0; results.hasNext(); i++) {
+            QuerySolution qs = results.next();
+        }
+        assertEquals("Got proper start and offset for query", 4, i );
+        
+        query.setLimit(5);
+        query.setOffset(1);
+        queryExec = QueryExecutionFactory.create(query, ds);
+        results = queryExec.execSelect();
+        for (i=0; results.hasNext(); i++) {
+            QuerySolution qs = results.next();
+        }
+        assertEquals("Got proper start and offset for query", 3, i );
+        query.setLimit(2);
+        query.setOffset(0);
+        queryExec = QueryExecutionFactory.create(query, ds);
+        results = queryExec.execSelect();
+        for (i=0; results.hasNext(); i++) {
+            QuerySolution qs = results.next();
+        }
+        assertEquals("Got proper start and offset for query", 2, i );
+        
+        
 
     }
 

@@ -126,6 +126,7 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
             qdef.setRulesets(markLogicDatasetGraph.getRulesets());
         }
         bindVariables(qdef, this.initial, markLogicDatasetGraph);
+       
         return qdef;
     }
     
@@ -155,7 +156,19 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
         QueryIterator qIter = null;
 
         Query query = (Query)context.get(ARQConstants.sysCurrentQuery);
-
+        
+        long limit = -1;
+        long offset = -1;
+        if (query.hasLimit()) {
+            limit = query.getLimit();
+            query.setLimit(Query.NOLIMIT);
+        }
+        if (query.hasOffset()) {
+            // offset is off-by-one from 'start'
+            offset = query.getOffset() + 1;
+            query.setOffset(Query.NOLIMIT);
+        }
+        
         SPARQLQueryDefinition qdef = prepareQueryDefinition(query);
        
         InputStreamHandle handle = new InputStreamHandle();
@@ -176,7 +189,7 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
         	query.setConstructTemplate(template);
         	//throw new MarkLogicJenaException("Construct Type Supported by Engine Layer");
         } else if (query.isSelectType()) {
-        	sparqlManager.executeSelect(qdef, handle, tx);
+        	sparqlManager.executeSelect(qdef, handle, offset, limit, tx);
             ResultSet results = JSONInput.fromJSON(handle.get());
             qIter = new QueryIteratorResultSet(results);
         } else {
