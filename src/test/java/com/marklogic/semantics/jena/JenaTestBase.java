@@ -25,8 +25,6 @@ import com.hp.hpl.jena.sparql.core.DatasetGraph;
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.DatabaseClientFactory;
 import com.marklogic.client.DatabaseClientFactory.Authentication;
-import com.marklogic.semantics.jena.graph.MarkLogicDatasetGraph;
-import com.marklogic.semantics.jena.graph.MarkLogicDatasetGraphFactory;
 
 public class JenaTestBase {
     public static DatabaseClient readerClient;

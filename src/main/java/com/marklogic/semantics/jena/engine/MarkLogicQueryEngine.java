@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.marklogic.semantics.jena.query;
+package com.marklogic.semantics.jena.engine;
 
 import java.util.Iterator;
 
@@ -48,14 +48,11 @@ import com.hp.hpl.jena.sparql.engine.main.QueryEngineMain;
 import com.hp.hpl.jena.sparql.resultset.JSONInput;
 import com.hp.hpl.jena.sparql.syntax.Template;
 import com.hp.hpl.jena.sparql.util.Context;
-import com.marklogic.client.DatabaseClient;
-import com.marklogic.client.Transaction;
 import com.marklogic.client.io.InputStreamHandle;
 import com.marklogic.client.semantics.SPARQLQueryDefinition;
-import com.marklogic.client.semantics.SPARQLQueryManager;
+import com.marklogic.semantics.jena.MarkLogicDatasetGraph;
 import com.marklogic.semantics.jena.MarkLogicJenaException;
 import com.marklogic.semantics.jena.client.JenaDatabaseClient;
-import com.marklogic.semantics.jena.graph.MarkLogicDatasetGraph;
 
 public class MarkLogicQueryEngine extends QueryEngineMain {
 
@@ -150,8 +147,7 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
     	MarkLogicDatasetGraph markLogicDatasetGraph = (MarkLogicDatasetGraph) dsg;
     	JenaDatabaseClient client = markLogicDatasetGraph.getDatabaseClient();
     	markLogicDatasetGraph.sync();
-    	Transaction tx = markLogicDatasetGraph.getCurrentTransaction();
-        QueryIterator qIter = null;
+    	QueryIterator qIter = null;
 
         Query query = (Query)context.get(ARQConstants.sysCurrentQuery);
         
@@ -172,22 +168,22 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
         InputStreamHandle handle = new InputStreamHandle();
         
         if (query.isAskType()) {
-        	boolean answer = client.executeAsk(qdef, tx);
+        	boolean answer = client.executeAsk(qdef);
         	log.debug("Answer from server is " + answer);
         	QueryIterator qIter1 = QueryIterRoot.create(initial, execCxt) ;
 			qIter = new BooleanQueryIterator(qIter1, execCxt, answer);
         } else if (query.isConstructType() || query.isDescribeType()) {
         	// what I need to create here is a QueryIterator that contains
         	// bindings of s, p, and o to every triple.
-        	if (query.isConstructType()) client.executeConstruct(qdef, handle, tx);
-        	if (query.isDescribeType()) client.executeDescribe(qdef, handle, tx);
+        	if (query.isConstructType()) client.executeConstruct(qdef, handle);
+        	if (query.isDescribeType()) client.executeDescribe(qdef, handle);
         	Iterator<Triple> triples = RiotReader.createIteratorTriples(handle.get(), Lang.NTRIPLES, null);
         	QueryIterator qIter1 = QueryIterRoot.create(initial, execCxt) ;
             qIter = new TripleQueryIterator(qIter1, execCxt, triples);
         	query.setConstructTemplate(template);
         	//throw new MarkLogicJenaException("Construct Type Supported by Engine Layer");
         } else if (query.isSelectType()) {
-        	client.executeSelect(qdef, handle, offset, limit, tx);
+        	client.executeSelect(qdef, handle, offset, limit);
             ResultSet results = JSONInput.fromJSON(handle.get());
             qIter = new QueryIteratorResultSet(results);
         } else {

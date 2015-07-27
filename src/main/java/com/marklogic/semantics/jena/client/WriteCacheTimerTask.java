@@ -1,4 +1,4 @@
-package com.marklogic.semantics.jena.util;
+package com.marklogic.semantics.jena.client;
 
 import java.util.Date;
 import java.util.TimerTask;
@@ -12,7 +12,7 @@ import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.NodeFactory;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.sparql.graph.GraphFactory;
-import com.marklogic.semantics.jena.graph.MarkLogicDatasetGraph;
+import com.marklogic.semantics.jena.MarkLogicDatasetGraph;
 
 /**
  * A timer task that flushes a cache of pending triple add statements
@@ -21,7 +21,7 @@ import com.marklogic.semantics.jena.graph.MarkLogicDatasetGraph;
 public class WriteCacheTimerTask extends TimerTask {
 
     private ConcurrentHashMap<Node, Graph> cache;
-    private MarkLogicDatasetGraph outer;
+    private JenaDatabaseClient client;
 
     private static long DEFAULT_CACHE_SIZE = 500;
     private long cacheSize = DEFAULT_CACHE_SIZE;
@@ -32,10 +32,10 @@ public class WriteCacheTimerTask extends TimerTask {
     
     private static Logger log = LoggerFactory.getLogger(WriteCacheTimerTask.class);
     
-    public WriteCacheTimerTask(MarkLogicDatasetGraph outer) {
+    public WriteCacheTimerTask(JenaDatabaseClient client) {
         super();
         this.cache = new ConcurrentHashMap<Node, Graph>();
-        this.outer = outer;
+        this.client = client;
     }
 
     @Override
@@ -52,10 +52,10 @@ public class WriteCacheTimerTask extends TimerTask {
     private synchronized void flush() {
         for (Node graphNode : cache.keySet()) {
             log.debug("Persisting " + graphNode);
-            outer.mergeGraph(graphNode, cache.get(graphNode));
+            client.mergeGraph(graphNode.getURI(), cache.get(graphNode));
         }
         if (cache.containsKey(DEFAULT_GRAPH_NODE)) {
-            outer.mergeGraph(DEFAULT_GRAPH_NODE, cache.get(DEFAULT_GRAPH_NODE));
+            client.mergeGraph(MarkLogicDatasetGraph.DEFAULT_GRAPH_URI, cache.get(DEFAULT_GRAPH_NODE));
         }
         lastCacheAccess = new Date();
         cache.clear();

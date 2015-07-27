@@ -44,10 +44,9 @@ import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.ResourceFactory;
 import com.hp.hpl.jena.sparql.graph.GraphFactory;
 import com.marklogic.client.ResourceNotFoundException;
-import com.marklogic.client.query.QueryDefinition;
 import com.marklogic.client.semantics.SPARQLRuleset;
 import com.marklogic.semantics.jena.JenaTestBase;
-import com.marklogic.semantics.jena.graph.MarkLogicDatasetGraph;
+import com.marklogic.semantics.jena.MarkLogicDatasetGraph;
 
 public class MarkLogicQueryEngineTest extends JenaTestBase {
 
@@ -119,7 +118,7 @@ public class MarkLogicQueryEngineTest extends JenaTestBase {
         ResultSet results = queryExec.execSelect();
         int i;
         for (i=0; results.hasNext(); i++) {
-            QuerySolution qs = results.next();
+            results.next();
         }
         assertEquals("Got proper start and offset for query", 4, i );
         
@@ -128,7 +127,7 @@ public class MarkLogicQueryEngineTest extends JenaTestBase {
         queryExec = QueryExecutionFactory.create(query, ds);
         results = queryExec.execSelect();
         for (i=0; results.hasNext(); i++) {
-            QuerySolution qs = results.next();
+            results.next();
         }
         assertEquals("Got proper start and offset for query", 3, i );
         query.setLimit(2);

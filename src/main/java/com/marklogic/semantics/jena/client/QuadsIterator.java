@@ -1,4 +1,4 @@
-package com.marklogic.semantics.jena.util;
+package com.marklogic.semantics.jena.client;
 
 import java.io.InputStream;
 import java.util.Iterator;

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.marklogic.semantics.jena.graph;
+package com.marklogic.semantics.jena;
 
 import java.io.InputStream;
 import java.net.URI;
@@ -23,11 +23,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Locale;
-import java.util.Timer;
 
-import org.apache.jena.riot.Lang;
-import org.apache.jena.riot.RDFDataMgr;
-import org.apache.jena.riot.WriterGraphRIOT;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,27 +37,16 @@ import com.hp.hpl.jena.sparql.core.DatasetGraph;
 import com.hp.hpl.jena.sparql.core.DatasetGraphTriplesQuads;
 import com.hp.hpl.jena.sparql.core.Quad;
 import com.hp.hpl.jena.sparql.core.Transactional;
-import com.hp.hpl.jena.sparql.graph.GraphFactory;
 import com.hp.hpl.jena.update.GraphStore;
-import com.marklogic.client.DatabaseClient;
-import com.marklogic.client.ResourceNotFoundException;
-import com.marklogic.client.Transaction;
 import com.marklogic.client.io.InputStreamHandle;
-import com.marklogic.client.io.OutputStreamHandle;
 import com.marklogic.client.query.QueryDefinition;
-import com.marklogic.client.semantics.GraphManager;
 import com.marklogic.client.semantics.GraphPermissions;
-import com.marklogic.client.semantics.RDFMimeTypes;
 import com.marklogic.client.semantics.SPARQLBindings;
 import com.marklogic.client.semantics.SPARQLQueryDefinition;
-import com.marklogic.client.semantics.SPARQLQueryManager;
 import com.marklogic.client.semantics.SPARQLRuleset;
-import com.marklogic.semantics.jena.MarkLogicTransactionException;
 import com.marklogic.semantics.jena.client.JenaDatabaseClient;
-import com.marklogic.semantics.jena.util.OutputStreamRIOTSender;
-import com.marklogic.semantics.jena.util.QuadsIterator;
-import com.marklogic.semantics.jena.util.WrappingIterator;
-import com.marklogic.semantics.jena.util.WriteCacheTimerTask;
+import com.marklogic.semantics.jena.client.QuadsIterator;
+import com.marklogic.semantics.jena.client.WrappingIterator;
 
 /**
  * A representation of MarkLogic's triple store as a DatasetGraph,
@@ -75,9 +60,6 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	static Logger log = LoggerFactory.getLogger(MarkLogicDatasetGraph.class);
 	
 	private JenaDatabaseClient client;
-	private WriteCacheTimerTask cache;
-
-	private Transaction currentTransaction;
 	
 	/*
      * An inferencing datasetGraph will add ruleset config to each query
@@ -97,9 +79,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	 */
 	public MarkLogicDatasetGraph(JenaDatabaseClient jenaClient) {
 		this.client = jenaClient;
-		this.cache = new WriteCacheTimerTask(this);
-		Timer timer = new Timer();
-        timer.scheduleAtFixedRate(cache, 1000, 1000);
+		
 	}
 
 	/**
@@ -120,7 +100,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	public void clear() {
 		String query = "DROP SILENT ALL";
 		SPARQLQueryDefinition qdef = client.newQueryDefinition(query);
-		client.executeUpdate(qdef, currentTransaction);
+		client.executeUpdate(qdef);
 	}
 	
 	/**
@@ -167,7 +147,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
         s = skolemize(s);
         p = skolemize(p);
         o = skolemize(o);
-	    cache.add(null, s, p, o);
+	    client.sinkQuad(null, s, p, o);
 	}
 
 	private Node skolemize(Node s) {
@@ -187,7 +167,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 		s = skolemize(s);
 		p = skolemize(p);
 		o = skolemize(o);
-		cache.add(g, s, p, o);
+		client.sinkQuad(g, s, p, o);
 	}
 
 	/**
@@ -205,7 +185,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 		qdef.withBinding("s", s.getURI());
 		qdef.withBinding("p", p.getURI());
 		qdef = bindObject(qdef, "o", o);
-		client.executeUpdate(qdef, currentTransaction);
+		client.executeUpdate(qdef);
 	}
 
 	/**
@@ -228,7 +208,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 		qdef.withBinding("s", s.getURI());
 		qdef.withBinding("p", p.getURI());
 		qdef = bindObject(qdef, "o", o);
-		client.executeUpdate(qdef, currentTransaction);
+		client.executeUpdate(qdef);
 	}
 
 	private InputStream selectTriplesInGraph(String graphName, Node s, Node p, Node o) {
@@ -253,7 +233,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 		sb.append("}");
 		qdef.setSparql(sb.toString());
 		qdef.setDefaultGraphUris(graphName);
-		InputStreamHandle results = client.executeSelect(qdef, new InputStreamHandle(), currentTransaction);
+		InputStreamHandle results = client.executeSelect(qdef, new InputStreamHandle());
 		return results.get();
 	}
 	
@@ -305,7 +285,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 		}
 		sb.append("}");
 		qdef.setSparql(sb.toString());
-		InputStreamHandle results = client.executeSelect(qdef, new InputStreamHandle(), currentTransaction);
+		InputStreamHandle results = client.executeSelect(qdef, new InputStreamHandle());
 		return new QuadsIterator(results.get());
 	}
 	
@@ -315,41 +295,25 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	    this.addGraph(NodeFactory.createURI(DEFAULT_GRAPH_URI), g);
 	}
 
-	private void checkCurrentTransaction() {
-		if (this.currentTransaction == null) {
-			throw new MarkLogicTransactionException("No open transaction");
-		}
-	}
 	
 	@Override
 	public void begin(ReadWrite readWrite) {
-		if (readWrite == ReadWrite.READ) {
-			throw new MarkLogicTransactionException("MarkLogic only supports write transactions");
-		} else {
-			if (this.currentTransaction != null) {
-				throw new MarkLogicTransactionException("Only one open transaction per MarkLogicDatasetGraph instance.");
-			}
-			this.currentTransaction = client.openTransaction();
-		}
+		client.begin(readWrite);
 	}
 
 	@Override
 	public void commit() {
-		checkCurrentTransaction();
-		this.currentTransaction.commit();
-		this.currentTransaction = null;
+		client.commit();
 	}
 
 	@Override
 	public void abort() {
-		checkCurrentTransaction();
-		this.currentTransaction.rollback();
-		this.currentTransaction = null;
+		client.abort();
 	}
 
 	@Override
 	public boolean isInTransaction() {
-		return (this.currentTransaction != null);
+		return client.isInTransaction();
 	}
 
 	@Override
@@ -379,15 +343,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
      */
 	@Override
 	public Graph getDefaultGraph() {
-		InputStreamHandle handle = new InputStreamHandle();
-		Graph graph = GraphFactory.createDefaultGraph();
-		try {
-			client.readGraph(DEFAULT_GRAPH_URI, handle, currentTransaction);
-			RDFDataMgr.read(graph, handle.get(), Lang.NTRIPLES);
-		} catch (ResourceNotFoundException e) {
-			// empty or non-existent.
-		}
-		return graph;
+	    return client.readDefaultGraph();
 	}
 
 	/**
@@ -395,15 +351,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
      */
 	@Override
 	public Graph getGraph(Node graphNode) {
-		InputStreamHandle handle = new InputStreamHandle();
-		client.readGraph(graphNode.getURI(), handle, currentTransaction);
-		Graph graph = GraphFactory.createDefaultGraph();
-		try {
-			RDFDataMgr.read(graph, handle.get(), Lang.NTRIPLES);
-		} catch (NullPointerException e) {
-			
-		}
-		return graph;
+		return client.readGraph(graphNode.getURI());
 	}
 
 	/**
@@ -411,11 +359,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
      */
     @Override
 	public void addGraph(Node graphName, Graph graph) {
-	    WriterGraphRIOT writer = RDFDataMgr.createGraphWriter(Lang.NTRIPLES);
-		OutputStreamRIOTSender sender = new OutputStreamRIOTSender(writer);
-		sender.setGraph(graph);
-		OutputStreamHandle handle = new OutputStreamHandle(sender);
-		client.mergeGraph(graphName.getURI(), handle, currentTransaction);
+	    client.writeGraph(graphName.getURI(), graph);
 	}
 	
 	/**
@@ -425,11 +369,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	 * @param graph The graph data.
 	 */
 	public void mergeGraph(Node graphName, Graph graph) {
-        WriterGraphRIOT writer = RDFDataMgr.createGraphWriter(Lang.NTRIPLES);
-        OutputStreamRIOTSender sender = new OutputStreamRIOTSender(writer);
-        sender.setGraph(graph);
-        OutputStreamHandle handle = new OutputStreamHandle(sender);
-        client.mergeGraph(graphName.getURI(), handle, currentTransaction);
+        client.mergeGraph(graphName.getURI(), graph);
     }
 
 	/**
@@ -437,7 +377,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
      */
 	@Override
 	public void removeGraph(Node graphName) {
-		client.deleteGraph(graphName.getURI(), currentTransaction);
+		client.deleteGraph(graphName.getURI());
 	}
 
 	/**
@@ -468,22 +408,12 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	public void clearPermissions(Node graphName) {
 		//graphManager.deletePermissions(uri);
 	}
-
-	/**
-	 * Returns the current transaction for the connection, or null
-	 * if there is no currently-running transaction.
-	 * @return The Transaction, or null.
-	 */
-	public Transaction getCurrentTransaction() {
-		return this.currentTransaction;
-	}
-	
 	
 	/**
 	 * Forces the quads in the write cache to flush to the server.
 	 */
 	public void sync() {
-	    cache.forceRun();
+	    client.sync();
 	}
 	
 	

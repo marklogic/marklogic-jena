@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.marklogic.semantics.jena.graph;
+package com.marklogic.semantics.jena;
 
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.DatabaseClientFactory;
 import com.marklogic.client.DatabaseClientFactory.Authentication;
 import com.marklogic.semantics.jena.client.JenaDatabaseClient;
-import com.marklogic.semantics.jena.query.MarkLogicQueryEngine;
-import com.marklogic.semantics.jena.query.MarkLogicUpdateEngine;
+import com.marklogic.semantics.jena.engine.MarkLogicQueryEngine;
+import com.marklogic.semantics.jena.engine.MarkLogicUpdateEngine;
 
 public class MarkLogicDatasetGraphFactory {
 

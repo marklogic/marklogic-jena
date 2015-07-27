@@ -1,4 +1,4 @@
-package com.marklogic.semantics.jena.query;
+package com.marklogic.semantics.jena.engine;
 
 import org.apache.jena.atlas.lib.Sink;
 
@@ -23,11 +23,10 @@ import com.hp.hpl.jena.sparql.modify.request.UpdateVisitor;
 import com.hp.hpl.jena.sparql.util.Context;
 import com.hp.hpl.jena.update.GraphStore;
 import com.hp.hpl.jena.update.Update;
-import com.marklogic.client.Transaction;
 import com.marklogic.client.semantics.SPARQLQueryDefinition;
+import com.marklogic.semantics.jena.MarkLogicDatasetGraph;
 import com.marklogic.semantics.jena.MarkLogicJenaException;
 import com.marklogic.semantics.jena.client.JenaDatabaseClient;
-import com.marklogic.semantics.jena.graph.MarkLogicDatasetGraph;
 
 public class MarkLogicUpdateEngine extends UpdateEngineMain {
 
@@ -96,9 +95,8 @@ public class MarkLogicUpdateEngine extends UpdateEngineMain {
             }
             MarkLogicQueryEngine.bindVariables(qdef, this.initial,
                     markLogicDatasetGraph);
-            Transaction tx = markLogicDatasetGraph.getCurrentTransaction();
-
-            client.executeUpdate(qdef, tx);
+            
+            client.executeUpdate(qdef);
         }
 
         @Override

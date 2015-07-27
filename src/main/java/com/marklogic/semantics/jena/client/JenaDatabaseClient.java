@@ -1,8 +1,18 @@
 package com.marklogic.semantics.jena.client;
 
 import java.util.Iterator;
+import java.util.Timer;
 
+import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.WriterGraphRIOT;
+
+import com.hp.hpl.jena.graph.Graph;
+import com.hp.hpl.jena.graph.Node;
+import com.hp.hpl.jena.query.ReadWrite;
+import com.hp.hpl.jena.sparql.graph.GraphFactory;
 import com.marklogic.client.DatabaseClient;
+import com.marklogic.client.ResourceNotFoundException;
 import com.marklogic.client.Transaction;
 import com.marklogic.client.io.InputStreamHandle;
 import com.marklogic.client.io.OutputStreamHandle;
@@ -11,6 +21,8 @@ import com.marklogic.client.semantics.GraphPermissions;
 import com.marklogic.client.semantics.RDFMimeTypes;
 import com.marklogic.client.semantics.SPARQLQueryDefinition;
 import com.marklogic.client.semantics.SPARQLQueryManager;
+import com.marklogic.semantics.jena.MarkLogicDatasetGraph;
+import com.marklogic.semantics.jena.MarkLogicTransactionException;
 
 /**
  * A class to encapsulate access to the Java API's DatabaseClient for Jena users.
@@ -20,14 +32,18 @@ public class JenaDatabaseClient {
 
     private GraphManager graphManager;
     private SPARQLQueryManager sparqlQueryManager;
-    
+    private WriteCacheTimerTask cache;
     private DatabaseClient client;
+    private Transaction currentTransaction;
     
     public JenaDatabaseClient(DatabaseClient client) {
         this.client = client;
         this.graphManager = client.newGraphManager();
         this.graphManager.setDefaultMimetype(RDFMimeTypes.NTRIPLES);
         this.sparqlQueryManager = client.newSPARQLQueryManager();
+        this.cache = new WriteCacheTimerTask(this);
+        Timer timer = new Timer();
+        timer.scheduleAtFixedRate(cache, 1000, 1000);
     }
 
     /**
@@ -41,45 +57,48 @@ public class JenaDatabaseClient {
         return this.sparqlQueryManager.newQueryDefinition(queryString);
     }
 
-    public void executeUpdate(SPARQLQueryDefinition qdef, Transaction tx) {
-        this.sparqlQueryManager.executeUpdate(qdef, tx);
+    public void executeUpdate(SPARQLQueryDefinition qdef) {
+        this.sparqlQueryManager.executeUpdate(qdef, currentTransaction);
     }
 
-    public boolean executeAsk(SPARQLQueryDefinition qdef, Transaction tx) {
-        return this.sparqlQueryManager.executeAsk(qdef, tx);
+    public boolean executeAsk(SPARQLQueryDefinition qdef) {
+        return this.sparqlQueryManager.executeAsk(qdef, currentTransaction);
     }
 
     public InputStreamHandle executeConstruct(SPARQLQueryDefinition qdef,
-            InputStreamHandle handle, Transaction tx) {
-        return this.sparqlQueryManager.executeConstruct(qdef, handle, tx);
+            InputStreamHandle handle) {
+        return this.sparqlQueryManager.executeConstruct(qdef, handle, currentTransaction);
     }
 
     public InputStreamHandle executeDescribe(SPARQLQueryDefinition qdef,
-            InputStreamHandle handle, Transaction tx) {
-        return this.sparqlQueryManager.executeDescribe(qdef, handle, tx);
+            InputStreamHandle handle) {
+        return this.sparqlQueryManager.executeDescribe(qdef, handle, currentTransaction);
     }
 
     public InputStreamHandle executeSelect(SPARQLQueryDefinition qdef,
-            InputStreamHandle handle, long offset, long limit, Transaction tx) {
-        return this.sparqlQueryManager.executeSelect(qdef, handle, offset, limit, tx);
+            InputStreamHandle handle, long offset, long limit) {
+        return this.sparqlQueryManager.executeSelect(qdef, handle, offset, limit, currentTransaction);
     }
 
     public InputStreamHandle executeSelect(SPARQLQueryDefinition qdef,
-            InputStreamHandle handle, Transaction tx) {
-        return executeSelect(qdef, handle, -1, -1, tx);
+            InputStreamHandle handle) {
+        return executeSelect(qdef, handle, -1, -1);
     }
 
     public Iterator<String> listGraphUris() {
         return this.graphManager.listGraphUris();
     }
 
-    public void mergeGraph(String uri, OutputStreamHandle handle,
-            Transaction tx) {
-        this.graphManager.merge(uri, handle, tx);
+    public void mergeGraph(String uri, Graph graph) {
+        WriterGraphRIOT writer = RDFDataMgr.createGraphWriter(Lang.NTRIPLES);
+        OutputStreamRIOTSender sender = new OutputStreamRIOTSender(writer);
+        sender.setGraph(graph);
+        OutputStreamHandle handle = new OutputStreamHandle(sender);
+        this.graphManager.merge(uri, handle, currentTransaction);
     }
 
-    public void deleteGraph(String uri, Transaction tx) {
-        this.graphManager.delete(uri, tx);
+    public void deleteGraph(String uri) {
+        this.graphManager.delete(uri, currentTransaction);
     }
 
     public GraphPermissions getGraphPermissions(String uri) {
@@ -93,10 +112,87 @@ public class JenaDatabaseClient {
     public Transaction openTransaction() {
         return this.client.openTransaction();
     }
+    
 
-    public InputStreamHandle readGraph(String uri, InputStreamHandle handle,
-            Transaction tx) {
-        return this.graphManager.read(uri, handle, tx);
+    public Graph readDefaultGraph() {
+        return readGraph(MarkLogicDatasetGraph.DEFAULT_GRAPH_URI);
+    }
+
+    public Graph readGraph(String uri) {
+        InputStreamHandle handle = new InputStreamHandle();
+        Graph graph = GraphFactory.createDefaultGraph();
+        try {
+            this.graphManager.read(uri, handle, currentTransaction);
+            RDFDataMgr.read(graph, handle.get(), Lang.NTRIPLES);
+        } catch (NullPointerException e) {
+            
+        } catch (ResourceNotFoundException e) {
+            
+        }
+        // close handle?
+        return graph;
+    }
+
+    public void writeGraph(String uri, Graph graph) {
+        WriterGraphRIOT writer = RDFDataMgr.createGraphWriter(Lang.NTRIPLES);
+        OutputStreamRIOTSender sender = new OutputStreamRIOTSender(writer);
+        sender.setGraph(graph);
+        OutputStreamHandle handle = new OutputStreamHandle(sender);
+        this.graphManager.write(uri, handle, currentTransaction);
+    }
+
+    /**
+     * Puts a quad into the cache, which is periodically sent to MarkLogic
+     * @param g Graph node.
+     * @param s Subject node
+     * @param p Property node.
+     * @param o Object Node.
+     */
+    public void sinkQuad(Node g, Node s, Node p, Node o) {
+        cache.add(g, s, p, o);
+    }
+
+    /**
+     * Flushes the write cache, ensuring consistent server state
+     * before query/delete.
+     */
+    public void sync() {
+        cache.forceRun();
+    }
+
+    
+
+    private void checkCurrentTransaction() {
+        if (this.currentTransaction == null) {
+            throw new MarkLogicTransactionException("No open transaction");
+        }
+    }
+    
+    public void begin(ReadWrite readWrite) {
+        if (readWrite == ReadWrite.READ) {
+            throw new MarkLogicTransactionException("MarkLogic only supports write transactions");
+        } else {
+            if (this.currentTransaction != null) {
+                throw new MarkLogicTransactionException("Only one open transaction per MarkLogicDatasetGraph instance.");
+            }
+            this.currentTransaction = openTransaction();
+        }
+    }
+
+    public void commit() {
+        checkCurrentTransaction();
+        this.currentTransaction.commit();
+        this.currentTransaction = null;
+    }
+
+    public void abort() {
+        checkCurrentTransaction();
+        this.currentTransaction.rollback();
+        this.currentTransaction = null;
+    }
+
+    public boolean isInTransaction() {
+        return (this.currentTransaction != null);
     }
 
 }

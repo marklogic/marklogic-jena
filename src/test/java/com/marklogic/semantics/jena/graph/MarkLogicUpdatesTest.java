@@ -17,7 +17,6 @@ package com.marklogic.semantics.jena.graph;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import org.junit.After;
 import org.junit.Test;
@@ -29,7 +28,7 @@ import com.hp.hpl.jena.update.GraphStore;
 import com.hp.hpl.jena.update.UpdateAction;
 import com.hp.hpl.jena.update.UpdateRequest;
 import com.marklogic.semantics.jena.JenaTestBase;
-import com.marklogic.semantics.jena.MarkLogicTransactionException;
+import com.marklogic.semantics.jena.MarkLogicDatasetGraph;
 
 public class MarkLogicUpdatesTest extends JenaTestBase {
 

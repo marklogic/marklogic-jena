@@ -63,6 +63,7 @@ import com.hp.hpl.jena.update.UpdateRequest;
 import com.marklogic.client.semantics.Capability;
 import com.marklogic.client.semantics.GraphPermissions;
 import com.marklogic.semantics.jena.JenaTestBase;
+import com.marklogic.semantics.jena.MarkLogicDatasetGraph;
 import com.marklogic.semantics.jena.MarkLogicTransactionException;
 
 public class MarkLogicDatasetGraphTest extends JenaTestBase {
