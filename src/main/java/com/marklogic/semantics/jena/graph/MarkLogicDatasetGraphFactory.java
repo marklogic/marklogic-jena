@@ -16,18 +16,41 @@
 package com.marklogic.semantics.jena.graph;
 
 import com.marklogic.client.DatabaseClient;
+import com.marklogic.client.DatabaseClientFactory;
+import com.marklogic.client.DatabaseClientFactory.Authentication;
+import com.marklogic.semantics.jena.client.JenaDatabaseClient;
 import com.marklogic.semantics.jena.query.MarkLogicQueryEngine;
 import com.marklogic.semantics.jena.query.MarkLogicUpdateEngine;
 
 public class MarkLogicDatasetGraphFactory {
 
+    /**
+     * Creates a MarkLogicDatasetGraph from an existing {@link com.marklogic.client.DatabaseClient}.
+     * @param client An instance of DatabaseClient.
+     * @return A MarkLogicDatasetGraph instance wrapping MarkLogic.
+     */
 	public static MarkLogicDatasetGraph createDatasetGraph(DatabaseClient client) {
-		MarkLogicDatasetGraph datasetGraph = new MarkLogicDatasetGraph(client);
+	    JenaDatabaseClient jenaClient = new JenaDatabaseClient(client);
+	    MarkLogicDatasetGraph datasetGraph = new MarkLogicDatasetGraph(jenaClient);
 		MarkLogicQueryEngine.unregister();
-		MarkLogicQueryEngine.register(client);
+		MarkLogicQueryEngine.register();
 		MarkLogicUpdateEngine.unregister();
-		MarkLogicUpdateEngine.register(client);
+		MarkLogicUpdateEngine.register();
 		return datasetGraph;
 	}
 
+	/**
+     * Creates MarkLogicDatasetGraph from access parameters to a REST MarkLogic server.
+     * 
+     * @param host  the host with the REST server
+     * @param port  the port for the REST server
+     * @param user  the user with read, write, or administrative privileges
+     * @param password  the password for the user
+     * @param type  the type of authentication applied to the request
+     * @return A MarkLogicDatasetGraph instance wrapping MarkLogic.
+     */
+    static public MarkLogicDatasetGraph createDatasetGraph(String host, int port, String user, String password, Authentication type) {
+        DatabaseClient client = DatabaseClientFactory.newClient(host, port, user, password, type);
+        return MarkLogicDatasetGraphFactory.createDatasetGraph(client);
+    }
 }

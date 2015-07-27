@@ -54,10 +54,10 @@ import com.marklogic.client.io.InputStreamHandle;
 import com.marklogic.client.semantics.SPARQLQueryDefinition;
 import com.marklogic.client.semantics.SPARQLQueryManager;
 import com.marklogic.semantics.jena.MarkLogicJenaException;
+import com.marklogic.semantics.jena.client.JenaDatabaseClient;
 import com.marklogic.semantics.jena.graph.MarkLogicDatasetGraph;
 
 public class MarkLogicQueryEngine extends QueryEngineMain {
-
 
 	private static Logger log = LoggerFactory.getLogger(MarkLogicQueryEngine.class);
 	private BasicPattern bgp = null;
@@ -74,21 +74,17 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
 	/**
 	 * Registers the factory with Jena's QueryEngineRegistry.
 	 */
-    public static void register(DatabaseClient client) {
+    public static void register() {
         QueryEngineRegistry.addFactory(factory) ;
-        sparqlManager = client.newSPARQLQueryManager();
     }
-    
+
     /**
      * Removes the factory from Jena's QueryEngineRegistry.
      */
     static public void unregister()     { 
         QueryEngineRegistry.removeFactory(factory);
-        sparqlManager = null;
     }
-    
-    static private SPARQLQueryManager sparqlManager;
-   
+
     /**
      * Constructor.
      * @param query A Jena Query.  This engine does not use all parts of the Query hierarchy.
@@ -121,7 +117,8 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
     }
 
     private SPARQLQueryDefinition prepareQueryDefinition(Query query) {
-        SPARQLQueryDefinition qdef = sparqlManager.newQueryDefinition(query.toString());
+        JenaDatabaseClient client = markLogicDatasetGraph.getDatabaseClient();
+        SPARQLQueryDefinition qdef = client.newQueryDefinition(query.toString());
         if (markLogicDatasetGraph.getRulesets() != null) {
             qdef.setRulesets(markLogicDatasetGraph.getRulesets());
         }
@@ -151,6 +148,7 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
         if (! (dsg instanceof MarkLogicDatasetGraph))
     		throw new MarkLogicJenaException("This query engine only works for MarkLogic-backed triple stores");
     	MarkLogicDatasetGraph markLogicDatasetGraph = (MarkLogicDatasetGraph) dsg;
+    	JenaDatabaseClient client = markLogicDatasetGraph.getDatabaseClient();
     	markLogicDatasetGraph.sync();
     	Transaction tx = markLogicDatasetGraph.getCurrentTransaction();
         QueryIterator qIter = null;
@@ -174,22 +172,22 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
         InputStreamHandle handle = new InputStreamHandle();
         
         if (query.isAskType()) {
-        	boolean answer = sparqlManager.executeAsk(qdef, tx);
+        	boolean answer = client.executeAsk(qdef, tx);
         	log.debug("Answer from server is " + answer);
         	QueryIterator qIter1 = QueryIterRoot.create(initial, execCxt) ;
 			qIter = new BooleanQueryIterator(qIter1, execCxt, answer);
         } else if (query.isConstructType() || query.isDescribeType()) {
         	// what I need to create here is a QueryIterator that contains
         	// bindings of s, p, and o to every triple.
-        	if (query.isConstructType()) sparqlManager.executeConstruct(qdef, handle, tx);
-        	if (query.isDescribeType()) sparqlManager.executeDescribe(qdef, handle, tx);
+        	if (query.isConstructType()) client.executeConstruct(qdef, handle, tx);
+        	if (query.isDescribeType()) client.executeDescribe(qdef, handle, tx);
         	Iterator<Triple> triples = RiotReader.createIteratorTriples(handle.get(), Lang.NTRIPLES, null);
         	QueryIterator qIter1 = QueryIterRoot.create(initial, execCxt) ;
             qIter = new TripleQueryIterator(qIter1, execCxt, triples);
         	query.setConstructTemplate(template);
         	//throw new MarkLogicJenaException("Construct Type Supported by Engine Layer");
         } else if (query.isSelectType()) {
-        	sparqlManager.executeSelect(qdef, handle, offset, limit, tx);
+        	client.executeSelect(qdef, handle, offset, limit, tx);
             ResultSet results = JSONInput.fromJSON(handle.get());
             qIter = new QueryIteratorResultSet(results);
         } else {

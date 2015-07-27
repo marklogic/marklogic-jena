@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 /**
- * A library that enables access to a MarkLogic-backed triple-store via the
- * Jena API.
+ * This library exposes MarkLogic Semantics to users of the Jena Framework
+ * {@link http://jena.apache.org}.
+ * 
+ * The entrance point is MarkLogicDatasetGraphFactory
+ * 
  */
 package com.marklogic.semantics.jena;
