@@ -48,6 +48,7 @@ import com.marklogic.client.ResourceNotFoundException;
 import com.marklogic.client.Transaction;
 import com.marklogic.client.io.InputStreamHandle;
 import com.marklogic.client.io.OutputStreamHandle;
+import com.marklogic.client.query.QueryDefinition;
 import com.marklogic.client.semantics.GraphManager;
 import com.marklogic.client.semantics.GraphPermissions;
 import com.marklogic.client.semantics.RDFMimeTypes;
@@ -79,6 +80,17 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 
 	private Transaction currentTransaction;
 	
+	/*
+     * An inferencing datasetGraph will add ruleset config to each query
+     */
+    private SPARQLRuleset[] rulesets;
+    
+    /*
+     * Used to constrain of corpus of documents against which to make a Dataset 
+     */
+    private QueryDefinition constrainingQueryDefinition;
+    
+    
 	/**
 	 * Creates a new MarkLogicDatasetGraph using the supplied DatabaseClient.  If this client can write to
 	 * the database, then the DatasetGraph is initialized with a default graph.
@@ -94,6 +106,9 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
         timer.scheduleAtFixedRate(cache, 1000, 1000);
 	}
 
+	/**
+	 * @see com.hp.hpl.jena.sparql.core.DatasetGraph
+	 */
 	@Override
 	public Iterator<Node> listGraphNodes() {
 		log.debug("listing graphs ");
@@ -101,6 +116,10 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 		return new WrappingIterator(graphNames);
 	}
 
+
+    /**
+     * @see com.hp.hpl.jena.sparql.core.DatasetGraph
+     */
 	@Override
 	public void clear() {
 		String query = "DROP SILENT ALL";
@@ -108,34 +127,45 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 		sparqlQueryManager.executeUpdate(qdef, currentTransaction);
 	}
 	
-	public static SPARQLQueryDefinition bindObject(SPARQLQueryDefinition qdef, String nodeName, Node objectNode) {
+	/**
+	 * Maps Jena bindings defined by a variable name and a {@link com.hp.hpl.jena.graph.Node} to MarkLogic 
+	 * {@link com.marklogic.client.semantics.SPARQLQueryDefinition} bindings.
+	 * @param qdef A {@link com.marklogic.client.semantics.SPARQLQueryDefinition} to decorate with a binding.
+	 * @param variableName Name of the variable
+	 * @param objectNode An RDF node with the value of variableName.
+	 * @return The qdef, with binding set.
+	 */
+	public static SPARQLQueryDefinition bindObject(SPARQLQueryDefinition qdef, String variableName, Node objectNode) {
 		SPARQLBindings bindings = qdef.getBindings();
 		if (objectNode.isURI()) {
-			bindings.bind(nodeName, objectNode.getURI());
+			bindings.bind(variableName, objectNode.getURI());
 		}
 		else if (objectNode.isLiteral()) {
 			if ( objectNode.getLiteralDatatype() != null) {
 				try {
 					String xsdType = objectNode.getLiteralDatatypeURI();
 					String fragment = new URI(xsdType).getFragment();
-					bindings.bind(nodeName, objectNode.getLiteralLexicalForm(), fragment);
+					bindings.bind(variableName, objectNode.getLiteralLexicalForm(), fragment);
 					log.debug("found " + xsdType);
 				} catch (URISyntaxException e) {
 					log.info("Is this an error");
 				}
 			} else if (!objectNode.getLiteralLanguage().equals("")) {
 				String languageTag = objectNode.getLiteralLanguage();
-				bindings.bind(nodeName, objectNode.getLiteralLexicalForm(), Locale.forLanguageTag(languageTag));
+				bindings.bind(variableName, objectNode.getLiteralLexicalForm(), Locale.forLanguageTag(languageTag));
 			} else {
 				// is this a hole, no type string?
-				bindings.bind(nodeName, objectNode.getLiteralLexicalForm(), "string");
+				bindings.bind(variableName, objectNode.getLiteralLexicalForm(), "string");
 			}
 		}
 		qdef.setBindings(bindings);
 		return qdef;
 	}
 
-	
+	 /**
+     * @see com.hp.hpl.jena.sparql.core.DatasetGraphTriplesQuads Internally uses
+     * a write cache to hold batches of quad updates.  @see sync()
+     */
 	@Override
 	protected void addToDftGraph(Node s, Node p, Node o) {
         s = skolemize(s);
@@ -152,18 +182,24 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 		}
 	}
 
+	 /**
+     * @see com.hp.hpl.jena.sparql.core.DatasetGraphTriplesQuads Internally uses
+     * a write cache to hold batches of quad updates.  @see sync()
+     */
 	@Override
 	protected void addToNamedGraph(Node g, Node s, Node p, Node o) {
-		// workaround -- use graph inline. insecure.
 		s = skolemize(s);
 		p = skolemize(p);
 		o = skolemize(o);
 		cache.add(g, s, p, o);
 	}
 
+	/**
+     * @see com.hp.hpl.jena.sparql.core.DatasetGraphTriplesQuads
+     */
 	@Override
 	protected void deleteFromDftGraph(Node s, Node p, Node o) {
-	   // cache.run();
+	    sync();
 		String query = "DELETE  WHERE { ?s ?p ?o }";
 	    sync();
 		s = skolemize(s);
@@ -176,6 +212,9 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 		sparqlQueryManager.executeUpdate(qdef, currentTransaction);
 	}
 
+	/**
+     * @see com.hp.hpl.jena.sparql.core.DatasetGraphTriplesQuads
+     */
 	@Override
 	protected void deleteFromNamedGraph(Node g, Node s, Node p, Node o) {
 	    sync();
@@ -221,6 +260,10 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 		InputStreamHandle results = sparqlQueryManager.executeSelect(qdef, new InputStreamHandle(), currentTransaction);
 		return results.get();
 	}
+	
+	/**
+     * @see com.hp.hpl.jena.sparql.core.DatasetGraphBaseFind
+     */
 	@Override
 	protected Iterator<Quad> findInDftGraph(Node s, Node p, Node o) {
 	    sync();
@@ -228,7 +271,9 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 		return new QuadsIterator(results);
 	}
 	
-
+	/**
+     * @see com.hp.hpl.jena.sparql.core.DatasetGraphBaseFind
+     */
 	@Override
 	protected Iterator<Quad> findInSpecificNamedGraph(Node g, Node s, Node p,
 			Node o) {
@@ -237,7 +282,10 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 		return new QuadsIterator(g.getURI(), results);
 	}
 
-	@Override
+	/**
+     * @see com.hp.hpl.jena.sparql.core.DatasetGraphBaseFind
+     */
+    @Override
 	protected Iterator<Quad> findInAnyNamedGraphs(Node s, Node p, Node o) {
 	    sync();
 	    s =  s != null ? s : Node.ANY;
@@ -334,6 +382,9 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 		return this.sparqlQueryManager;
 	}
 	
+	/**
+     * @see com.hp.hpl.jena.sparql.core.DatasetGraph
+     */
 	@Override
 	public Graph getDefaultGraph() {
 		InputStreamHandle handle = new InputStreamHandle();
@@ -347,6 +398,9 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 		return graph;
 	}
 
+	/**
+     * @see com.hp.hpl.jena.sparql.core.DatasetGraph
+     */
 	@Override
 	public Graph getGraph(Node graphNode) {
 		InputStreamHandle handle = new InputStreamHandle();
@@ -360,7 +414,10 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 		return graph;
 	}
 
-	@Override
+	/**
+     * @see com.hp.hpl.jena.sparql.core.DatasetGraph
+     */
+    @Override
 	public void addGraph(Node graphName, Graph graph) {
 	    WriterGraphRIOT writer = RDFDataMgr.createGraphWriter(Lang.NTRIPLES);
 		OutputStreamRIOTSender sender = new OutputStreamRIOTSender(writer);
@@ -371,7 +428,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	
 	/**
 	 * Merges triples into a graph on the MarkLogic server.  mergeGraph()
-	 * is not part of Jena's DatasetGraph interface.
+	 * is NOT part of Jena's DatasetGraph interface.
 	 * @param graphName The graph to merge with server state.
 	 * @param graph The graph data.
 	 */
@@ -383,25 +440,45 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
         graphManager.merge(graphName.getURI(), handle, currentTransaction);
     }
 
+	/**
+     * @see com.hp.hpl.jena.sparql.core.DatasetGraph
+     */
 	@Override
 	public void removeGraph(Node graphName) {
 		graphManager.delete(graphName.getURI(), currentTransaction);
 	}
 
-	public GraphPermissions getPermissions(Node g1) {
-		return graphManager.getPermissions(g1.getURI());
-	}
-
-	public void addPermissions(Node g1, GraphPermissions permissions) {
-		graphManager.mergePermissions(g1.getURI(), permissions);
+	/**
+	 * Gets the permissions associated with this graph.
+	 * @param graphName the node with the graph's name.
+	 * @return A {@link com.marklogic.client.semantics.GraphPermissions} 
+	 * object holding the graph's permissions.
+	 */
+	public GraphPermissions getPermissions(Node graphName) {
+		return graphManager.getPermissions(graphName.getURI());
 	}
 	
-	public void clearPermissions(Node g1) {
+	
+	/**
+     * Adds permissions to a graph.
+     * @param graphName the node with the graph's name.
+     * param permissions A {@link com.marklogic.client.semantics.GraphPermissions} 
+     * object holding the graph's permissions.
+     */
+	public void addPermissions(Node graphName, GraphPermissions permissions) {
+		graphManager.mergePermissions(graphName.getURI(), permissions);
+	}
+	
+	/**
+	 * Removes all but the default permissions from a graph.
+	 * @param graphName
+	 */
+	public void clearPermissions(Node graphName) {
 		//graphManager.deletePermissions(uri);
 	}
 
 	/**
-	 * Returns the current transaction for this dataset connection, or null
+	 * Returns the current transaction for the connection, or null
 	 * if there is no currently-running transaction.
 	 * @return The Transaction, or null.
 	 */
@@ -411,17 +488,13 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	
 	
 	/**
-	 * Forces the quads cache to flush to the server.
+	 * Forces the quads in the write cache to flush to the server.
 	 */
 	public void sync() {
 	    cache.forceRun();
 	}
 	
-	/**
-	 * An inferencing datasetGraph will add ruleset config to each query
-	 */
-    private SPARQLRuleset[] rulesets;
-    
+	
     public void setRulesets(SPARQLRuleset... rulesets) {
         this.rulesets = rulesets;
     }
@@ -440,5 +513,9 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
             this.rulesets = collection.toArray(new SPARQLRuleset[] {});
         }
         return this;
+    }
+
+    public void setConstrainingQueryDefinition(QueryDefinition constrainingQueryDefinition) {
+        this.constrainingQueryDefinition = constrainingQueryDefinition;
     }
 }

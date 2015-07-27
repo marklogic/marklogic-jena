@@ -44,6 +44,7 @@ import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.ResourceFactory;
 import com.hp.hpl.jena.sparql.graph.GraphFactory;
 import com.marklogic.client.ResourceNotFoundException;
+import com.marklogic.client.query.QueryDefinition;
 import com.marklogic.client.semantics.SPARQLRuleset;
 import com.marklogic.semantics.jena.JenaTestBase;
 import com.marklogic.semantics.jena.graph.MarkLogicDatasetGraph;
@@ -253,6 +254,10 @@ public class MarkLogicQueryEngineTest extends JenaTestBase {
     @Test
     @Ignore
     public void testCombinationQuery() {
-
+        MarkLogicDatasetGraph infTestDsg = getMarkLogicDatasetGraph();
+        //QueryDefinition qdef = client.newQueryDefinition();
+        
+        //infTestDsg.setConstrainingQuery(qdef);
+        
     }
 }
