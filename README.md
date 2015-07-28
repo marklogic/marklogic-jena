@@ -46,14 +46,7 @@ you should verify that Java API client has been deployed to your local maven rep
 
 #### Setup Marklogic
 
-Ensure MarkLogic (Nightly) is installed and running;
-
-1) run gradle target that provisions everything needed for MarkLogic
-
-```
-gradle mlDeploy
-```
-
+Ensure MarkLogic (Nightly) is installed and running.
 
 #### Setup  MarkLogic Jena
 
@@ -63,14 +56,19 @@ gradle mlDeploy
 https://github.com/marklogic/marklogic-jena/tree/develop
 ```
 
-2) build MarkLogic Jena
+2) run gradle target that provisions a testing database for this project.  The command and tests use values recorded in `./gradle.properties`
+
+```
+gradle mlDeploy
+```
+
+3) build MarkLogic Jena
 
 ```
 gradle test
 
 ```
 
-will build and run unit tests.
 
 ### Usage
 
