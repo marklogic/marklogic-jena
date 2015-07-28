@@ -1,0 +1,3 @@
+rootProject.name = 'marklogic-jena-parent'
+include ':marklogic-jena'
+include ':marklogic-jena-functionaltests'
