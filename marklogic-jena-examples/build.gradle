@@ -1,0 +1,22 @@
+// example marklogic-jena project.  Uses your local maven repository
+
+
+// this directive should be uncommented for development environments
+// otherwise the examples can run from centrally distributed marklogic-jena
+evaluationDependsOn(":marklogic-jena")
+
+apply plugin: 'java'
+
+
+repositories {
+  mavenCentral()
+  mavenLocal()
+}
+
+dependencies {
+  compile('com.marklogic:marklogic-jena:1.0.0-SNAPSHOT'){
+    changing=true
+  }
+}
+
+compileJava.dependsOn ":marklogic-jena:install"

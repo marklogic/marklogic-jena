@@ -18,15 +18,10 @@ apply plugin: 'me.champeau.gradle.jmh'
 apply plugin: 'ml-gradle'
 apply plugin: 'java'
 apply plugin: 'eclipse'
-apply plugin: 'org.ajoberstar.github-pages'
+apply plugin: 'maven'
 
-githubPages {
-  repoUri = 'git@github.com:marklogic/marklogic-jena.git'
-  pages {
-    from javadoc
-  }
-}
-
+version = '1.0.0-SNAPSHOT'
+group   = 'com.marklogic'
 
 configure(allprojects){
 			ext.slf4jVersion = '1.7.2'
