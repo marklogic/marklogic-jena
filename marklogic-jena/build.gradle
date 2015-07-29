@@ -6,7 +6,6 @@ buildscript {
   }
   dependencies {
     classpath "com.marklogic:ml-gradle:2.0a12b"
-	classpath 'org.ajoberstar:gradle-git:1.2.0'
   }
 }
 

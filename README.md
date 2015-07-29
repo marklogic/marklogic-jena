@@ -7,24 +7,6 @@ _IMPORTANT_ - NO RELEASE HAS BEEN MADE YET
 This library integrates MarkLogic Semantics feature into the [Jena RDF
 Framework](http://jena.apache.org) as a persistence and query layer.
 
-## Quick start (draft, for future release)
-
-For gradle-based projects include this dependency in `build.gradle`
-```
-dependencies {
-   compile 'com.marklogic:marklogic-jena:1.0.0'
-}
-```
-
-Maven-based projects use this block in `pom.xml`:
-
-```
-<dependency>
-    <groupId>com.marklogic</groupId>
-    <artifactId>marklogic-jena</artifactId>
-    <version>1.0.0</version>
-</dependency>
-```
 
 #### Setup Java API Client
 
@@ -59,24 +41,42 @@ https://github.com/marklogic/marklogic-jena/tree/develop
 2) run gradle target that provisions a testing database for this project.  The command and tests use values recorded in `./gradle.properties`
 
 ```
-gradle mlDeploy
+gradle :marklogic-jena:mlDeploy
 ```
 
 3) build MarkLogic Jena
 
 ```
-gradle test
+gradle :marklogic-jena:test
 
 ```
 
-
-### Usage
-
-To use in your own code, deploy into local maven repo or copy snapshot jars from /build directory.
+To use in your own projects, deploy into local maven repo or copy snapshot jars from /build directory.
 
 ```
-gradle deploy
+gradle install
 
+```
+
+## Usage
+
+### Quick start (Note: draft for future release)
+
+For gradle-based projects include this dependency in `build.gradle`
+```
+dependencies {
+   compile 'com.marklogic:marklogic-jena:1.0.0'
+}
+```
+
+Maven-based projects use this block in `pom.xml`:
+
+```
+<dependency>
+    <groupId>com.marklogic</groupId>
+    <artifactId>marklogic-jena</artifactId>
+    <version>1.0.0</version>
+</dependency>
 ```
 
 ### Javadocs
