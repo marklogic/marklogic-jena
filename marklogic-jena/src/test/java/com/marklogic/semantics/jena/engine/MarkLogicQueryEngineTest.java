@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.marklogic.semantics.jena.query;
+package com.marklogic.semantics.jena.engine;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -22,8 +22,8 @@ import static org.junit.Assert.assertTrue;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.hp.hpl.jena.graph.Graph;
@@ -44,6 +44,11 @@ import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.ResourceFactory;
 import com.hp.hpl.jena.sparql.graph.GraphFactory;
 import com.marklogic.client.ResourceNotFoundException;
+import com.marklogic.client.document.XMLDocumentManager;
+import com.marklogic.client.io.Format;
+import com.marklogic.client.io.StringHandle;
+import com.marklogic.client.query.QueryManager;
+import com.marklogic.client.query.RawCombinedQueryDefinition;
 import com.marklogic.client.semantics.SPARQLRuleset;
 import com.marklogic.semantics.jena.JenaTestBase;
 import com.marklogic.semantics.jena.MarkLogicDatasetGraph;
@@ -250,13 +255,5 @@ public class MarkLogicQueryEngineTest extends JenaTestBase {
 
     }
 
-    @Test
-    @Ignore
-    public void testCombinationQuery() {
-        MarkLogicDatasetGraph infTestDsg = getMarkLogicDatasetGraph();
-        //QueryDefinition qdef = client.newQueryDefinition();
-        
-        //infTestDsg.setConstrainingQuery(qdef);
-        
-    }
+   
 }

@@ -27,9 +27,9 @@ import com.marklogic.client.DatabaseClientFactory;
 import com.marklogic.client.DatabaseClientFactory.Authentication;
 
 public class JenaTestBase {
-    public static DatabaseClient readerClient;
-    public static DatabaseClient writerClient;
-    public static DatabaseClient adminClient;
+    protected static DatabaseClient readerClient;
+    protected static DatabaseClient writerClient;
+    protected static DatabaseClient adminClient;
     
     
     static {

@@ -440,6 +440,10 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
     public void setConstrainingQueryDefinition(QueryDefinition constrainingQueryDefinition) {
         this.constrainingQueryDefinition = constrainingQueryDefinition;
     }
+    
+    public QueryDefinition getConstrainingQueryDefinition() {
+       return constrainingQueryDefinition;
+    }
 
     /**
      * Return the com.marklogic.semantics.jena.client.JenaDatabaseClient 
@@ -448,4 +452,6 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
     public JenaDatabaseClient getDatabaseClient() {
         return this.client;
     }
+
+    
 }

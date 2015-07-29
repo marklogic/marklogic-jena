@@ -49,6 +49,8 @@ import com.hp.hpl.jena.sparql.resultset.JSONInput;
 import com.hp.hpl.jena.sparql.syntax.Template;
 import com.hp.hpl.jena.sparql.util.Context;
 import com.marklogic.client.io.InputStreamHandle;
+import com.marklogic.client.query.QueryDefinition;
+import com.marklogic.client.query.RawCombinedQueryDefinition;
 import com.marklogic.client.semantics.SPARQLQueryDefinition;
 import com.marklogic.semantics.jena.MarkLogicDatasetGraph;
 import com.marklogic.semantics.jena.MarkLogicJenaException;
@@ -120,7 +122,13 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
             qdef.setRulesets(markLogicDatasetGraph.getRulesets());
         }
         bindVariables(qdef, this.initial, markLogicDatasetGraph);
-       
+        
+        QueryDefinition constrainingQueryDefinition = markLogicDatasetGraph.getConstrainingQueryDefinition();
+        
+        if (constrainingQueryDefinition instanceof RawCombinedQueryDefinition) {
+            log.warn("When using RawCombinedQueryDefinition, the SPARQL in the payload is used, and that supplied to Jena ignored");
+        }
+        qdef.setConstrainingQueryDefinintion(constrainingQueryDefinition);
         return qdef;
     }
     
@@ -164,9 +172,9 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
         }
         
         SPARQLQueryDefinition qdef = prepareQueryDefinition(query);
-       
+
         InputStreamHandle handle = new InputStreamHandle();
-        
+
         if (query.isAskType()) {
         	boolean answer = client.executeAsk(qdef);
         	log.debug("Answer from server is " + answer);
