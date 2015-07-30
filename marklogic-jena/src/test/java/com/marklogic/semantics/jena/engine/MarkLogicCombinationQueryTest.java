@@ -76,10 +76,10 @@ public class MarkLogicCombinationQueryTest extends JenaTestBase {
         // case one, rawcombined
         String combinedQuery = 
             "{\"search\":" +
-            "{\"qtext\":[\"First\",\"Title\"]}}";
+            "{\"qtext\":\"First Title\"}}";
         String negCombinedQuery = 
                 "{\"search\":" +
-                "{\"qtext\":[\"Second\",\"Title\"]}}";
+                "{\"qtext\":\"Second Title\"}}";
         
         RawCombinedQueryDefinition rawCombined = qmgr.newRawCombinedQueryDefinition(new StringHandle().with(combinedQuery).withFormat(Format.JSON));
         RawCombinedQueryDefinition negRawCombined = qmgr.newRawCombinedQueryDefinition(new StringHandle().with(negCombinedQuery).withFormat(Format.JSON));
@@ -101,8 +101,8 @@ public class MarkLogicCombinationQueryTest extends JenaTestBase {
         
         queryExec = QueryExecutionFactory.create(query2, ds);
         
-        assertFalse(queryExec.execAsk());
-        
+        assertTrue(queryExec.execAsk());
+        dsg.setConstrainingQueryDefinition(null);
     }
     
     @Test
