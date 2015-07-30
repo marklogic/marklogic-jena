@@ -81,7 +81,7 @@ Maven-based projects use this block in `pom.xml`:
 
 ### Javadocs
 
-http://marklogic.github.io/marklogic-jena/build/docs/javadoc/
+http://marklogic.github.io/marklogic-jena/marklogic-jena/build/docs/javadoc/
 
 ### Examples
 

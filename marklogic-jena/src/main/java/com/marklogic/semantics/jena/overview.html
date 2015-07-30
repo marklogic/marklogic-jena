@@ -1,0 +1,76 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head><title>MarkLogic Java API Overview</title></head>
+<body>
+<h2>MarkLogic Jena</h2>
+<p>
+    marklogic-jena enables applications based on Apache Jena 2.13 to use
+    MarkLogic as a persistence layer for triples, and as a source for SPARQL
+    queries.  In addition to basic support for graph CRUD and SPARQL query and update, 
+    marklogic-jena also exposes the following MarkLogic capabilities to the Jena
+    framework:
+    <ul>
+        <li>Transactions</li>
+        <li>Variable bindings</li>
+        <li>Inference (ruleset configuration)</li>
+        <li>Combination of SPARQL with MarkLogic document query</li>
+        <li>Optimized pagination of SPARQL result sets</li>
+    </ul>
+</p>
+
+<h2>Before Starting</h2>
+<p>
+    Ensure that you have the following information available for a MarkLogic instance:
+    <ul>
+        <li>hostname</li>
+        <li>port of an application server</li>
+        <li>credentials to read/write/administer the database as needed</li>
+    </ul>
+    Note: If you are starting with 8.0-4 MarkLogic installation on your local
+    machine, the configuration of ml-gradle out of the box will set up a test
+    server for you.
+</p>
+<h2>The API</h2>
+<p>
+Jena uses a {@link com.hp.hpl.jena.sparql.core.DatasetGraph} to model a set of RDF graphs.  To create a DatasetGraph that accesses MarkLogic, use {@link com.marklogic.semantics.jena.MarkLogicDatasetGraph}.  You may make a DatasetGraph instance from a <a href="http://github.com/marklogic/java-client-api">Java Client API</a> Database Client, or directly from the factory method.
+
+<pre>
+import com.hp.hpl.jena.sparql.core.DatasetGraph;
+import com.marklogic.client.DatabaseClient;
+import com.marklogic.client.DatabaseClientFactory;
+import com.marklogic.client.DatabaseClientFactory.Authentication;
+import com.marklogic.semantics.jena.MarkLogicDatasetGraph;
+import com.marklogic.semantics.jena.MarkLogicDatasetGraphFactory;
+...
+
+String host = "localhost";
+String port = 9999;
+String username = "username";
+String password = "password";
+
+// either make a DatabaseClient first
+DatabseClient client = DatabaseClientFactory.newClient(
+    host, port, username, password, Authentication.DIGEST);
+    
+DatasetGraph dsg;
+dsg = MarkLogicDatasetGraphFactory.createDatasetGraph(client);
+
+// or create dsg directly
+dsg = MarkLogicDatasetGraphFactory.createDatasetGraph(
+    host, port, username, password, Authentication.DIGEST);
+
+// Do things with your DatasetGraph
+</pre>
+</p>
+<h2>Graph operations</h2>
+<p>
+</p>
+<pre>
+</pre>
+<h2>SPARQL Queries</h2>
+<p>
+</p>
+<h2>SPARQL Update</h2>
+<p>
+</p>
+</body>
+</html>

@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 /**
- * This library exposes MarkLogic Semantics to users of the
- * <a href="http://jena.apache.org">Jena Framework</a>
- * 
- * {@link com.marklogic.semantics.jena.MarkLogicDatasetGraphFactory#createDatasetGraph(String, int,...)}
- * 
+ * This package contains the core class for marklogic-jena,
+ * {@link com.marklogic.semantics.jena.MarkLogicDatasetGraph}, 
+ * as well as a Factory and Exceptions.  Only the classes in this
+ * package are required in your application.
  */
 package com.marklogic.semantics.jena;

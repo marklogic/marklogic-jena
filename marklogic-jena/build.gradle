@@ -61,6 +61,10 @@ sourceSets {
 	}
 }
 
+javadoc {
+    options.overview = "src/main/java/com/marklogic/semantics/jena/overview.html"
+}
+
 task wrapper(type: Wrapper) {
     gradleVersion = '2.4'
 }

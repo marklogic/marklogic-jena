@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.hp.hpl.jena.query.Dataset;
@@ -75,15 +76,11 @@ public class MarkLogicCombinationQueryTest extends JenaTestBase {
         // case one, rawcombined
         String combinedQuery = 
             "{\"search\":" +
-            "{\"qtext\":[\"First\",\"Title\"],"+
-            " \"sparql\":\"" + query1 + "\"}" +
-            "}";
+            "{\"qtext\":[\"First\",\"Title\"]}}";
         String negCombinedQuery = 
                 "{\"search\":" +
-                "{\"qtext\":[\"First\",\"Title\"],"+
-                " \"sparql\":\"" + query2 + 
-                "\"}" +
-                "}";
+                "{\"qtext\":[\"Second\",\"Title\"]}}";
+        
         RawCombinedQueryDefinition rawCombined = qmgr.newRawCombinedQueryDefinition(new StringHandle().with(combinedQuery).withFormat(Format.JSON));
         RawCombinedQueryDefinition negRawCombined = qmgr.newRawCombinedQueryDefinition(new StringHandle().with(negCombinedQuery).withFormat(Format.JSON));
 
@@ -95,10 +92,7 @@ public class MarkLogicCombinationQueryTest extends JenaTestBase {
         
         queryExec = QueryExecutionFactory.create(query2, ds);
         
-        /* Warning -- query result not modified, because payload has query, not query.
-         *   I think this is a design bug...
-         */
-        assertTrue(queryExec.execAsk());
+        assertFalse(queryExec.execAsk());
         
         dsg.setConstrainingQueryDefinition(negRawCombined);
         queryExec = QueryExecutionFactory.create(query1, ds);
@@ -107,7 +101,7 @@ public class MarkLogicCombinationQueryTest extends JenaTestBase {
         
         queryExec = QueryExecutionFactory.create(query2, ds);
         
-        assertTrue(queryExec.execAsk());
+        assertFalse(queryExec.execAsk());
         
     }
     
@@ -137,12 +131,12 @@ public class MarkLogicCombinationQueryTest extends JenaTestBase {
     public void testStructuredQuery() {
         // reversing neg and pos for diversity.
         StructuredQueryBuilder qb = new StructuredQueryBuilder();
-        qb.term("Second");
-        QueryDefinition structuredDef = qb.build();
+        QueryDefinition structuredDef = qb.build(qb.term("Second"));
         dsg.setConstrainingQueryDefinition(structuredDef);
         
-        String negQuery = "ASK WHERE {<http://example.org/r9928> ?p ?o .}";
         String posQuery = "ASK WHERE {<http://example.org/r9929> ?p ?o .}";
+        String negQuery = "ASK WHERE {<http://example.org/r9928> ?p ?o .}";
+       
         QueryExecution queryExec = QueryExecutionFactory.create(posQuery, ds);
         assertTrue(queryExec.execAsk());
         
