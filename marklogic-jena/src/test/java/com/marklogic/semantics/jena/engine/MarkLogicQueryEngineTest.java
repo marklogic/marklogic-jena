@@ -22,7 +22,6 @@ import static org.junit.Assert.assertTrue;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -44,11 +43,6 @@ import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.ResourceFactory;
 import com.hp.hpl.jena.sparql.graph.GraphFactory;
 import com.marklogic.client.ResourceNotFoundException;
-import com.marklogic.client.document.XMLDocumentManager;
-import com.marklogic.client.io.Format;
-import com.marklogic.client.io.StringHandle;
-import com.marklogic.client.query.QueryManager;
-import com.marklogic.client.query.RawCombinedQueryDefinition;
 import com.marklogic.client.semantics.SPARQLRuleset;
 import com.marklogic.semantics.jena.JenaTestBase;
 import com.marklogic.semantics.jena.MarkLogicDatasetGraph;
@@ -140,11 +134,10 @@ public class MarkLogicQueryEngineTest extends JenaTestBase {
         queryExec = QueryExecutionFactory.create(query, ds);
         results = queryExec.execSelect();
         for (i=0; results.hasNext(); i++) {
+            @SuppressWarnings("unused")
             QuerySolution qs = results.next();
         }
         assertEquals("Got proper start and offset for query", 2, i );
-        
-        
 
     }
 

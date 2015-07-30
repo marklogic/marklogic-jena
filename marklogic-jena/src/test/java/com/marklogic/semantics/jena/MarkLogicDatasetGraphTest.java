@@ -28,11 +28,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.marklogic.semantics.jena.graph;
+package com.marklogic.semantics.jena;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -40,7 +41,6 @@ import java.util.Iterator;
 
 import org.apache.jena.riot.RDFDataMgr;
 import org.junit.After;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -270,8 +270,6 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
 	}
 
 	@Test
-	@Ignore
-	// TODO not ready yet in java api.
 	public void testGraphPermissions() {
 		MarkLogicDatasetGraph markLogicDatasetGraph = getMarkLogicDatasetGraph();
 
@@ -286,7 +284,7 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
 		assertTrue(graphPermissions.get("rest-reader").contains(Capability.READ));
 		assertTrue(graphPermissions.get("rest-writer").contains(Capability.UPDATE));
 		
-		//markLogicDatasetGraph.addPermissions(g1, GraphPermissions.permission("semantics-peon-role", { Capability.READ }));
+		markLogicDatasetGraph.addPermissions(g1, graphPermissions.permission("semantics-peon-role", Capability.READ));
 		
 		graphPermissions = markLogicDatasetGraph.getPermissions(g1);
 		assertTrue(graphPermissions.get("rest-reader").contains(Capability.READ));
@@ -295,7 +293,7 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
 
 		markLogicDatasetGraph.clearPermissions(g1);
 		graphPermissions = markLogicDatasetGraph.getPermissions(g1);
-		assertFalse(graphPermissions.get("semantics-peon-role").contains(Capability.READ));
+		assertNull(graphPermissions.get("semantics-peon-role"));
 
 	}
 	

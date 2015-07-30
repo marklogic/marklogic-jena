@@ -95,7 +95,9 @@ public class MarkLogicUpdateEngine extends UpdateEngineMain {
             }
             MarkLogicQueryEngine.bindVariables(qdef, this.initial,
                     markLogicDatasetGraph);
-            
+            if (markLogicDatasetGraph.getSPARQLUpdatePermissions() != null) {
+                qdef.setUpdatePermissions(markLogicDatasetGraph.getSPARQLUpdatePermissions());
+            }
             client.executeUpdate(qdef);
         }
 

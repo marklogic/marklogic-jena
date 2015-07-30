@@ -70,6 +70,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
      * Used to constrain of corpus of documents against which to make a Dataset 
      */
     private QueryDefinition constrainingQueryDefinition;
+    private GraphPermissions updatePermissions;
     
     
 	/**
@@ -406,7 +407,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	 * @param graphName
 	 */
 	public void clearPermissions(Node graphName) {
-		//graphManager.deletePermissions(uri);
+		client.deletePermissions(graphName.getURI());
 	}
 	
 	/**
@@ -451,6 +452,24 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
      */
     public JenaDatabaseClient getDatabaseClient() {
         return this.client;
+    }
+
+    /**
+     * Set the permissions for graphs created by this DatasetGraph
+     * during SPARQL update operations. Set to null for default permissions.
+     * @param permission One or more permissions to add to graphs created during
+     * SPARQL updates.
+     */
+    public void setSPARQLUpdatePermissions(GraphPermissions permissions) {
+        this.updatePermissions = permissions;
+    }
+
+    /**
+     * Get the permissions that are to be written to new graphs during SPARQL update.
+     * @return
+     */
+    public GraphPermissions getSPARQLUpdatePermissions() {
+        return this.updatePermissions;
     }
 
     

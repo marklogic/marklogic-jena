@@ -102,17 +102,22 @@ public class JenaDatabaseClient {
     }
 
     public GraphPermissions getGraphPermissions(String uri) {
-        return this.graphManager.getPermissions(uri);
+        return this.graphManager.getPermissions(uri, currentTransaction);
     }
 
     public void mergeGraphPermissions(String uri, GraphPermissions permissions) {
-        this.graphManager.mergePermissions(uri, permissions);
+        this.graphManager.mergePermissions(uri, permissions, currentTransaction);
     }
+
+    public void deletePermissions(String uri) {
+        this.graphManager.deletePermissions(uri, currentTransaction);
+    }
+
 
     public Transaction openTransaction() {
         return this.client.openTransaction();
     }
-    
+
 
     public Graph readDefaultGraph() {
         return readGraph(MarkLogicDatasetGraph.DEFAULT_GRAPH_URI);
