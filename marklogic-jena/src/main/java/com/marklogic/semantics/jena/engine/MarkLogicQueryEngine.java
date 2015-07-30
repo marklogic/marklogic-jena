@@ -122,16 +122,12 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
             qdef.setRulesets(markLogicDatasetGraph.getRulesets());
         }
         bindVariables(qdef, this.initial, markLogicDatasetGraph);
-        
         QueryDefinition constrainingQueryDefinition = markLogicDatasetGraph.getConstrainingQueryDefinition();
-        
-        if (constrainingQueryDefinition instanceof RawCombinedQueryDefinition) {
-            log.warn("When using RawCombinedQueryDefinition, the SPARQL in the payload is used, and that supplied to Jena ignored");
-        }
+
         qdef.setConstrainingQueryDefinintion(constrainingQueryDefinition);
         return qdef;
     }
-    
+
     static void bindVariables(SPARQLQueryDefinition qdef, Binding initial, MarkLogicDatasetGraph markLogicDatasetGraph) {
         if (initial == null) {
         }
