@@ -395,7 +395,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	/**
      * Adds permissions to a graph.
      * @param graphName the node with the graph's name.
-     * param permissions A {@link com.marklogic.client.semantics.GraphPermissions} 
+     * @param permissions A {@link com.marklogic.client.semantics.GraphPermissions} 
      * object holding the graph's permissions.
      */
 	public void addPermissions(Node graphName, GraphPermissions permissions) {
@@ -410,6 +410,17 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 		client.deletePermissions(graphName.getURI());
 	}
 	
+	/**
+     * Sets the permissions on a graph.
+     * @param graphName the node with the graph's name.
+     * @param permissions A {@link com.marklogic.client.semantics.GraphPermissions} 
+     * object holding the graph's permissions.
+     */
+    public void writePermissions(Node graphName, GraphPermissions permissions) {
+        client.writeGraphPermissions(graphName.getURI(), permissions);
+    }
+    
+    
 	/**
 	 * Forces the quads in the write cache to flush to the server.
 	 */

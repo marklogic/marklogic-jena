@@ -124,7 +124,7 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
         bindVariables(qdef, this.initial, markLogicDatasetGraph);
         QueryDefinition constrainingQueryDefinition = markLogicDatasetGraph.getConstrainingQueryDefinition();
 
-        qdef.setConstrainingQueryDefinintion(constrainingQueryDefinition);
+        qdef.setConstrainingQueryDefinition(constrainingQueryDefinition);
         return qdef;
     }
 
@@ -155,8 +155,8 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
 
         Query query = (Query)context.get(ARQConstants.sysCurrentQuery);
         
-        long limit = -1;
-        long offset = -1;
+        Long limit = null;
+        Long offset = null;
         if (query.hasLimit()) {
             limit = query.getLimit();
             query.setLimit(Query.NOLIMIT);
@@ -187,7 +187,7 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
         	query.setConstructTemplate(template);
         	//throw new MarkLogicJenaException("Construct Type Supported by Engine Layer");
         } else if (query.isSelectType()) {
-        	client.executeSelect(qdef, handle, offset, limit);
+            client.executeSelect(qdef, handle, offset, limit);
             ResultSet results = JSONInput.fromJSON(handle.get());
             qIter = new QueryIteratorResultSet(results);
         } else {
