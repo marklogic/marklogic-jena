@@ -76,13 +76,21 @@ public class JenaDatabaseClient {
     }
 
     public InputStreamHandle executeSelect(SPARQLQueryDefinition qdef,
-            InputStreamHandle handle, long offset, long limit) {
-        return this.sparqlQueryManager.executeSelect(qdef, handle, offset, limit, currentTransaction);
+            InputStreamHandle handle, Long offset, Long limit) {
+        if (limit != null) {
+            this.sparqlQueryManager.setPageLength(limit);
+        }
+        if (offset != null) {
+            return this.sparqlQueryManager.executeSelect(qdef, handle, offset, currentTransaction);
+        }
+        else {
+            return this.sparqlQueryManager.executeSelect(qdef, handle, currentTransaction);
+        }
     }
 
     public InputStreamHandle executeSelect(SPARQLQueryDefinition qdef,
             InputStreamHandle handle) {
-        return executeSelect(qdef, handle, -1, -1);
+        return executeSelect(qdef, handle, null, null);
     }
 
     public Iterator<String> listGraphUris() {
@@ -113,6 +121,9 @@ public class JenaDatabaseClient {
         this.graphManager.deletePermissions(uri, currentTransaction);
     }
 
+    public void writeGraphPermissions(String uri, GraphPermissions permissions) {
+        this.graphManager.writePermissions(uri, permissions, currentTransaction);
+    }
 
     public Transaction openTransaction() {
         return this.client.openTransaction();
