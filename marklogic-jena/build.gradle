@@ -37,7 +37,7 @@ repositories {
 
 dependencies {
     compile('org.apache.jena:jena-arq:2.13.0')
-    compile('com.marklogic:java-client-api:4.0-SNAPSHOT') {
+    compile('com.marklogic:java-client-api:3.0-SNAPSHOT') {
 	   exclude(group: 'org.slf4j')
        exclude(group: 'ch.qos.logback')
     }
