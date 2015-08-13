@@ -34,7 +34,9 @@ import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.NodeFactory;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.query.ReadWrite;
+import com.hp.hpl.jena.shared.Lock;
 import com.hp.hpl.jena.sparql.core.Quad;
+import com.hp.hpl.jena.sparql.util.Context;
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.DatabaseClientFactory;
 import com.marklogic.client.DatabaseClientFactory.Authentication;
@@ -111,12 +113,16 @@ public class JenaGraphTests extends ConnectedRESTQA {
 	 */
 
 	@Test
-	public void testCrud_admin() {
+	public void test004Crud_admin() {
 		// Insert Triples into Graph
 		Graph g1 = markLogicDatasetGraphAdmin.getDefaultGraph();
+		assertTrue(g1.isEmpty());
+		assertNotNull(g1);
 		Triple triple = new Triple(NodeFactory.createURI("s5"), NodeFactory.createURI("p5"), NodeFactory.createURI("o5"));
 		g1.add(triple);
+
 		Node n1 = NodeFactory.createURI("http://example.org/jenaAdd");
+		Quad quad = new Quad(n1, triple);
 		// Add Named Graph and validate triples
 		markLogicDatasetGraphAdmin.addGraph(n1, g1);
 		Graph g2 = markLogicDatasetGraphAdmin.getGraph(n1);
@@ -130,9 +136,38 @@ public class JenaGraphTests extends ConnectedRESTQA {
 		Graph g3 = markLogicDatasetGraphAdmin.getGraph(n1);
 		assertTrue("Expecting empty graph, received " + g3.toString(), g3.toString().contains("{}"));
 
-		// Close DataSet
-		markLogicDatasetGraphAdmin.close();
+		// AFTER CLEAR add new graph and Quad with same triple and Graph node
+		markLogicDatasetGraphAdmin.addGraph(n1, g1);
+		markLogicDatasetGraphAdmin.add(quad);
 
+		Iterator<Quad> quads = markLogicDatasetGraphAdmin.find(null, null, null, null);
+		while (quads.hasNext()) {
+			Quad quad1 = quads.next();
+			assertTrue(quad1.equals(quad));
+		}
+
+		Iterator<Quad> quads1 = markLogicDatasetGraphAdmin.find(Node.ANY, Node.ANY, Node.ANY, Node.ANY);
+		while (quads1.hasNext()) {
+			Quad quad1 = quads1.next();
+			assertTrue(quad1.equals(quad));
+		}
+
+		// Delete All triples in Named Graph and verify
+		markLogicDatasetGraphAdmin.deleteAny(n1, null, null, null);
+		assertFalse(markLogicDatasetGraphAdmin.getGraph(n1).contains(triple));
+		assertTrue(markLogicDatasetGraphAdmin.size() == 1);
+
+		assertNotNull(markLogicDatasetGraphAdmin.getLock());
+
+		// Close DataSet TODO: add assert after #14 is fixed
+		markLogicDatasetGraphAdmin.close();
+		try {
+			Iterator<Node> graphClosed = markLogicDatasetGraphAdmin.listGraphNodes();
+			System.out.println(graphClosed.toString());
+		} catch (Exception e) {
+			System.out.println("EXCEPTION AFTER CLOSE" + e);
+		}
+		// TODO assert Exception
 	}
 
 	/*
@@ -173,58 +208,81 @@ public class JenaGraphTests extends ConnectedRESTQA {
 		Node graphNode = NodeFactory.createURI("testing/quad_add");
 		Boolean found = markLogicDatasetGraphWriter.containsGraph(graphNode);
 		assertTrue("Did not find the Graph Node ::" + graphNode + "Returned" + found, found);
-		
-		
+		markLogicDatasetGraphWriter.deleteAny(NodeFactory.createURI("testing/quad_add"), Node.ANY, Node.ANY, Node.ANY);
+
 		// Add and Validate Quad
 		Quad quad = new Quad(NodeFactory.createURI("http://originalGraph"), NodeFactory.createURI("#electricVehicle2"),
 				NodeFactory.createURI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
 				NodeFactory.createURI("http://people.aifb.kit.edu/awa/2011/smartgrid/schema/smartgrid#ElectricVehicle"));
+		Quad quad2 = new Quad(NodeFactory.createURI("http://originalGraph"), NodeFactory.createURI("#electricVehicle21"),
+				NodeFactory.createURI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type1"),
+				NodeFactory.createURI("http://people.aifb.kit.edu/awa/2011/smartgrid/schema/smartgrid#ElectricVehicle1"));
 		markLogicDatasetGraphWriter.add(quad);
-		found = markLogicDatasetGraphWriter.contains(quad);
+
+		// Validate quad using contains node's
+		found = markLogicDatasetGraphWriter.contains(NodeFactory.createURI("http://originalGraph"),
+				NodeFactory.createURI("#electricVehicle2"), NodeFactory.createURI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
+				NodeFactory.createURI("http://people.aifb.kit.edu/awa/2011/smartgrid/schema/smartgrid#ElectricVehicle"));
+
 		assertTrue("Did not find the Quad Node ::" + quad + "Returned" + found, found);
 		Iterator<Quad> quads = markLogicDatasetGraphWriter.find(quad);
-			while (quads.hasNext()) {
-				Quad quad1 = quads.next();
-				assertTrue(quad1.equals(quad));
-			}
+		while (quads.hasNext()) {
+			Quad quad1 = quads.next();
+			assertTrue(quad1.equals(quad));
+		}
 
-			markLogicDatasetGraphWriter.delete(quad);
-		
-		try{
-			Iterator<Quad> quads1 = markLogicDatasetGraphWriter.find(quad);
-			while (quads1.hasNext()) {
-				Quad quad1 = quads1.next();
-				assertFalse(quad1.equals(quad));
-			}
-			
-		}catch(Exception e){
-			System.out.println(e);
+		// Delete Non existing quad and validate Inserted quad exists
+		markLogicDatasetGraphWriter.delete(quad2);
+		quads = markLogicDatasetGraphWriter.find();
+		while (quads.hasNext()) {
+			Quad quad1 = quads.next();
+			assertTrue(quad1.equals(quad));
 		}
-		
-		try{
-		Iterator<Quad> quads1 = markLogicDatasetGraphWriter.find();
-		while(quads.hasNext()){
-			Quad quad2 = quads.next();
-			assertFalse(quad2.equals(quad));
-				}
-			}catch(Exception e){
-				System.out.println(e);
-		}
-			 
+
+		// Delete existing Quad and validate
+		markLogicDatasetGraphWriter.delete(NodeFactory.createURI("http://originalGraph"), NodeFactory.createURI("#electricVehicle2"),
+				NodeFactory.createURI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
+				NodeFactory.createURI("http://people.aifb.kit.edu/awa/2011/smartgrid/schema/smartgrid#ElectricVehicle"));
+
+		assertFalse(markLogicDatasetGraphWriter.contains(NodeFactory.createURI("http://originalGraph"),
+				NodeFactory.createURI("#electricVehicle2"), NodeFactory.createURI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
+				NodeFactory.createURI("http://people.aifb.kit.edu/awa/2011/smartgrid/schema/smartgrid#ElectricVehicle")));
+
+		// Find and validate Quad doesnot exist
+
+		Iterator<Quad> quads1 = markLogicDatasetGraphWriter.find(quad);
+		Boolean quads1has = quads1.hasNext();
+		assertFalse(quads1.hasNext());
+
+		quads1 = markLogicDatasetGraphWriter.find();
+		assertFalse(quads1.hasNext());
+
 		// Merge Graphs and Validate triples
 		String file = datasource + "semantics.nq";
 		RDFDataMgr.read(markLogicDatasetGraphWriter, file);
 		markLogicDatasetGraphWriter.sync();
-		Graph g = markLogicDatasetGraphWriter.getGraph(NodeFactory.createURI("http://en.wikipedia.org/wiki/Apollo_13?oldid=495374925#absolute-line=6"));
+		Graph g = markLogicDatasetGraphWriter.getGraph(NodeFactory
+				.createURI("http://en.wikipedia.org/wiki/Apollo_13?oldid=495374925#absolute-line=6"));
 		markLogicDatasetGraphWriter.mergeGraph(graphNode, g);
 		Graph mergedgraph = markLogicDatasetGraphWriter.getGraph(graphNode);
-		 assertTrue("Merged graph dpes not have expected number of triples", mergedgraph.size() == 5);
-		 
-				// Remove Graph and validate
-		markLogicDatasetGraphWriter.removeGraph(graphNode);
-		assertTrue("The graph Shold not Exist after delete",
-				!(markLogicDatasetGraphWriter.containsGraph(graphNode)));
+		int size = mergedgraph.size();
+		assertTrue("Merged graph dpes not have expected number of triples", mergedgraph.size() == 4);
 
+		// Remove Graph and validate
+		markLogicDatasetGraphWriter.removeGraph(graphNode);
+		assertTrue("The graph Shold not Exist after delete", !(markLogicDatasetGraphWriter.containsGraph(graphNode)));
+
+		// Delete non existing graph, expected to throw ResourceNotfound
+		// Exception
+		Exception exp = null;
+		try {
+			markLogicDatasetGraphWriter.removeGraph(graphNode);
+		} catch (Exception e) {
+			exp = e;
+
+		}
+		assertTrue("Deleting non Existing Grpah should throw ResourceNot found exception, but it did not",
+				exp.toString().contains("ResourceNotFoundException"));
 		markLogicDatasetGraphWriter.close();
 	}
 
@@ -248,29 +306,69 @@ public class JenaGraphTests extends ConnectedRESTQA {
 	}
 
 	/*
-	 * Add Quad with Admin User and Read with Read user
+	 * Add Quad with Admin User and Read with Read user and validate using find,
+	 * findNG with null and ANY, contains
 	 */
+
 	@Test
 	public void testAddRead_AdminUser() throws Exception {
-		try {
-			Quad quad = new Quad(NodeFactory.createURI("http://originalGraph1"), new Triple(NodeFactory.createURI("#electricVehicle3"),
-					NodeFactory.createURI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type1"),
-					NodeFactory.createLiteral("http://people.aifb.kit.edu/awa/2011/smartgrid/schema/smartgrid#ElectricVehicle1")));
-			markLogicDatasetGraphAdmin.add(quad);
-			markLogicDatasetGraphAdmin.sync();
-			assertTrue("Did not find  Quad in Dataset, Received " + markLogicDatasetGraphReader.contains(quad),
-					markLogicDatasetGraphReader.contains(quad));
-			markLogicDatasetGraphReader.close();
 
-			Node n1 = NodeFactory.createURI("http://originalGraph1");
-
-			markLogicDatasetGraphAdmin.clearPermissions(n1);
-			GraphPermissions permissions = markLogicDatasetGraphAdmin.getPermissions(n1);
-			assertTrue("Didnot have expected permissions, returned " + permissions,
-					permissions.get("rest-writer").contains(Capability.UPDATE) && permissions.get("rest-reader").contains(Capability.READ));
-		} catch (Exception e) {
-
+		Quad quad = new Quad(NodeFactory.createURI("http://originalGraph1"), new Triple(NodeFactory.createURI("#electricVehicle3"),
+				NodeFactory.createURI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type1"),
+				NodeFactory.createLiteral("http://people.aifb.kit.edu/awa/2011/smartgrid/schema/smartgrid#ElectricVehicle1")));
+		markLogicDatasetGraphAdmin.add(quad);
+		markLogicDatasetGraphAdmin.sync();
+		// Contains Node of type quad
+		assertTrue(
+				"Did not find  Quad in Dataset, Received " + markLogicDatasetGraphReader.contains(quad),
+				markLogicDatasetGraphReader.contains(NodeFactory.createURI("http://originalGraph1"),
+						NodeFactory.createURI("#electricVehicle3"),
+						NodeFactory.createURI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type1"),
+						NodeFactory.createLiteral("http://people.aifb.kit.edu/awa/2011/smartgrid/schema/smartgrid#ElectricVehicle1")));
+		// find node
+		Iterator<Quad> result = markLogicDatasetGraphReader.find(NodeFactory.createURI("http://originalGraph1"),
+				NodeFactory.createURI("#electricVehicle3"), NodeFactory.createURI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type1"),
+				NodeFactory.createLiteral("http://people.aifb.kit.edu/awa/2011/smartgrid/schema/smartgrid#ElectricVehicle1"));
+		while (result.hasNext()) {
+			Quad quad1 = result.next();
+			assertTrue(
+					"returned" + quad1,
+					quad1.matches(NodeFactory.createURI("http://originalGraph1"), NodeFactory.createURI("#electricVehicle3"),
+							NodeFactory.createURI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type1"),
+							NodeFactory.createLiteral("http://people.aifb.kit.edu/awa/2011/smartgrid/schema/smartgrid#ElectricVehicle1")));
 		}
+
+		// find node with pattern null and any
+		Iterator<Quad> result1 = markLogicDatasetGraphReader.find(null, NodeFactory.createURI("#electricVehicle3"), Node.ANY,
+				NodeFactory.createLiteral("http://people.aifb.kit.edu/awa/2011/smartgrid/schema/smartgrid#ElectricVehicle1"));
+		while (result1.hasNext()) {
+			Quad quad1 = result1.next();
+			assertTrue(
+					"returned" + quad1,
+					quad1.matches(NodeFactory.createURI("http://originalGraph1"), NodeFactory.createURI("#electricVehicle3"),
+							NodeFactory.createURI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type1"),
+							NodeFactory.createLiteral("http://people.aifb.kit.edu/awa/2011/smartgrid/schema/smartgrid#ElectricVehicle1")));
+		}
+
+		// findNG with any and null
+		Iterator<Quad> result2 = markLogicDatasetGraphReader.findNG(NodeFactory.createURI("http://originalGraph1"), Node.ANY,
+				NodeFactory.createURI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type1"), null);
+		while (result2.hasNext()) {
+			Quad quad1 = result2.next();
+			assertTrue(
+					"returned" + quad1,
+					quad1.matches(NodeFactory.createURI("http://originalGraph1"), NodeFactory.createURI("#electricVehicle3"),
+							NodeFactory.createURI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type1"),
+							NodeFactory.createLiteral("http://people.aifb.kit.edu/awa/2011/smartgrid/schema/smartgrid#ElectricVehicle1")));
+		}
+
+		Node n1 = NodeFactory.createURI("http://originalGraph1");
+
+		markLogicDatasetGraphAdmin.clearPermissions(n1);
+		GraphPermissions permissions = markLogicDatasetGraphAdmin.getPermissions(n1);
+		assertTrue("Didnot have expected permissions, returned " + permissions, permissions.get("rest-writer").contains(Capability.UPDATE)
+				&& permissions.get("rest-reader").contains(Capability.READ));
+
 	}
 
 	@Test
@@ -302,7 +400,6 @@ public class JenaGraphTests extends ConnectedRESTQA {
 	 * Delete triple and quad and set empty graph as default graph
 	 */
 	@Test
-	// isEmpty
 	public void testDelete_admin() {
 		Triple triple = new Triple(NodeFactory.createURI("s5"), NodeFactory.createURI("p5"), NodeFactory.createURI("o5"));
 		Quad quad = new Quad(NodeFactory.createURI("new-graph-fordefault2"), triple);
@@ -332,7 +429,10 @@ public class JenaGraphTests extends ConnectedRESTQA {
 		// Add Triples into Named Graph
 		Graph g = markLogicDatasetGraphWriter.getDefaultGraph();
 		Node newgraph = NodeFactory.createURI("http://jena.example.org/perm");
+		// Add Graph and Validate
 		markLogicDatasetGraphWriter.addGraph(newgraph, g);
+		markLogicDatasetGraphWriter.sync();
+		assertTrue(markLogicDatasetGraphWriter.containsGraph(newgraph));
 		GraphPermissions permissions = markLogicDatasetGraphAdmin.getPermissions(newgraph);
 		markLogicDatasetGraphWriter.addPermissions(newgraph, permissions.permission("test-eval", Capability.EXECUTE));
 		permissions = markLogicDatasetGraphWriter.getPermissions(newgraph);
@@ -342,104 +442,174 @@ public class JenaGraphTests extends ConnectedRESTQA {
 		markLogicDatasetGraphWriter.sync();
 		permissions = markLogicDatasetGraphWriter.getPermissions(newgraph);
 		System.out.println(permissions);
-		assertTrue("Should not have Execute for test-eval",!( permissions.containsValue("test-eval")));
+		assertTrue("Should not have Execute for test-eval", !(permissions.containsValue("test-eval")));
 
 	}
 
 	@Test
 	public void testAddDelete_permissions_inTrx() {
 		String file = datasource + "rdfxml1.rdf";
-		// Read triples into dataset
-		markLogicDatasetGraphWriter.begin(ReadWrite.WRITE);
-		RDFDataMgr.read(markLogicDatasetGraphWriter, file);
-		markLogicDatasetGraphWriter.sync();
+		try {
+			// Read triples into dataset
+			markLogicDatasetGraphWriter.begin(ReadWrite.WRITE);
+			RDFDataMgr.read(markLogicDatasetGraphWriter, file);
+			markLogicDatasetGraphWriter.sync();
 
-		// Add Triples into Named Graph
-		Graph g = markLogicDatasetGraphWriter.getDefaultGraph();
-		Node newgraph = NodeFactory.createURI("http://jena.example.org/perm");
-		markLogicDatasetGraphWriter.addGraph(newgraph, g);
-		markLogicDatasetGraphWriter.commit();
+			// Add Triples into Named Graph
+			Graph g = markLogicDatasetGraphWriter.getDefaultGraph();
+			Node newgraph = NodeFactory.createURI("http://jena.example.org/perm");
+			markLogicDatasetGraphWriter.addGraph(newgraph, g);
+			markLogicDatasetGraphWriter.commit();
 
-		assertFalse(markLogicDatasetGraphWriter.isInTransaction());
+			assertFalse(markLogicDatasetGraphWriter.isInTransaction());
 
-		GraphPermissions permissions = markLogicDatasetGraphAdmin.getPermissions(newgraph);
+			GraphPermissions permissions = markLogicDatasetGraphAdmin.getPermissions(newgraph);
 
-		// Add Permission and validate
-		markLogicDatasetGraphWriter.begin(ReadWrite.WRITE);
-		markLogicDatasetGraphWriter.addPermissions(newgraph, permissions.permission("test-eval", Capability.EXECUTE));
-		markLogicDatasetGraphWriter.commit();
-		permissions = markLogicDatasetGraphWriter.getPermissions(newgraph);
-		System.out.println(markLogicDatasetGraphWriter.getPermissions(newgraph));
-		assertTrue("Did not have permission looking for", permissions.get("test-eval").contains(Capability.EXECUTE));
+			// Add Permission and validate
+			markLogicDatasetGraphWriter.begin(ReadWrite.WRITE);
+			markLogicDatasetGraphWriter.addPermissions(newgraph, permissions.permission("test-eval", Capability.EXECUTE));
+			markLogicDatasetGraphWriter.commit();
+			permissions = markLogicDatasetGraphWriter.getPermissions(newgraph);
+			System.out.println(markLogicDatasetGraphWriter.getPermissions(newgraph));
+			assertTrue("Did not have permission looking for", permissions.get("test-eval").contains(Capability.EXECUTE));
 
-		// Clear Permission and Abort and validate permission exist
-		markLogicDatasetGraphWriter.begin(ReadWrite.WRITE);
-		markLogicDatasetGraphWriter.clearPermissions(newgraph);
-		markLogicDatasetGraphWriter.end();
-		assertFalse(markLogicDatasetGraphWriter.isInTransaction());
-		permissions = markLogicDatasetGraphWriter.getPermissions(newgraph);
-		assertTrue("Did not have permission looking for", permissions.get("test-eval").contains(Capability.EXECUTE));
+			// Clear Permission and Abort and validate permission exist
+			markLogicDatasetGraphWriter.begin(ReadWrite.WRITE);
+			markLogicDatasetGraphWriter.clearPermissions(newgraph);
+			markLogicDatasetGraphWriter.end();
+			assertFalse(markLogicDatasetGraphWriter.isInTransaction());
+			permissions = markLogicDatasetGraphWriter.getPermissions(newgraph);
+			assertTrue("Did not have permission looking for", permissions.get("test-eval").contains(Capability.EXECUTE));
 
-		// Clear Permission And validate
-		markLogicDatasetGraphWriter.begin(ReadWrite.WRITE);
-		markLogicDatasetGraphWriter.clearPermissions(newgraph);
-		markLogicDatasetGraphWriter.commit();
-		assertFalse(markLogicDatasetGraphWriter.isInTransaction());
-		System.out.println(markLogicDatasetGraphWriter.getPermissions(newgraph));
-		permissions = markLogicDatasetGraphWriter.getPermissions(newgraph);
-		assertTrue("Should not contain test-eval=[EXECUTE]", !(permissions.toString().contains("test-eval=[EXECUTE]")));
+			// Clear Permission And validate
+			markLogicDatasetGraphWriter.begin(ReadWrite.WRITE);
+			markLogicDatasetGraphWriter.clearPermissions(newgraph);
+			markLogicDatasetGraphWriter.commit();
+			assertFalse(markLogicDatasetGraphWriter.isInTransaction());
+			System.out.println(markLogicDatasetGraphWriter.getPermissions(newgraph));
+			permissions = markLogicDatasetGraphWriter.getPermissions(newgraph);
+			assertTrue("Should not contain test-eval=[EXECUTE]", !(permissions.toString().contains("test-eval=[EXECUTE]")));
+		} catch (Exception e) {
+			System.out.println(e);
+		} finally {
+			if (markLogicDatasetGraphWriter.isInTransaction())
+				markLogicDatasetGraphWriter.end();
+		}
 	}
 
 	/*
 	 * Delete Quad and graph within permission
 	 */
 	@Test
-	public void testDelete_InTrx() {
+	public void test001CRUD_InTrx() {
 
 		String file = datasource + "rdfxml1.rdf";
-		// Read triples into dataset
-		markLogicDatasetGraphWriter.begin(ReadWrite.WRITE);
-		RDFDataMgr.read(markLogicDatasetGraphWriter, file);
-		markLogicDatasetGraphWriter.sync();
-		Graph g = markLogicDatasetGraphWriter.getDefaultGraph();
-		Node newgraph = NodeFactory.createURI("http://jena.example.org/perm");
-		markLogicDatasetGraphWriter.addGraph(newgraph, g);
-		markLogicDatasetGraphWriter.commit();
+		try {
+			Node newgraph = NodeFactory.createURI("http://jena.example.org/perm");
+			// Read triples into dataset & Add to named graph
+			markLogicDatasetGraphWriter.begin(ReadWrite.WRITE);
+			RDFDataMgr.read(markLogicDatasetGraphWriter, file);
+			markLogicDatasetGraphWriter.sync();
+			Graph g = markLogicDatasetGraphWriter.getDefaultGraph();
 
-		// Delete one Triple and Validate
-		markLogicDatasetGraphWriter.begin(ReadWrite.WRITE);
-		markLogicDatasetGraphWriter.deleteAny(newgraph, Node.ANY, NodeFactory.createURI("http://example.org/kennedy/sameAs"), Node.ANY);
-		markLogicDatasetGraphWriter.commit();
-		Quad quad = new Quad(newgraph, Node.ANY, NodeFactory.createURI("http://example.org/kennedy/sameAs"), Node.ANY);
-		assertFalse(markLogicDatasetGraphWriter.contains(quad));
+			markLogicDatasetGraphWriter.addGraph(newgraph, g);
+			markLogicDatasetGraphWriter.commit();
 
-		// Merge Graphs and validate
-		markLogicDatasetGraphWriter.begin(ReadWrite.WRITE);
-		markLogicDatasetGraphWriter.mergeGraph(newgraph, g);
-		assertTrue(markLogicDatasetGraphWriter.contains(quad));
-		markLogicDatasetGraphWriter.commit();
+			// Delete one Triple and Validate
+			markLogicDatasetGraphWriter.begin(ReadWrite.WRITE);
+			markLogicDatasetGraphWriter.deleteAny(newgraph, Node.ANY, NodeFactory.createURI("http://example.org/kennedy/sameAs"), Node.ANY);
+			markLogicDatasetGraphWriter.commit();
+			markLogicDatasetGraphWriter.sync();
+			Quad quad = new Quad(newgraph, Node.ANY, NodeFactory.createURI("http://example.org/kennedy/sameAs"), Node.ANY);
+			assertFalse(markLogicDatasetGraphWriter.contains(quad));
 
-		// Delete Graph , Abort trx and Validate graph exists
-		markLogicDatasetGraphWriter.begin(ReadWrite.WRITE);
-		markLogicDatasetGraphWriter.removeGraph(newgraph);
-		markLogicDatasetGraphWriter.abort();
-		assertFalse(markLogicDatasetGraphWriter.isInTransaction());
-		assertTrue(markLogicDatasetGraphWriter.contains(newgraph, Node.ANY, Node.ANY, Node.ANY));
+			// Merge Graphs and validate
+			markLogicDatasetGraphWriter.begin(ReadWrite.WRITE);
+			markLogicDatasetGraphWriter.mergeGraph(newgraph, g);
+			assertTrue(markLogicDatasetGraphWriter.contains(quad));
+			markLogicDatasetGraphWriter.commit();
 
-		// Delete Graph and Validate 
-		markLogicDatasetGraphWriter.begin(ReadWrite.WRITE);
-		markLogicDatasetGraphWriter.removeGraph(newgraph);
-		markLogicDatasetGraphWriter.commit();
-		assertFalse(markLogicDatasetGraphWriter.containsGraph(newgraph));
+			// Delete Graph , Abort trx and Validate graph exists
+			markLogicDatasetGraphWriter.begin(ReadWrite.WRITE);
+			markLogicDatasetGraphWriter.removeGraph(newgraph);
+			markLogicDatasetGraphWriter.abort();
+			assertFalse(markLogicDatasetGraphWriter.isInTransaction());
+			assertTrue(markLogicDatasetGraphWriter.contains(newgraph, Node.ANY, Node.ANY, Node.ANY));
 
+			// Delete Graph and Validate
+			markLogicDatasetGraphWriter.begin(ReadWrite.WRITE);
+			markLogicDatasetGraphWriter.removeGraph(newgraph);
+			markLogicDatasetGraphWriter.commit();
+			assertFalse(markLogicDatasetGraphWriter.containsGraph(newgraph));
+
+			// Add Graph and Find Quads
+			markLogicDatasetGraphWriter.begin(ReadWrite.WRITE);
+			Node newgraph1 = NodeFactory.createURI("http://jena.example.org/perm1");
+			markLogicDatasetGraphWriter.addGraph(newgraph1, g);
+			Iterator<Quad> quads = markLogicDatasetGraphWriter.find();
+			assertTrue(quads.hasNext());
+			while (quads.hasNext()) {
+				Quad quad1 = quads.next();
+				System.out.println(quad1.getSubject());
+				assertTrue(quad1.getSubject().matches(NodeFactory.createURI("http://example.org/kennedy/person1")));
+			}
+			// Commit and validate outside trx
+			markLogicDatasetGraphWriter.commit();
+
+			quads = markLogicDatasetGraphWriter.find();
+			assertTrue(quads.hasNext());
+			while (quads.hasNext()) {
+				Quad quad1 = quads.next();
+				System.out.println(quad1.getSubject());
+				assertTrue(quad1.getSubject().matches(NodeFactory.createURI("http://example.org/kennedy/person1")));
+			}
+			// READ trx
+			Exception exp = null;
+			try {
+				markLogicDatasetGraphWriter.begin(ReadWrite.READ);
+				Iterator<Quad> quadsRead = markLogicDatasetGraphWriter.find();
+				assertTrue(quads.hasNext());
+				while (quadsRead.hasNext()) {
+					Quad quad1 = quadsRead.next();
+					System.out.println(quad1.getSubject());
+					assertTrue(quad1.getSubject().matches(NodeFactory.createURI("http://example.org/kennedy/person1")));
+				}
+			} catch (Exception e) {
+				exp = e;
+				System.out.println(e);
+			}
+			assertTrue("should throw:: MarkLogic only supports write transactions",
+					exp.toString().contains(" MarkLogic only supports write transactions"));
+			markLogicDatasetGraphWriter.end();
+		} catch (Exception e) {
+
+		} finally {
+			if (markLogicDatasetGraphWriter.isInTransaction())
+				markLogicDatasetGraphWriter.end();
+		}
 	}
-	//TODO find  ..quads
-	
-	
-	//TODO ? Support for triplexml miemtype ..?
-	// TODO? removeGraph(Remove all data associated with the named graph), deletes graph as well..? along with data within graph
-	//TODO ? any special exception handling required for Jena.?
-	
+
+	/*
+	 * -ve parsing with wrong format
+	 */
+
+	@Test
+	public void testCRUD_triplexml() {
+
+		String file = datasource + "triplexml1.xml";
+		// Read triples into dataset
+		try {
+			RDFDataMgr.read(markLogicDatasetGraphWriter, file);
+			markLogicDatasetGraphWriter.sync();
+			Graph g1 = markLogicDatasetGraphWriter.getDefaultGraph();
+
+			assertTrue("did not match Triples", g1.toString().contains("Anna's Homepage"));
+
+		} catch (Exception e) {
+			assertTrue(e.toString().contains("RiotException"));
+		}
+	}
+
 	public void testStubs_datasetGraph() {
 		markLogicDatasetGraphWriter.abort();// D
 		Quad quad = null;
@@ -470,7 +640,7 @@ public class JenaGraphTests extends ConnectedRESTQA {
 		markLogicDatasetGraphWriter.setDefaultGraph(graph);// D
 		markLogicDatasetGraphWriter.size(); // D
 		markLogicDatasetGraphWriter.sync(); // D
-		
+
 		QueryDefinition constrainingQueryDefinition = null;
 		markLogicDatasetGraphWriter.setConstrainingQueryDefinition(constrainingQueryDefinition);
 		SPARQLRuleset rulesets = null;
