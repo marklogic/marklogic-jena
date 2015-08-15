@@ -420,7 +420,7 @@ public class JenaGraphTests extends ConnectedRESTQA {
 	}
 
 	@Test
-	public void testAddDelete_permissions() {
+	public void test001AddDelete_permissions() {
 		String file = datasource + "rdfxml1.rdf";
 		// Read triples into dataset
 		RDFDataMgr.read(markLogicDatasetGraphWriter, file);
@@ -443,6 +443,21 @@ public class JenaGraphTests extends ConnectedRESTQA {
 		permissions = markLogicDatasetGraphWriter.getPermissions(newgraph);
 		System.out.println(permissions);
 		assertTrue("Should not have Execute for test-eval", !(permissions.containsValue("test-eval")));
+
+		// Set Execute permissions and validate
+		permissions =  permissions.permission("test-eval", Capability.EXECUTE);
+		markLogicDatasetGraphWriter.writePermissions(newgraph, permissions);
+		assertTrue("Did not have permission looking for", permissions.get("test-eval").contains(Capability.EXECUTE));
+
+		// Set UPDATE permissions and validate
+		permissions =  permissions.permission("test-eval", Capability.UPDATE);
+		markLogicDatasetGraphWriter.writePermissions(newgraph, permissions);
+		assertTrue(permissions.get("test-eval").size() == 1 );
+		assertTrue("Did not have permission looking for", permissions.get("test-eval").contains(Capability.UPDATE));
+		
+		// Set the same permission for the same graph
+		markLogicDatasetGraphWriter.writePermissions(newgraph, permissions);
+		assertTrue(permissions.get("test-eval").size() == 1 );
 
 	}
 
@@ -641,24 +656,7 @@ public class JenaGraphTests extends ConnectedRESTQA {
 		markLogicDatasetGraphWriter.size(); // D
 		markLogicDatasetGraphWriter.sync(); // D
 
-		QueryDefinition constrainingQueryDefinition = null;
-		markLogicDatasetGraphWriter.setConstrainingQueryDefinition(constrainingQueryDefinition);
-		SPARQLRuleset rulesets = null;
-		markLogicDatasetGraphWriter.setRulesets(rulesets);
-		markLogicDatasetGraphWriter.getRulesets();
-		markLogicDatasetGraphWriter.setSPARQLUpdatePermissions(permissions);
-		markLogicDatasetGraphWriter.getSPARQLUpdatePermissions();
-		markLogicDatasetGraphWriter.startRequest();
-		markLogicDatasetGraphWriter.end();
-		markLogicDatasetGraphWriter.finishRequest();
-		markLogicDatasetGraphWriter.getConstrainingQueryDefinition();
-		markLogicDatasetGraphWriter.getDatabaseClient();
-		markLogicDatasetGraphWriter.toDataset();
-		markLogicDatasetGraphWriter.withRulesets(rulesets);
-		SPARQLQueryDefinition qdef = null;
-		String variableName = null;
-		Node objectNode = null;
-		markLogicDatasetGraphWriter.bindObject(qdef, variableName, objectNode);
+		
 
 	}
 
