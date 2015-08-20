@@ -462,7 +462,7 @@ public class JenaGraphTests extends ConnectedRESTQA {
 	}
 
 	@Test
-	public void testAddDelete_permissions_inTrx() {
+	public void testAddDelete_permissions_inTrx() throws Exception{
 		String file = datasource + "rdfxml1.rdf";
 		try {
 			// Read triples into dataset
@@ -516,7 +516,7 @@ public class JenaGraphTests extends ConnectedRESTQA {
 	 * Delete Quad and graph within permission
 	 */
 	@Test
-	public void test001CRUD_InTrx() {
+	public void testCRUD_InTrx() throws Exception{
 
 		String file = datasource + "rdfxml1.rdf";
 		try {
