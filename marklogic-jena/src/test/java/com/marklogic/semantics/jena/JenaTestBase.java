@@ -30,8 +30,7 @@ public class JenaTestBase {
     protected static DatabaseClient readerClient;
     protected static DatabaseClient writerClient;
     protected static DatabaseClient adminClient;
-    
-    
+
     static {
         Properties props = new Properties();
         try {
