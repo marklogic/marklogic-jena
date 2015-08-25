@@ -401,6 +401,12 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
         checkIsOpen();
 		client.deleteGraph(graphName.getURI());
 	}
+	
+	@Override
+    public long size() {
+	    throw new UnsupportedOperationException("size() not supported on MarkLogicDatasetGraph");
+	} 
+    
 
 	/**
 	 * Gets the permissions associated with this graph.
