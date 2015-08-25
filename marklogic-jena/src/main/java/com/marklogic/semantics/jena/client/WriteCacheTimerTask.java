@@ -54,9 +54,6 @@ public class WriteCacheTimerTask extends TimerTask {
             log.debug("Persisting " + graphNode);
             client.mergeGraph(graphNode.getURI(), cache.get(graphNode));
         }
-        if (cache.containsKey(DEFAULT_GRAPH_NODE)) {
-            client.mergeGraph(MarkLogicDatasetGraph.DEFAULT_GRAPH_URI, cache.get(DEFAULT_GRAPH_NODE));
-        }
         lastCacheAccess = new Date();
         cache.clear();
     }

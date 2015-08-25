@@ -52,9 +52,12 @@ import com.hp.hpl.jena.graph.NodeFactory;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.query.Dataset;
 import com.hp.hpl.jena.query.DatasetFactory;
+import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QueryExecution;
 import com.hp.hpl.jena.query.QueryExecutionFactory;
+import com.hp.hpl.jena.query.QueryFactory;
 import com.hp.hpl.jena.query.ReadWrite;
+import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.sparql.core.DatasetGraph;
 import com.hp.hpl.jena.sparql.core.Quad;
 import com.hp.hpl.jena.sparql.graph.GraphFactory;
@@ -62,9 +65,6 @@ import com.hp.hpl.jena.update.UpdateAction;
 import com.hp.hpl.jena.update.UpdateRequest;
 import com.marklogic.client.semantics.Capability;
 import com.marklogic.client.semantics.GraphPermissions;
-import com.marklogic.semantics.jena.JenaTestBase;
-import com.marklogic.semantics.jena.MarkLogicDatasetGraph;
-import com.marklogic.semantics.jena.MarkLogicTransactionException;
 
 public class MarkLogicDatasetGraphTest extends JenaTestBase {
 
@@ -373,4 +373,17 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
 	    Graph graphClosed = dsg.getGraph(n1);
 	    fail("Closed connection allowed operation");
 	}
+	
+	@Test
+    public void testSmallFileInsert() {
+        Dataset dataSet = getMarkLogicDatasetGraph("testdata/smallfile.nt").toDataset();
+        Query query = QueryFactory.create("select (count(?s) as ?ct) where { ?s ?p ?o }");
+        QueryExecution execution = QueryExecutionFactory.create(query, dataSet);
+        ResultSet results = execution.execSelect();
+        int i;
+        for (i=0; results.hasNext(); i++) {
+            results.next();
+        }
+        assertEquals("One triple inserted", 1, i);
+    }
 }
