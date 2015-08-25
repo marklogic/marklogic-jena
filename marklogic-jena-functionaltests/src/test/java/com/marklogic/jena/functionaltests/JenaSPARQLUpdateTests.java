@@ -132,6 +132,8 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 				+ " ASK WHERE" + " {" + " ?id bb:team r:Tigers." + " ?id bb:position \"pitcher\"." + " }";
 		queryExec = QueryExecutionFactory.create(query2, dataSet);
 		assertTrue(queryExec.execAsk());
+		markLogicDatasetGraph.close();
+		markLogicDatasetGraph = MarkLogicDatasetGraphFactory.createDatasetGraph(writerClient);
 
 	}
 
@@ -160,10 +162,14 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 	}
 
 	@Test
-	public void test002DescribeQuery_withbinding() {
+	public void testDescribeQuery_withbinding() {
 		markLogicDatasetGraph.clear();
 		Node newgraph = NodeFactory.createURI("http://marklogic.com/graph1");
+
 		dataSet = DatasetFactory.create(markLogicDatasetGraph);
+
+		markLogicDatasetGraph.add(null, NodeFactory.createURI("john"), NodeFactory.createURI("fname"), NodeFactory.createURI("johnfname"));
+
 		markLogicDatasetGraph.add(newgraph, NodeFactory.createURI("john"), NodeFactory.createURI("fname"),
 				NodeFactory.createURI("johnfname"));
 		markLogicDatasetGraph.add(newgraph, NodeFactory.createURI("john"), NodeFactory.createURI("lname"),
@@ -204,7 +210,7 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 	}
 
 	@Test
-	public void testStringQuery_withbinding() {
+	public void test001StringQuery_withbinding() {
 		markLogicDatasetGraph.clear();
 		String file = datasource + "tigers.ttl";
 		// Read triples into dataset
@@ -228,14 +234,27 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 		String query4 = "PREFIX  bb: <http://marklogic.com/baseball/players#> CONSTRUCT { ?ID ?p \"coach\" .}  FROM <http://marklogic.com/Graph1>"
 				+ "WHERE { ?ID ?p \"coach\" . ?ID bb:firstname ?firstname . Values ?firstname {\"Gene\"}}";
 
-		// TODO:: confirm Query and add assert
-		// PREFIX bb: <http://marklogic.com/baseball/players#>
-		// CONSTRUCT { ?ID bb:position ?o .} FROM <http://marklogic.com/Graph1>
-		// WHERE { ?ID bb:position ?o .
-		// bb:120 bb:position ?o .}
-
 		String query6 = "DESCRIBE <http://marklogic.com/baseball/players#107>";
 
+		String query7 = "PREFIX  bb: <http://marklogic.com/baseball/players#>  SELECT  ?n FROM <http://marklogic.com/Graph1> WHERE"
+				+ "{ ?s bb:position ?o.} LIMIT 2";
+		
+		//TODO:: fix after Githib issue #9	
+		
+		/*
+		 QueryExecution  queryExec7 = QueryExecutionFactory.create(query7, dataSet);
+		 ResultSet results3 = queryExec7.execSelect();
+		  System.out.println(results3.toString());
+		  System.out.println(results3.hasNext());
+		  
+		  while (results3.hasNext()) {
+			  QuerySolution qs = results3.next();
+		  System.out.println(qs.toString()); 
+		  }
+		 
+		*/
+		
+		
 		// ASK
 		QuerySolutionMap binding = new QuerySolutionMap();
 		binding.add("s", ResourceFactory.createResource("http://marklogic.com/baseball/players#120"));
@@ -275,7 +294,7 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 		Model model6 = queryExec6.execDescribe();
 		System.out.println(model6.getGraph().size() == 12);
 		assertTrue(model6.getGraph().size() == 12);
-
+		
 	}
 
 	@Test
@@ -424,6 +443,17 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 		QueryExecution askQuery1 = QueryExecutionFactory.create(
 				"BASE <http://example.org/> ASK WHERE { GRAPH <update3> { <s0> <p0> <o0>  }}", graphstore.toDataset());
 		assertFalse("update action must update database.", askQuery1.execAsk());
+		Exception exp = null;
+		try {
+			update = new UpdateRequest();
+			update.add("DELETE {<s1> <p1> <o1>}  INSERT { GRAPH <http://example.org/update4> { <s1> <p1> <o1>  } } WHERE { ?s <#email> ?o}, http://marklogicsparql.com/addressbook");
+			UpdateAction.execute(update, graphstore);
+		} catch (Exception e) {
+			System.out.println(e);
+			exp = e;
+		}
+
+		assertTrue(exp.toString().contains("QueryParseException"));
 	}
 
 	/*
@@ -547,20 +577,20 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 	}
 
 	@Test
-	public void test001SPARQLUpdate_withTrx_Permissions() throws Exception {
+	public void testSPARQLUpdate_withTrx_Permissions() throws Exception {
 		createUserRolesWithPrevilages("test-perm");
 		createRESTUser("perm-user", "x", "test-perm");
 		Exception exp = null;
-		  
+
 		try {
-			try{
+			try {
 				markLogicDatasetGraph.end();
-			}catch(Exception e){
+			} catch (Exception e) {
 				System.out.println(e);
-				exp =e;
+				exp = e;
 			}
 			assertTrue(exp.toString().contains("No open transaction"));
-			
+
 			// Start Insert data within Trx, abort and validate
 			markLogicDatasetGraph.begin(ReadWrite.WRITE);
 			UpdateRequest update = new UpdateRequest();
@@ -647,7 +677,9 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 			update.add("BASE <http://example.org/> INSERT DATA {GRAPH <copy4> {<s4> <p4> <o4>}}");
 			UpdateAction.execute(update, markLogicDatasetGraph);
 			markLogicDatasetGraph.abort();
-			 exp = null;
+
+			// Get permissions for non-existing graph
+			exp = null;
 			try {
 				permissions = markLogicDatasetGraph.getPermissions(NodeFactory.createURI("http://example.org/copy4"));
 				assertFalse(permissions.get("test-perm").contains(Capability.READ));
@@ -655,6 +687,22 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 				exp = e;
 			}
 			assertTrue(exp.toString().contains("Could not read resource at graphs") && exp != null);
+
+			// Incorrect Query within Trx
+			markLogicDatasetGraph.begin(ReadWrite.WRITE);
+			exp = null;
+			try {
+				update = new UpdateRequest();
+				update.add("DELETE {<s1> <p1> <o1>}  INSERT { GRAPH <http://example.org/update4> { <s1> <p1> <o1>  } } WHERE { ?s <#email> ?o}, http://marklogicsparql.com/addressbook");
+				UpdateAction.execute(update, markLogicDatasetGraph);
+			} catch (Exception e) {
+				System.out.println(e);
+				exp = e;
+			}
+
+			assertTrue(exp.toString().contains("QueryParseException"));
+			markLogicDatasetGraph.commit();
+
 		} finally {
 			if (markLogicDatasetGraph.isInTransaction())
 				markLogicDatasetGraph.commit();
@@ -708,8 +756,22 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 			assertTrue(qs.contains("o"));
 			count++;
 		}
-		// TODO confirm LIMIT reset to the query git issue #6
 		assertTrue("Should return 9 results but returned (UPdate after GIT issue #6 is resolved)::" + count, count == 9);
+		
+		query.setLimit(2);
+		 queryExec = QueryExecutionFactory.create(query, dataSet);
+
+		 results = queryExec.execSelect();
+		assertNotNull(results);
+		assertTrue(results.hasNext());
+		 count = 0;
+		while (results.hasNext()) {
+			QuerySolution qs = results.next();
+			System.out.println(qs.toString());
+			assertTrue(qs.contains("o"));
+			count++;
+		}
+		assertTrue(count == 2);
 
 		// Query with limit 20 and offset 0
 		query.setLimit(20);
@@ -782,7 +844,7 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 	}
 
 	@Test
-	public void testJenaRuleset() {
+	public void testJenaRuleset() throws Exception {
 		// Build custom data for Ruleset and Inference tests
 		String newline = System.getProperty("line.separator");
 		StringBuffer inferdata = new StringBuffer();
@@ -861,15 +923,57 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 
 		// Enable one rule set.
 
-		// Multiple execution of a QueryExecution object throws exception.
 		// Attempt to use the iterator twice.
 		QueryExecution queryExec31 = QueryExecutionFactory.create(query1, dataSet);
 		markLogicDatasetGraph.setRulesets(SPARQLRuleset.SUBCLASS_OF);
-
+		markLogicDatasetGraph.getRulesets();
 		ResultSet results31 = queryExec31.execSelect();
 		resCount = 0;
 		while (results31.hasNext()) {
 			QuerySolution qs = results31.next();
+			System.out.println(qs.toString());
+			resCount++;
+		}
+		System.out.println("Count of triples with SUBCLASS_OF ruleset is " + resCount);
+		assertEquals("Number of triples with SUBCLASS_OF ruleset, inferences is incorrect ", 31, resCount);
+
+		// Multiple execution of a QueryExecution object throws exception.
+		Exception exp = null;
+		try {
+			markLogicDatasetGraph.getRulesets();
+			ResultSet results0 = queryExec31.execSelect();
+		} catch (Exception e) {
+			System.out.println(e);
+			exp = e;
+		}
+		assertTrue(exp.toString().contains("Attempt to use the iterator twice") && exp != null);
+
+		// Null rulesets should return 18 results, without any inference
+		// triples.
+		try {
+			QueryExecution queryExec0 = QueryExecutionFactory.create(query1, dataSet);
+			markLogicDatasetGraph.setRulesets(null);
+			ResultSet results0 = queryExec0.execSelect();
+			resCount = 0;
+			while (results0.hasNext()) {
+				QuerySolution qs = results0.next();
+				System.out.println(qs.toString());
+				resCount++;
+			}
+		} catch (Exception e) {
+			System.out.println(e);
+		}
+		assertEquals("Number of triples with SUBCLASS_OF ruleset, inferences is incorrect ", 18, resCount);
+
+		// With rulesets
+		markLogicDatasetGraph.withRulesets(SPARQLRuleset.SUBCLASS_OF);
+		QueryExecution queryExec311 = QueryExecutionFactory.create(query1, dataSet);
+		ResultSet results311 = queryExec311.execSelect();
+		System.out.println(markLogicDatasetGraph.getRulesets());
+		// markLogicDatasetGraph.getRulesets().equals(SPARQLRuleset.SUBCLASS_OF);
+		resCount = 0;
+		while (results311.hasNext()) {
+			QuerySolution qs = results311.next();
 			System.out.println(qs.toString());
 			resCount++;
 		}
@@ -892,28 +996,4 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 				resCount);
 	}
 
-	// RuleSets ..Transactions
-
-	public void teststubs() {
-		QueryDefinition constrainingQueryDefinition = null;
-		markLogicDatasetGraph.setConstrainingQueryDefinition(constrainingQueryDefinition);
-		SPARQLRuleset rulesets = null;
-		markLogicDatasetGraph.setRulesets(rulesets);
-		markLogicDatasetGraph.getRulesets();
-		markLogicDatasetGraph.withRulesets(rulesets);
-
-		GraphPermissions permissions = null;
-		markLogicDatasetGraph.setSPARQLUpdatePermissions(permissions);
-		markLogicDatasetGraph.getSPARQLUpdatePermissions();
-		markLogicDatasetGraph.startRequest();
-		markLogicDatasetGraph.end();
-		markLogicDatasetGraph.finishRequest();
-		markLogicDatasetGraph.getConstrainingQueryDefinition();
-		markLogicDatasetGraph.getDatabaseClient();
-		markLogicDatasetGraph.toDataset();
-		SPARQLQueryDefinition qdef = null;
-		String variableName = null;
-		Node objectNode = null;
-		markLogicDatasetGraph.bindObject(qdef, variableName, objectNode);
-	}
 }

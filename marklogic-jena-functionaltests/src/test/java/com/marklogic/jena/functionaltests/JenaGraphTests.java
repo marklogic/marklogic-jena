@@ -103,7 +103,8 @@ public class JenaGraphTests extends ConnectedRESTQA {
 		evalClient = DatabaseClientFactory.newClient("localhost", uberPort, dbName, "eval-user", "x", Authentication.DIGEST);
 		markLogicDatasetGraphWriter = MarkLogicDatasetGraphFactory.createDatasetGraph(writerClient);
 		markLogicDatasetGraphReader = MarkLogicDatasetGraphFactory.createDatasetGraph(readerClient);
-		markLogicDatasetGraphAdmin = MarkLogicDatasetGraphFactory.createDatasetGraph(adminClient);
+		markLogicDatasetGraphAdmin = MarkLogicDatasetGraphFactory.createDatasetGraph("localhost", 8014, "rest-admin", "x",
+				Authentication.DIGEST);
 	}
 
 	/*
@@ -113,14 +114,13 @@ public class JenaGraphTests extends ConnectedRESTQA {
 	 */
 
 	@Test
-	public void test004Crud_admin() {
+	public void test001Crud_admin() {
 		// Insert Triples into Graph
 		Graph g1 = markLogicDatasetGraphAdmin.getDefaultGraph();
 		assertTrue(g1.isEmpty());
 		assertNotNull(g1);
 		Triple triple = new Triple(NodeFactory.createURI("s5"), NodeFactory.createURI("p5"), NodeFactory.createURI("o5"));
 		g1.add(triple);
-
 		Node n1 = NodeFactory.createURI("http://example.org/jenaAdd");
 		Quad quad = new Quad(n1, triple);
 		// Add Named Graph and validate triples
@@ -139,7 +139,8 @@ public class JenaGraphTests extends ConnectedRESTQA {
 		// AFTER CLEAR add new graph and Quad with same triple and Graph node
 		markLogicDatasetGraphAdmin.addGraph(n1, g1);
 		markLogicDatasetGraphAdmin.add(quad);
-
+	
+		
 		Iterator<Quad> quads = markLogicDatasetGraphAdmin.find(null, null, null, null);
 		while (quads.hasNext()) {
 			Quad quad1 = quads.next();
@@ -155,23 +156,24 @@ public class JenaGraphTests extends ConnectedRESTQA {
 		// Delete All triples in Named Graph and verify
 		markLogicDatasetGraphAdmin.deleteAny(n1, null, null, null);
 		assertFalse(markLogicDatasetGraphAdmin.getGraph(n1).contains(triple));
-		assertTrue(markLogicDatasetGraphAdmin.size() == 1);
-
+		// TODO catch unsupported Exception size
+		System.out.println(markLogicDatasetGraphAdmin.size());
+		// TODO catch unsupported Exception getLock
 		assertNotNull(markLogicDatasetGraphAdmin.getLock());
 
-		// Close DataSet TODO: add assert after #14 is fixed
 		markLogicDatasetGraphAdmin.close();
+		Exception exp = null;
 		try {
-			Iterator<Node> graphClosed = markLogicDatasetGraphAdmin.listGraphNodes();
-			System.out.println(graphClosed.toString());
+			markLogicDatasetGraphAdmin.addGraph(n1, g1);
 		} catch (Exception e) {
 			System.out.println("EXCEPTION AFTER CLOSE" + e);
+			exp = e;
 		}
-		// TODO assert Exception
+		assertTrue("Should Throw DatabaseGraph is closed Exception", exp.toString().contains("DatabaseGraph is closed"));
 	}
 
 	/*
-	 * 
+	 * List All the Graph using rest write user
 	 */
 
 	@Test
@@ -292,6 +294,7 @@ public class JenaGraphTests extends ConnectedRESTQA {
 
 	@Test
 	public void testAdd_ReadUser() throws FileNotFoundException {
+		Exception exp = null;
 		try {
 			Quad quad = new Quad(NodeFactory.createURI("http://originalGraph1"), new Triple(NodeFactory.createURI("#electricVehicle3"),
 					NodeFactory.createURI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type1"),
@@ -300,9 +303,11 @@ public class JenaGraphTests extends ConnectedRESTQA {
 			markLogicDatasetGraphReader.sync();
 			assertFalse(markLogicDatasetGraphReader.contains(quad));
 		} catch (Exception e) {
-			assertTrue("Should catch ForbiddenUserException ", e.toString().contains("ForbiddenUserException"));
+			exp = e;
 
 		}
+		assertTrue("Should catch ForbiddenUserException ", exp.toString().contains("ForbiddenUserException") && exp != null);
+
 	}
 
 	/*
@@ -420,7 +425,7 @@ public class JenaGraphTests extends ConnectedRESTQA {
 	}
 
 	@Test
-	public void test001AddDelete_permissions() {
+	public void testAddDelete_permissions() {
 		String file = datasource + "rdfxml1.rdf";
 		// Read triples into dataset
 		RDFDataMgr.read(markLogicDatasetGraphWriter, file);
@@ -445,24 +450,24 @@ public class JenaGraphTests extends ConnectedRESTQA {
 		assertTrue("Should not have Execute for test-eval", !(permissions.containsValue("test-eval")));
 
 		// Set Execute permissions and validate
-		permissions =  permissions.permission("test-eval", Capability.EXECUTE);
+		permissions = permissions.permission("test-eval", Capability.EXECUTE);
 		markLogicDatasetGraphWriter.writePermissions(newgraph, permissions);
 		assertTrue("Did not have permission looking for", permissions.get("test-eval").contains(Capability.EXECUTE));
 
 		// Set UPDATE permissions and validate
-		permissions =  permissions.permission("test-eval", Capability.UPDATE);
+		permissions = permissions.permission("test-eval", Capability.UPDATE);
 		markLogicDatasetGraphWriter.writePermissions(newgraph, permissions);
-		assertTrue(permissions.get("test-eval").size() == 1 );
+		assertTrue(permissions.get("test-eval").size() == 1);
 		assertTrue("Did not have permission looking for", permissions.get("test-eval").contains(Capability.UPDATE));
-		
+
 		// Set the same permission for the same graph
 		markLogicDatasetGraphWriter.writePermissions(newgraph, permissions);
-		assertTrue(permissions.get("test-eval").size() == 1 );
+		assertTrue(permissions.get("test-eval").size() == 1);
 
 	}
 
 	@Test
-	public void testAddDelete_permissions_inTrx() throws Exception{
+	public void testAddDelete_permissions_inTrx() throws Exception {
 		String file = datasource + "rdfxml1.rdf";
 		try {
 			// Read triples into dataset
@@ -513,10 +518,10 @@ public class JenaGraphTests extends ConnectedRESTQA {
 	}
 
 	/*
-	 * Delete Quad and graph within permission
+	 * Add/Delete Quad and graph within Transaction
 	 */
 	@Test
-	public void testCRUD_InTrx() throws Exception{
+	public void testCRUD_InTrx() throws Exception {
 
 		String file = datasource + "rdfxml1.rdf";
 		try {
@@ -612,6 +617,7 @@ public class JenaGraphTests extends ConnectedRESTQA {
 	public void testCRUD_triplexml() {
 
 		String file = datasource + "triplexml1.xml";
+		Exception exp = null;
 		// Read triples into dataset
 		try {
 			RDFDataMgr.read(markLogicDatasetGraphWriter, file);
@@ -621,43 +627,10 @@ public class JenaGraphTests extends ConnectedRESTQA {
 			assertTrue("did not match Triples", g1.toString().contains("Anna's Homepage"));
 
 		} catch (Exception e) {
-			assertTrue(e.toString().contains("RiotException"));
+			exp = e;
+
 		}
-	}
-
-	public void testStubs_datasetGraph() {
-		markLogicDatasetGraphWriter.abort();// D
-		Quad quad = null;
-		markLogicDatasetGraphWriter.add(quad); // D
-		Node g = null, s = null, p = null, o = null;
-		markLogicDatasetGraphWriter.add(g, s, p, o); // D
-		Node graphName = null;
-		Graph graph = null;
-		markLogicDatasetGraphWriter.addGraph(graphName, graph);// D
-		GraphPermissions permissions = null;
-		markLogicDatasetGraphWriter.addPermissions(graphName, permissions);// D
-		ReadWrite readWrite = null;
-		markLogicDatasetGraphWriter.begin(readWrite);// D
-		markLogicDatasetGraphWriter.clear();// D
-		markLogicDatasetGraphWriter.clearPermissions(graphName);// D
-		markLogicDatasetGraphWriter.commit();// D
-		markLogicDatasetGraphWriter.close();// D
-		markLogicDatasetGraphWriter.contains(quad); // D
-		Node graphNode = null;
-		markLogicDatasetGraphWriter.containsGraph(graphNode);// D
-		markLogicDatasetGraphWriter.getDefaultGraph(); // D
-		markLogicDatasetGraphWriter.getGraph(graphNode); // D
-		markLogicDatasetGraphWriter.getPermissions(graphName);// D
-		markLogicDatasetGraphWriter.isInTransaction();// D
-		markLogicDatasetGraphWriter.listGraphNodes(); // D
-		markLogicDatasetGraphWriter.mergeGraph(graphName, graph); // D
-		markLogicDatasetGraphWriter.removeGraph(graphName); // D
-		markLogicDatasetGraphWriter.setDefaultGraph(graph);// D
-		markLogicDatasetGraphWriter.size(); // D
-		markLogicDatasetGraphWriter.sync(); // D
-
-		
-
+		assertTrue(exp.toString().contains("RiotException") && exp != null);
 	}
 
 }
