@@ -370,7 +370,8 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
 	    Node n1 = NodeFactory.createURI("http://example.org/jenaAdd");
 	    dsg.addGraph(n1, g1);
 	    dsg.close();
-	    Graph graphClosed = dsg.getGraph(n1);
+	    @SuppressWarnings("unused")
+        Graph graphClosed = dsg.getGraph(n1);
 	    fail("Closed connection allowed operation");
 	}
 	

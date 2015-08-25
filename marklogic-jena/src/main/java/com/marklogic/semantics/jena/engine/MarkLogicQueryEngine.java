@@ -50,7 +50,6 @@ import com.hp.hpl.jena.sparql.syntax.Template;
 import com.hp.hpl.jena.sparql.util.Context;
 import com.marklogic.client.io.InputStreamHandle;
 import com.marklogic.client.query.QueryDefinition;
-import com.marklogic.client.query.RawCombinedQueryDefinition;
 import com.marklogic.client.semantics.SPARQLQueryDefinition;
 import com.marklogic.semantics.jena.MarkLogicDatasetGraph;
 import com.marklogic.semantics.jena.MarkLogicJenaException;
@@ -191,6 +190,7 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
             ResultSet results = JSONInput.fromJSON(handle.get());
             qIter = new QueryIteratorResultSet(results);
         } else {
+            handle.close();
         	throw new MarkLogicJenaException("Unrecognized Query Type");
         }
      // Wrap with something to check for closed iterators.
