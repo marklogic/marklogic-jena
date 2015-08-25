@@ -152,7 +152,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	}
 
 	private Node skolemize(Node s) {
-		if (s.isBlank()) {
+	    if (s.isBlank()) {
 			return NodeFactory.createURI("http://marklogic.com/semantics/blank/" + s.toString());
 		} else {
 			return s;
@@ -178,8 +178,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	protected void deleteFromDftGraph(Node s, Node p, Node o) {
 	    sync();
 		String query = "DELETE  WHERE { ?s ?p ?o }";
-	    sync();
-		s = skolemize(s);
+	    s = skolemize(s);
 		p = skolemize(p);
 		o = skolemize(o);
 		SPARQLQueryDefinition qdef = client.newQueryDefinition(query);
@@ -200,12 +199,12 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 		p = skolemize(p);
 		o = skolemize(o);
 		String gString = "?g";
-		if (g != null) {
-			gString = g.getURI();
-		}
-		String query = "DELETE WHERE { GRAPH <" + gString + "> { ?s ?p ?o } }";
+		
+		String query = "DELETE WHERE { GRAPH ?g { ?s ?p ?o } }";
 		SPARQLQueryDefinition qdef = client.newQueryDefinition(query);
-		//qdef.withBinding("g", g.getURI());
+		if (g != null) {
+		    qdef.withBinding("g", g.getURI());
+		}
 		qdef.withBinding("s", s.getURI());
 		qdef.withBinding("p", p.getURI());
 		qdef = bindObject(qdef, "o", o);
@@ -213,7 +212,10 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	}
 
 	private InputStream selectTriplesInGraph(String graphName, Node s, Node p, Node o) {
-		s = skolemize(s);
+	    s =  s != null ? s : Node.ANY;
+        p =  p != null ? p : Node.ANY;
+        o =  o != null ? o : Node.ANY;
+        s = skolemize(s);
 		p = skolemize(p);
 		o = skolemize(o);
 		SPARQLQueryDefinition qdef = client.newQueryDefinition("");
@@ -255,7 +257,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	protected Iterator<Quad> findInSpecificNamedGraph(Node g, Node s, Node p,
 			Node o) {
 	    sync();
-		InputStream results = selectTriplesInGraph(g.getURI(), s,p,o);
+	    InputStream results = selectTriplesInGraph(g.getURI(), s,p,o);
 		return new QuadsIterator(g.getURI(), results);
 	}
 
@@ -268,7 +270,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	    s =  s != null ? s : Node.ANY;
 		p =  p != null ? p : Node.ANY;
 		o =  o != null ? o : Node.ANY;
-		
+
 		SPARQLQueryDefinition qdef = client.newQueryDefinition("");
 		StringBuffer sb = new StringBuffer();
 		sb.append("SELECT ?g ?s ?p ?o where {GRAPH ?g { ?s ?p ?o }");
@@ -289,14 +291,13 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 		InputStreamHandle results = client.executeSelect(qdef, new InputStreamHandle());
 		return new QuadsIterator(results.get());
 	}
-	
+
 	@Override
     public void setDefaultGraph(Graph g)
     {
 	    this.addGraph(NodeFactory.createURI(DEFAULT_GRAPH_URI), g);
 	}
 
-	
 	@Override
 	public void begin(ReadWrite readWrite) {
 		client.begin(readWrite);

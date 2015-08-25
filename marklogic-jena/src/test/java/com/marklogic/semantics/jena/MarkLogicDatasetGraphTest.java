@@ -266,6 +266,11 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
 	    		}
 	    	}
 	    }
+	    
+	    // issue #3 gave NPE here:
+	    quads = markLogicDatasetGraph.find(null, null, null, null);
+        
+	    
 	    assertEquals("Got back all the quads except default", 9, i);
 	}
 
