@@ -19,6 +19,7 @@ apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'maven'
 
+
 version = '1.0.0-SNAPSHOT'
 group   = 'com.marklogic'
 
@@ -34,6 +35,7 @@ repositories {
     mavenLocal()
     mavenCentral()
 }
+
 
 dependencies {
     compile('org.apache.jena:jena-arq:2.13.0')
