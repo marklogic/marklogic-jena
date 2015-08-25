@@ -360,4 +360,17 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
 			System.out.println(q);
 		}
 	}
+	
+	@Test(expected = MarkLogicJenaException.class)
+	public void testLifeCycle() {
+	    MarkLogicDatasetGraph dsg = getMarkLogicDatasetGraph("testdata/testData.trig");
+	    Triple triple = new Triple(NodeFactory.createURI("s5"), NodeFactory.createURI("p5"), NodeFactory.createURI("o5"));
+	    Graph g1 = GraphFactory.createDefaultGraph();
+	    g1.add(triple);
+	    Node n1 = NodeFactory.createURI("http://example.org/jenaAdd");
+	    dsg.addGraph(n1, g1);
+	    dsg.close();
+	    Graph graphClosed = dsg.getGraph(n1);
+	    fail("Closed connection allowed operation");
+	}
 }

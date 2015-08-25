@@ -80,7 +80,6 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	 */
 	public MarkLogicDatasetGraph(JenaDatabaseClient jenaClient) {
 		this.client = jenaClient;
-		
 	}
 
 	/**
@@ -89,6 +88,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	@Override
 	public Iterator<Node> listGraphNodes() {
 		log.debug("listing graphs ");
+        checkIsOpen();
 		Iterator<String> graphNames = client.listGraphUris();
 		return new WrappingIterator(graphNames);
 	}
@@ -99,6 +99,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
      */
 	@Override
 	public void clear() {
+        checkIsOpen();
 		String query = "DROP SILENT ALL";
 		SPARQLQueryDefinition qdef = client.newQueryDefinition(query);
 		client.executeUpdate(qdef);
@@ -145,6 +146,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
      */
 	@Override
 	protected void addToDftGraph(Node s, Node p, Node o) {
+        checkIsOpen();
         s = skolemize(s);
         p = skolemize(p);
         o = skolemize(o);
@@ -165,6 +167,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
      */
 	@Override
 	protected void addToNamedGraph(Node g, Node s, Node p, Node o) {
+        checkIsOpen();
 		s = skolemize(s);
 		p = skolemize(p);
 		o = skolemize(o);
@@ -176,6 +179,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
      */
 	@Override
 	protected void deleteFromDftGraph(Node s, Node p, Node o) {
+        checkIsOpen();
 	    sync();
 		String query = "DELETE  WHERE { ?s ?p ?o }";
 	    s = skolemize(s);
@@ -193,8 +197,8 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
      */
 	@Override
 	protected void deleteFromNamedGraph(Node g, Node s, Node p, Node o) {
+        checkIsOpen();
 	    sync();
-		// workaround -- use graph inline. insecure.
 		s = skolemize(s);
 		p = skolemize(p);
 		o = skolemize(o);
@@ -212,6 +216,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	}
 
 	private InputStream selectTriplesInGraph(String graphName, Node s, Node p, Node o) {
+        checkIsOpen();
 	    s =  s != null ? s : Node.ANY;
         p =  p != null ? p : Node.ANY;
         o =  o != null ? o : Node.ANY;
@@ -245,6 +250,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
      */
 	@Override
 	protected Iterator<Quad> findInDftGraph(Node s, Node p, Node o) {
+        checkIsOpen();
 	    sync();
 		InputStream results = selectTriplesInGraph(DEFAULT_GRAPH_URI, s,p,o);
 		return new QuadsIterator(results);
@@ -256,6 +262,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	@Override
 	protected Iterator<Quad> findInSpecificNamedGraph(Node g, Node s, Node p,
 			Node o) {
+        checkIsOpen();
 	    sync();
 	    InputStream results = selectTriplesInGraph(g.getURI(), s,p,o);
 		return new QuadsIterator(g.getURI(), results);
@@ -266,6 +273,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
      */
     @Override
 	protected Iterator<Quad> findInAnyNamedGraphs(Node s, Node p, Node o) {
+        checkIsOpen();
 	    sync();
 	    s =  s != null ? s : Node.ANY;
 		p =  p != null ? p : Node.ANY;
@@ -295,36 +303,43 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	@Override
     public void setDefaultGraph(Graph g)
     {
+        checkIsOpen();
 	    this.addGraph(NodeFactory.createURI(DEFAULT_GRAPH_URI), g);
 	}
 
 	@Override
 	public void begin(ReadWrite readWrite) {
+        checkIsOpen();
 		client.begin(readWrite);
 	}
 
 	@Override
 	public void commit() {
+        checkIsOpen();
 		client.commit();
 	}
 
 	@Override
 	public void abort() {
+        checkIsOpen();
 		client.abort();
 	}
 
 	@Override
 	public boolean isInTransaction() {
+        checkIsOpen();
 		return client.isInTransaction();
 	}
 
 	@Override
 	public void end() {
+        checkIsOpen();
 		abort();
 	}
 
 	@Override
 	public Dataset toDataset() {
+        checkIsOpen();
 		return DatasetFactory.create(this);
 	}
 
@@ -345,6 +360,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
      */
 	@Override
 	public Graph getDefaultGraph() {
+        checkIsOpen();
 	    return client.readDefaultGraph();
 	}
 
@@ -353,6 +369,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
      */
 	@Override
 	public Graph getGraph(Node graphNode) {
+        checkIsOpen();
 		return client.readGraph(graphNode.getURI());
 	}
 
@@ -361,6 +378,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
      */
     @Override
 	public void addGraph(Node graphName, Graph graph) {
+        checkIsOpen();
 	    client.writeGraph(graphName.getURI(), graph);
 	}
 	
@@ -371,6 +389,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	 * @param graph The graph data.
 	 */
 	public void mergeGraph(Node graphName, Graph graph) {
+        checkIsOpen();
         client.mergeGraph(graphName.getURI(), graph);
     }
 
@@ -379,6 +398,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
      */
 	@Override
 	public void removeGraph(Node graphName) {
+        checkIsOpen();
 		client.deleteGraph(graphName.getURI());
 	}
 
@@ -389,6 +409,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	 * object holding the graph's permissions.
 	 */
 	public GraphPermissions getPermissions(Node graphName) {
+        checkIsOpen();
 		return client.getGraphPermissions(graphName.getURI());
 	}
 	
@@ -400,6 +421,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
      * object holding the graph's permissions.
      */
 	public void addPermissions(Node graphName, GraphPermissions permissions) {
+        checkIsOpen();
 		client.mergeGraphPermissions(graphName.getURI(), permissions);
 	}
 	
@@ -408,6 +430,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	 * @param graphName
 	 */
 	public void clearPermissions(Node graphName) {
+        checkIsOpen();
 		client.deletePermissions(graphName.getURI());
 	}
 	
@@ -418,6 +441,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
      * object holding the graph's permissions.
      */
     public void writePermissions(Node graphName, GraphPermissions permissions) {
+        checkIsOpen();
         client.writeGraphPermissions(graphName.getURI(), permissions);
     }
     
@@ -484,5 +508,19 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
         return this.updatePermissions;
     }
 
-    
+    /**
+     * Closes the connection to the database.  After closing the DatabaseGraph, 
+     * it can no longer be used for query or update.
+     */
+    @Override
+    public void close() {
+        checkIsOpen();
+        this.client = null;
+    }
+
+    private void checkIsOpen() {
+        if (client == null) {
+            throw new MarkLogicJenaException("DatabaseGraph is closed");
+        }
+    }
 }
