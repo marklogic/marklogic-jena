@@ -77,7 +77,9 @@ public class JenaDatabaseClient {
 
     public InputStreamHandle executeSelect(SPARQLQueryDefinition qdef,
             InputStreamHandle handle, Long offset, Long limit) {
-        if (limit != null) {
+        if (limit == null) {
+            this.sparqlQueryManager.clearPageLength();
+        } else {
             this.sparqlQueryManager.setPageLength(limit);
         }
         if (offset != null) {
