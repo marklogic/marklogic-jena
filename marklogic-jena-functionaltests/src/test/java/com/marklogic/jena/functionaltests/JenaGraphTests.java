@@ -156,6 +156,8 @@ public class JenaGraphTests extends ConnectedRESTQA {
 		// Delete All triples in Named Graph and verify
 		markLogicDatasetGraphAdmin.deleteAny(n1, null, null, null);
 		assertFalse(markLogicDatasetGraphAdmin.getGraph(n1).contains(triple));
+		
+		// Get Size on DataSet and Catch UnSupported Exception
 		Exception exp = null;
 		try{
 		markLogicDatasetGraphAdmin.size();
@@ -163,6 +165,8 @@ public class JenaGraphTests extends ConnectedRESTQA {
 			exp =e;
 		}
 		assertTrue("Size not supported",exp.toString().contains("UnsupportedOperationException") && exp != null);
+		
+		// Get Lock on DataSet and Catch UnSupported Exception
 		try{
 			markLogicDatasetGraphAdmin.getLock();
 			}catch(Exception e){
