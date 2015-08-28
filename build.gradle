@@ -2,21 +2,13 @@ subprojects{
 
 apply plugin: 'java'
 apply plugin: 'eclipse'
-apply plugin: 'jacoco'
 
-jacoco{toolVersion="0.7.4.201502262128"}
 
 repositories {
     mavenCentral()
     mavenLocal()
 	}
 
-
-jacocoTestReport {
-                    group = "Reporting"
-                    description = "Generate Jacoco coverage reports after running tests."
-                    additionalSourceDirs = files(sourceSets.main.allJava.srcDirs)
-                }
 
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.+'
