@@ -33,6 +33,8 @@ import com.hp.hpl.jena.graph.NodeFactory;
 import com.hp.hpl.jena.query.Dataset;
 import com.hp.hpl.jena.query.DatasetFactory;
 import com.hp.hpl.jena.query.ReadWrite;
+import com.hp.hpl.jena.shared.Lock;
+import com.hp.hpl.jena.shared.LockNone;
 import com.hp.hpl.jena.sparql.core.DatasetGraph;
 import com.hp.hpl.jena.sparql.core.DatasetGraphTriplesQuads;
 import com.hp.hpl.jena.sparql.core.Quad;
@@ -92,7 +94,14 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 		Iterator<String> graphNames = client.listGraphUris();
 		return new WrappingIterator(graphNames);
 	}
-
+	
+	/**
+	 * MarkLogicDatasetGraph does not make use of locks.
+	 */
+	@Override
+	public Lock getLock() {
+	    return new LockNone();
+	}
 
     /**
      * @see com.hp.hpl.jena.sparql.core.DatasetGraph
