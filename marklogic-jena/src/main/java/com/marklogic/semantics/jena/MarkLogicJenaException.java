@@ -16,6 +16,9 @@
 package com.marklogic.semantics.jena;
 
 @SuppressWarnings("serial")
+/**
+ * A generic Runtime Exception that wraps most issues with MarkLogic interaction.
+ */
 public class MarkLogicJenaException extends RuntimeException {
 
     public MarkLogicJenaException(String message) {

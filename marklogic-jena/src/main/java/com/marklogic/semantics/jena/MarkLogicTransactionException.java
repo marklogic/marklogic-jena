@@ -17,6 +17,9 @@ package com.marklogic.semantics.jena;
 
 
 @SuppressWarnings("serial")
+/**
+ * An issue associated with MarkLogic transactions.
+ */
 public class MarkLogicTransactionException extends MarkLogicJenaException {
 
 	public MarkLogicTransactionException(String message) {

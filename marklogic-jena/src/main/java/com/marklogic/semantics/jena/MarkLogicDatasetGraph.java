@@ -52,8 +52,10 @@ import com.marklogic.semantics.jena.client.WrappingIterator;
 
 /**
  * A representation of MarkLogic's triple store as a DatasetGraph,
- * plus a few extra MarkLogic-specific features.
- *
+ * plus a few extra MarkLogic-specific features.  Use this class as you 
+ * would any other DatasetGraph in a jena-based project.
+ * If you know you are using a MarkLogicDatasetGraph, simply cast it
+ * in order to use the MarkLogic-specific capabilities.
  */
 public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements DatasetGraph, GraphStore, Transactional {
 
@@ -97,6 +99,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	
 	/**
 	 * MarkLogicDatasetGraph does not make use of locks.
+	 * @return An instance of com.hp.hpl.jena.shared.LockNone
 	 */
 	@Override
 	public Lock getLock() {
@@ -120,7 +123,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	 * @param qdef A {@link com.marklogic.client.semantics.SPARQLQueryDefinition} to decorate with a binding.
 	 * @param variableName Name of the variable
 	 * @param objectNode An RDF node with the value of variableName.
-	 * @return The qdef, with binding set.
+	 * @return The query definition, with binding set.
 	 */
 	public static SPARQLQueryDefinition bindObject(SPARQLQueryDefinition qdef, String variableName, Node objectNode) {
 		SPARQLBindings bindings = qdef.getBindings();
@@ -149,7 +152,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 		return qdef;
 	}
 
-	 /**
+	 /*
      * @see com.hp.hpl.jena.sparql.core.DatasetGraphTriplesQuads Internally uses
      * a write cache to hold batches of quad updates.  @see sync()
      */
@@ -211,8 +214,6 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 		s = skolemize(s);
 		p = skolemize(p);
 		o = skolemize(o);
-		String gString = "?g";
-		
 		String query = "DELETE WHERE { GRAPH ?g { ?s ?p ?o } }";
 		SPARQLQueryDefinition qdef = client.newQueryDefinition(query);
 		if (g != null) {
@@ -310,6 +311,9 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	}
 
 	@Override
+	/**
+     * @see com.hp.hpl.jena.sparql.core.DatasetGraph
+     */
     public void setDefaultGraph(Graph g)
     {
         checkIsOpen();
@@ -317,51 +321,73 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	}
 
 	@Override
+	/**
+	 * Start a transaction.
+	 */
 	public void begin(ReadWrite readWrite) {
         checkIsOpen();
 		client.begin(readWrite);
 	}
 
 	@Override
+	/**
+	 * Commit the current transaction.
+	 */
 	public void commit() {
         checkIsOpen();
 		client.commit();
 	}
 
 	@Override
+	/**
+	 * Abort the current transaction with a rollback operation.
+	 */
 	public void abort() {
         checkIsOpen();
 		client.abort();
 	}
 
 	@Override
+	/**
+	 * @return true if there is a multi-statement transaction in play.
+	 */
 	public boolean isInTransaction() {
         checkIsOpen();
 		return client.isInTransaction();
 	}
 
 	@Override
+	/**
+	 * Synonymous with abort();
+	 */
 	public void end() {
         checkIsOpen();
 		abort();
 	}
 
 	@Override
+	/**
+	 * Gets a view of the DatasetGraph as a Dataset, which is used to back queries.
+	 */
 	public Dataset toDataset() {
         checkIsOpen();
 		return DatasetFactory.create(this);
 	}
 
 	@Override
+	/**
+	 * Not used.
+	 */
 	public void startRequest() {
-		// TODO Auto-generated method stub
-		
+		// noop
 	}
 
 	@Override
+	/**
+	 * Not used.
+	 */
 	public void finishRequest() {
-		// TODO Auto-generated method stub
-		
+	    // noop
 	}
 	
 	/**
@@ -412,6 +438,9 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	}
 	
 	@Override
+	/**
+	 * Not supported by MarkLogicDatasetGraph.
+	 */
     public long size() {
 	    throw new UnsupportedOperationException("size() not supported on MarkLogicDatasetGraph");
 	} 
@@ -468,14 +497,29 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	    client.sync();
 	}
 	
-	
+	/**
+	 * Specifies a set of inferencing rulesets to apply to a query.
+	 * These rulesets either come with MarkLogic server or were installed
+	 * by an administrator.
+	 * @param rulesets Zero-or-more rulesets to apply to queries.
+	 */
     public void setRulesets(SPARQLRuleset... rulesets) {
         this.rulesets = rulesets;
     }
+    
+    /**
+     * Returns the array or rulesets currently used for SPARQL queries.
+     * @return An array of SPARQLRulesets.
+     */
     public SPARQLRuleset[] getRulesets() {
         return this.rulesets;
     }
     
+    /**
+     * Fluent setter for rulesets.
+     * @param rulesets Zero-or-more rulesets to apply to queries.
+     * @return The MarkLogicDatasetGraph, with rulesets set.
+     */
     public MarkLogicDatasetGraph withRulesets(SPARQLRuleset... rulesets) {
         if (this.rulesets == null) {
             this.rulesets = rulesets;
@@ -489,10 +533,19 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
         return this;
     }
 
+    /**
+     * Sets a MarkLogic Java API QueryDefinition that is applied to SPARQL queries to restrict documents
+     * upon which queries are run.
+     * @param constrainingQueryDefinition A query definition.  Use raw query definitions or QueryBuilder.
+     */
     public void setConstrainingQueryDefinition(QueryDefinition constrainingQueryDefinition) {
         this.constrainingQueryDefinition = constrainingQueryDefinition;
     }
     
+    /**
+     * Return the query defintion currently associated with SPARQL Queries against this DatasetGraph.
+     * @return the QueryDefinition.
+     */
     public QueryDefinition getConstrainingQueryDefinition() {
        return constrainingQueryDefinition;
     }
@@ -508,7 +561,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
     /**
      * Set the permissions for graphs created by this DatasetGraph
      * during SPARQL update operations. Set to null for default permissions.
-     * @param permission One or more permissions to add to graphs created during
+     * @param permissions One or more permissions to add to graphs created during
      * SPARQL updates.
      */
     public void setSPARQLUpdatePermissions(GraphPermissions permissions) {
@@ -517,7 +570,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 
     /**
      * Get the permissions that are to be written to new graphs during SPARQL update.
-     * @return
+     * @return the permissions associated with updates.
      */
     public GraphPermissions getSPARQLUpdatePermissions() {
         return this.updatePermissions;

@@ -22,6 +22,10 @@ import com.marklogic.semantics.jena.client.JenaDatabaseClient;
 import com.marklogic.semantics.jena.engine.MarkLogicQueryEngine;
 import com.marklogic.semantics.jena.engine.MarkLogicUpdateEngine;
 
+/**
+ * Contains static methods for creating a MarkLogicDatasetGraph, which is a DatabsetGraph
+ * that is backed by a MarkLogic database and REST API.
+ */
 public class MarkLogicDatasetGraphFactory {
 
     /**

@@ -5,15 +5,10 @@ buildscript {
     maven {url "http://rjrudin.github.io/marklogic-java/releases"}
   }
   dependencies {
-    classpath "com.marklogic:ml-gradle:2.0a12b"
+    classpath "com.rjrudin:ml-gradle:2.0b5"
   }
 }
 
-plugins {
-    id 'me.champeau.gradle.jmh' version '0.1.3'
-}
-
-apply plugin: 'me.champeau.gradle.jmh'
 apply plugin: 'ml-gradle'
 apply plugin: 'java'
 apply plugin: 'eclipse'
@@ -23,36 +18,24 @@ apply plugin: 'maven'
 version = '1.0.0-SNAPSHOT'
 group   = 'com.marklogic'
 
-configure(allprojects){
-			ext.slf4jVersion = '1.7.2'
-			ext.logbackVersion = '1.0.9'
-}
-
-sourceCompatibility = "1.7"
-targetCompatibility = "1.7"
-
-repositories {
-    mavenLocal()
-    mavenCentral()
-}
-
-
 dependencies {
-    compile('org.apache.jena:jena-arq:2.13.0')
+    compile('org.apache.jena:jena-arq:2.13.0') {
+	   exclude(group: 'org.slf4j')
+       exclude(group: 'ch.qos.logback')
+       exclude(group: 'log4j')
+    }
     compile('com.marklogic:java-client-api:3.0-SNAPSHOT') {
 	   exclude(group: 'org.slf4j')
        exclude(group: 'ch.qos.logback')
     }
    
-	compile('org.slf4j:slf4j-api:1.7.10')
+	compile("org.slf4j:slf4j-api:$slf4jVersion")
 	compile "ch.qos.logback:logback-classic:$logbackVersion"
 	compile "org.slf4j:jcl-over-slf4j:$slf4jVersion"
 
 	testCompile 'com.jayway.restassured:rest-assured:2.4.1'
 	testCompile 'org.hamcrest:hamcrest-all:1.3'
 	testCompile 'junit:junit:4.12'
-    testCompile 'org.openjdk.jmh:jmh-core:1.3.2'
-    testCompile 'org.openjdk.jmh:jmh-generator-annprocess:1.3.2'
 }
 
 sourceSets {
@@ -67,6 +50,3 @@ javadoc {
     options.overview = "src/main/java/com/marklogic/semantics/jena/overview.html"
 }
 
-task wrapper(type: Wrapper) {
-    gradleVersion = '2.4'
-}
