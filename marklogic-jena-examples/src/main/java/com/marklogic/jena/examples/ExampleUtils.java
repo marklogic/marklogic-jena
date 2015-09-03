@@ -28,13 +28,11 @@ public class ExampleUtils {
         int port = Integer.parseInt(props.getProperty("mlRestPort"));
         String user = props.getProperty("writerUser");
         String pass = props.getProperty("writerPassword");
-        String fileName = props.getProperty("testData");
-
+        
         DatabaseClient client = DatabaseClientFactory.newClient(host, port,
                 user, pass, Authentication.DIGEST);
         MarkLogicDatasetGraph dg = MarkLogicDatasetGraphFactory
                 .createDatasetGraph(client);
-        RDFDataMgr.read(dg,  fileName);
         return dg;
     }
 }

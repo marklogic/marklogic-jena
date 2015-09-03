@@ -15,47 +15,41 @@
  */
 package com.marklogic.jena.examples;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.Properties;
+import java.util.Iterator;
 
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 
-import com.marklogic.client.DatabaseClient;
-import com.marklogic.client.DatabaseClientFactory;
-import com.marklogic.client.DatabaseClientFactory.Authentication;
+import com.hp.hpl.jena.sparql.core.Quad;
 import com.marklogic.semantics.jena.MarkLogicDatasetGraph;
-import com.marklogic.semantics.jena.MarkLogicDatasetGraphFactory;
 
 public class RIOTExamples {
 
-    protected DatabaseClient client;
     private MarkLogicDatasetGraph dsg;
 
     public RIOTExamples() {
-        Properties props = new Properties();
-        try {
-            props.load(new FileInputStream("gradle.properties"));
-        } catch (IOException e) {
-            System.err.println("Properties file not loaded.");
-            System.exit(1);
-        }
-        String host = props.getProperty("mlHost");
-        int port = Integer.parseInt(props.getProperty("mlRestPort"));
-        String writerUser = props.getProperty("writerUser");
-        String writerPassword = props.getProperty("writerPassword");
-
-        client = DatabaseClientFactory.newClient(host, port, writerUser, writerPassword, Authentication.DIGEST);
+        dsg = ExampleUtils.loadPropsAndInit();
     }
+    
+    public void run() {
+        System.out.println("Loading triples from NT files to MarkLogic");
+        RDFDataMgr.read(dsg, "src/main/resources/dbpedia60k.nt", Lang.NTRIPLES);
+        
+        System.out.println("Loading more from RDF/XML file to MarkLogic");
+        RDFDataMgr.read(dsg, "src/main/resources/test.owl", Lang.RDFXML);
 
-    public void loadFromFile() {
-        dsg = MarkLogicDatasetGraphFactory.createDatasetGraph(client);
-        RDFDataMgr.read(dsg, "file.nt", Lang.NTRIPLES);
+        System.out.println("Write the entire database to System.out");
+        // this does not work, see Issue #16
+        // RDFDataMgr.write(System.out, dsg.toDataset(), Lang.NTRIPLES);
+        int i=0;
+        for (Iterator<Quad> quads = dsg.find(); quads.hasNext(); i++) {
+            Quad quad = quads.next();
+            System.out.println(quad.toString());
+        }
     }
 
     public static void main(String... args) {
-       RIOTExamples examples = new RIOTExamples();
-       examples.loadFromFile();
+       RIOTExamples example = new RIOTExamples();
+       example.run();
     }
 }
