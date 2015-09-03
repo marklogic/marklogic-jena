@@ -1,4 +1,4 @@
-package com.marklogic.semantics.jena.benchmarks;
+package com.marklogic.jena.examples;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -18,6 +18,7 @@ import com.hp.hpl.jena.query.QueryExecution;
 import com.hp.hpl.jena.query.QueryExecutionFactory;
 import com.hp.hpl.jena.query.QuerySolution;
 import com.hp.hpl.jena.query.ResultSet;
+import com.hp.hpl.jena.query.ResultSetFormatter;
 import com.hp.hpl.jena.sparql.core.DatasetGraph;
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.DatabaseClientFactory;
@@ -26,38 +27,20 @@ import com.marklogic.semantics.jena.MarkLogicDatasetGraph;
 import com.marklogic.semantics.jena.MarkLogicDatasetGraphFactory;
 
 @State(value = Scope.Thread)
+/**
+ * This is a benchmark that simply loads some data and then runs
+ * a naive query over the data.
+ */
 public class MarkLogicDatasetGraphNaivePerfTest {
 
     private static Logger log = LoggerFactory.getLogger(MarkLogicDatasetGraphNaivePerfTest.class);
 	private MarkLogicDatasetGraph markLogicDatasetGraph;
-	
 	private static Dataset dataset;
 	
 	@Setup
-	public void loadData() {
-        Properties props = new Properties();
-        try {
-            props.load(new FileInputStream("gradle.properties"));
-        } catch (IOException e) {
-            System.err.println("problem loading properties file.");
-            System.exit(1);
-        }
-        String host = props.getProperty("mlHost");
-        int port = Integer.parseInt(props.getProperty("mlRestPort"));
-        String user = props.getProperty("writerUser");
-        String pass = props.getProperty("writerPassword");
-        String fileName = props.getProperty("jmhTestData");
-
-        DatabaseClient client = DatabaseClientFactory.newClient(host, port,
-                user, pass, Authentication.DIGEST);
-        DatasetGraph dg = MarkLogicDatasetGraphFactory
-                .createDatasetGraph(client);
-        dataset = DatasetFactory.create(dg);
-
-        markLogicDatasetGraph = MarkLogicDatasetGraphFactory
-                .createDatasetGraph(client);
+	public void configure() {
+	    markLogicDatasetGraph = ExampleUtils.loadPropsAndInit();
         // markLogicDatasetGraph.clear();
-        RDFDataMgr.read(markLogicDatasetGraph,  fileName);
         dataset = DatasetFactory.create(markLogicDatasetGraph);
 	}
 	
@@ -72,7 +55,7 @@ public class MarkLogicDatasetGraphNaivePerfTest {
             QuerySolution qs = results.next();
             log.debug("Got result from query with subject " + qs.get("s"));
         }
-       //esultSetFormatter.out(System.out, results);
+        ResultSetFormatter.out(System.out, results);
     }
 
 }

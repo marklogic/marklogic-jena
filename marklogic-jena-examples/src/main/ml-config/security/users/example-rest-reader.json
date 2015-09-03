@@ -1,0 +1,5 @@
+{
+  "user-name":"example-rest-reader", 
+  "password": "x",
+  "role":["rest-reader"]
+}

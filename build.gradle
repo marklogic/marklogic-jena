@@ -1,26 +1,36 @@
-subprojects{
+subprojects {
 
-apply plugin: 'java'
-apply plugin: 'eclipse'
+    apply plugin: 'java'
+    apply plugin: 'eclipse'
+
+    sourceCompatibility = "1.7"
+    targetCompatibility = "1.7"
+
+    configure(allprojects){
+        ext.slf4jVersion = '1.7.2'
+        ext.logbackVersion = '1.0.9'
+    }
+
+    repositories {
+        mavenCentral()
+        mavenLocal()
+    }
 
 
-repositories {
-    mavenCentral()
-    mavenLocal()
-	}
+    dependencies {
+        testCompile group: 'junit', name: 'junit', version: '4.+'
+            testCompile 'org.apache.httpcomponents:httpclient:4.1.1'
+    }
 
-
-dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.+'
-    testCompile 'org.apache.httpcomponents:httpclient:4.1.1'
-	}
-test{
-                testLogging{
-                events 'started','passed', 'skipped'
-
-                }
+    test{
+        testLogging{
+            events 'started','passed', 'skipped'
         }
+    }
 
 }
 
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.4'
+}
 

@@ -1,0 +1,6 @@
+{
+  "user-name":"example-rest-minimal", 
+  "password": "x",
+  "description":"User that has a rest-reader privilege but not rest-reader role", 
+  "role": ["example-minimal-role"]
+}
