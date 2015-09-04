@@ -15,6 +15,8 @@
  */
 package com.marklogic.semantics.jena;
 
+import org.apache.jena.riot.RDFWriterRegistry;
+
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.DatabaseClientFactory;
 import com.marklogic.client.DatabaseClientFactory.Authentication;

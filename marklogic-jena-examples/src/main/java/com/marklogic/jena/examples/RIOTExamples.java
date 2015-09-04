@@ -19,6 +19,7 @@ import java.util.Iterator;
 
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.RDFFormat;
 
 import com.hp.hpl.jena.sparql.core.Quad;
 import com.marklogic.semantics.jena.MarkLogicDatasetGraph;
@@ -38,14 +39,9 @@ public class RIOTExamples {
         System.out.println("Loading more from RDF/XML file to MarkLogic");
         RDFDataMgr.read(dsg, "src/main/resources/test.owl", Lang.RDFXML);
 
-        System.out.println("Write the entire database to System.out");
-        // this does not work, see Issue #16
-        // RDFDataMgr.write(System.out, dsg.toDataset(), Lang.NTRIPLES);
-        int i=0;
-        for (Iterator<Quad> quads = dsg.find(); quads.hasNext(); i++) {
-            Quad quad = quads.next();
-            System.out.println(quad.toString());
-        }
+        System.out.println("Write the entire database to System.out as NQUADS");
+        RDFDataMgr.write(System.out, dsg.toDataset(), RDFFormat.NQUADS_UTF8);
+        
         dsg.close();
     }
 

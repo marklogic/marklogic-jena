@@ -41,6 +41,7 @@ import java.util.Iterator;
 
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.RDFFormat;
 import org.junit.After;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -391,10 +392,8 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
     }
 	
 	@Test
-	@Ignore
 	public void testRIOTWrite() {
         Dataset dataSet = getMarkLogicDatasetGraph("testdata/smallfile.nt").toDataset();
-	    RDFDataMgr.write(System.out, dataSet, Lang.NTRIPLES);
-	    RDFDataMgr.write(System.out, dataSet, Lang.TURTLE);
+	    RDFDataMgr.write(System.out, dataSet, RDFFormat.TRIG_PRETTY);
 	}
 }
