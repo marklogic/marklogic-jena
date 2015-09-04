@@ -197,7 +197,6 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 		markLogicDatasetGraph.add(newgraph, NodeFactory.createURI("jerry"), NodeFactory.createURI("email"),
 				NodeFactory.createURI("jerry@email.com"));
 
-		// TODO:: query to get everything related to subject / predicate
 		String query1 = "CONSTRUCT{ ?person <homeTel> ?o .}  FROM <http://marklogic.com/graph1> WHERE {"
 				+ "  ?person <homeTel> ?o .  ?person <fname> ?firstname .} ";
 		QuerySolutionMap binding = new QuerySolutionMap();
@@ -239,9 +238,8 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 		String query7 = "PREFIX  bb: <http://marklogic.com/baseball/players#>  SELECT  ?n FROM <http://marklogic.com/Graph1> WHERE"
 				+ "{ ?s bb:position ?o.} LIMIT 2";
 		
-		//TODO:: fix after Githib issue #9	
-		
-		/*
+	
+		// Query with unbound variable and validate it returns empty results.
 		 QueryExecution  queryExec7 = QueryExecutionFactory.create(query7, dataSet);
 		 ResultSet results3 = queryExec7.execSelect();
 		  System.out.println(results3.toString());
@@ -250,11 +248,9 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 		  while (results3.hasNext()) {
 			  QuerySolution qs = results3.next();
 		  System.out.println(qs.toString()); 
+		  assertTrue("Expecting Object node to be empty :: ", qs.toString().isEmpty());
 		  }
 		 
-		*/
-		
-		
 		// ASK
 		QuerySolutionMap binding = new QuerySolutionMap();
 		binding.add("s", ResourceFactory.createResource("http://marklogic.com/baseball/players#120"));
@@ -519,7 +515,6 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 
 	}
 
-	// TODO:: UPDATE test after the fix for Git issue #7
 	@Test
 	public void testSPARQLUpdate_Permissions() {
 

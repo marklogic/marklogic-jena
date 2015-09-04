@@ -35,6 +35,7 @@ import com.hp.hpl.jena.graph.NodeFactory;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.query.ReadWrite;
 import com.hp.hpl.jena.shared.Lock;
+import com.hp.hpl.jena.shared.LockNone;
 import com.hp.hpl.jena.sparql.core.Quad;
 import com.hp.hpl.jena.sparql.util.Context;
 import com.marklogic.client.DatabaseClient;
@@ -116,6 +117,7 @@ public class JenaGraphTests extends ConnectedRESTQA {
 	@Test
 	public void test001Crud_admin() {
 		// Insert Triples into Graph
+		markLogicDatasetGraphAdmin.clear();
 		Graph g1 = markLogicDatasetGraphAdmin.getDefaultGraph();
 		assertTrue(g1.isEmpty());
 		assertNotNull(g1);
@@ -139,8 +141,8 @@ public class JenaGraphTests extends ConnectedRESTQA {
 		// AFTER CLEAR add new graph and Quad with same triple and Graph node
 		markLogicDatasetGraphAdmin.addGraph(n1, g1);
 		markLogicDatasetGraphAdmin.add(quad);
-	
-		
+
+
 		Iterator<Quad> quads = markLogicDatasetGraphAdmin.find(null, null, null, null);
 		while (quads.hasNext()) {
 			Quad quad1 = quads.next();
@@ -156,26 +158,23 @@ public class JenaGraphTests extends ConnectedRESTQA {
 		// Delete All triples in Named Graph and verify
 		markLogicDatasetGraphAdmin.deleteAny(n1, null, null, null);
 		assertFalse(markLogicDatasetGraphAdmin.getGraph(n1).contains(triple));
-		
+
 		// Get Size on DataSet and Catch UnSupported Exception
 		Exception exp = null;
 		try{
-		markLogicDatasetGraphAdmin.size();
+			markLogicDatasetGraphAdmin.size();
 		}catch(Exception e){
 			exp =e;
 		}
 		assertTrue("Size not supported",exp.toString().contains("UnsupportedOperationException") && exp != null);
-		
-		// Get Lock on DataSet and Catch UnSupported Exception
-		try{
-			markLogicDatasetGraphAdmin.getLock();
-			}catch(Exception e){
-				exp =e;
-			}
-			assertTrue("getLock not supported",exp.toString().contains("UnsupportedOperationException") && exp != null);
+
+		// Get Lock on DataSet and and verify LockNone
+		Lock lck =	markLogicDatasetGraphAdmin.getLock();
+		System.out.println(lck.toString());
+		assertTrue("getLock not supported",lck != null);
 
 		markLogicDatasetGraphAdmin.close();
-		 exp = null;
+		exp = null;
 		try {
 			markLogicDatasetGraphAdmin.addGraph(n1, g1);
 		} catch (Exception e) {
@@ -209,8 +208,8 @@ public class JenaGraphTests extends ConnectedRESTQA {
 			assertTrue(
 					"did not find Node in :: " + graphs.toString(),
 					graphs.toString().contains("http://jena.example.org/fileWrite")
-							|| graphs.toString().contains(MarkLogicDatasetGraph.DEFAULT_GRAPH_URI)
-							|| graphs.toString().contains("http://marklogic.com/semantics#graphs"));
+					|| graphs.toString().contains(MarkLogicDatasetGraph.DEFAULT_GRAPH_URI)
+					|| graphs.toString().contains("http://marklogic.com/semantics#graphs"));
 		}
 
 	}
