@@ -35,17 +35,31 @@ public class JenaDatabaseClient {
     private WriteCacheTimerTask cache;
     private DatabaseClient client;
     private Transaction currentTransaction;
+    private Timer timer;
     
+    /**
+     * Constructor.
+     * @param client a Java Client API DatabaseClient.  Can be made with com.marklogic.client.DatabaseClientFactory
+     */
     public JenaDatabaseClient(DatabaseClient client) {
         this.client = client;
         this.graphManager = client.newGraphManager();
         this.graphManager.setDefaultMimetype(RDFMimeTypes.NTRIPLES);
         this.sparqlQueryManager = client.newSPARQLQueryManager();
         this.cache = new WriteCacheTimerTask(this);
-        Timer timer = new Timer();
+        this.timer = new Timer();
         timer.scheduleAtFixedRate(cache, 1000, 1000);
     }
 
+    /**
+     * Close the connection and free resources
+     */
+    public void close() {
+        cache.cancel();
+        timer.cancel();
+        client = null;
+    }
+    
     /**
      * Create a new {@link com.marklogic.client.semantics.SPARQLQueryDefinition} from
      * a query String.  You can use the resulting object to configure various

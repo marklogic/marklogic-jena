@@ -23,6 +23,10 @@ import org.apache.jena.riot.WriterGraphRIOT;
 import com.hp.hpl.jena.graph.Graph;
 import com.marklogic.client.io.OutputStreamSender;
 
+/**
+ * Encapsulates a writer that can send an output stream from RIOT
+ * to a MarkLogic Java CLient API OutputStreamHandle.
+ */
 public class OutputStreamRIOTSender implements OutputStreamSender {
 
 	private WriterGraphRIOT writer;

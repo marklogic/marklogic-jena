@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 /**
- * This package contains the core class for marklogic-jena,
- * {@link com.marklogic.semantics.jena.MarkLogicDatasetGraph}, 
- * as well as a Factory and Exceptions.  Only the classes in this
- * package are required in an API user's application.
+ * This package contains the Jena extensions that wire
+ * MarkLogic functionality into Jena's query processing and
+ * graph manipulation APIs.
  */
-package com.marklogic.semantics.jena;
+package com.marklogic.semantics.jena.engine;

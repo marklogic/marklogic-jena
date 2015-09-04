@@ -10,6 +10,10 @@ import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.sparql.core.Quad;
 import com.hp.hpl.jena.sparql.resultset.JSONInput;
 
+/**
+ * Returns quads as elements in an iterator, by
+ * processing the special purpose SELECT ?g ?s ?p ?o pattern
+ */
 public class QuadsIterator implements Iterator<Quad> {
 
 	private ResultSet results;

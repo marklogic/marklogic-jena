@@ -46,6 +46,7 @@ public class RIOTExamples {
             Quad quad = quads.next();
             System.out.println(quad.toString());
         }
+        dsg.close();
     }
 
     public static void main(String... args) {

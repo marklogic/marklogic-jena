@@ -55,6 +55,12 @@ import com.marklogic.semantics.jena.MarkLogicDatasetGraph;
 import com.marklogic.semantics.jena.MarkLogicJenaException;
 import com.marklogic.semantics.jena.client.JenaDatabaseClient;
 
+/**
+ * Implements a hook into the Jena query execution framework
+ * for working with MarkLogic.
+ * Applications need not use this class.
+ * it accessed via the MarkLogicDatasetGraph.
+ */
 public class MarkLogicQueryEngine extends QueryEngineMain {
 
 	private static Logger log = LoggerFactory.getLogger(MarkLogicQueryEngine.class);
@@ -141,6 +147,9 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
     }
     
     @Override
+    /**
+     * Evaluation hook for all queries.
+     */
     public QueryIterator eval(Op op, DatasetGraph dsg, Binding initial, Context context)
     {
     	// see if this can be null
@@ -229,8 +238,10 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
     }
 
 
-    
-    public class BooleanQueryIterator extends QueryIter1 implements QueryIterator {
+    /**
+     * Wraps a boolean result into an iterator implementation (with one item)
+     */
+    class BooleanQueryIterator extends QueryIter1 implements QueryIterator {
     	private boolean answer;
     	
 		public BooleanQueryIterator(QueryIterator input, ExecutionContext ctx, Boolean answer) {
@@ -259,7 +270,11 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
 		}
     }
 
-    public class TripleQueryIterator extends QueryIter1 {
+    /**
+     * Wraps the results of a CONSTRUCT query into a new binding
+     * which is understood by Jena's internals.
+     */
+    class TripleQueryIterator extends QueryIter1 {
 
     	private Iterator<Triple> triples;
     	

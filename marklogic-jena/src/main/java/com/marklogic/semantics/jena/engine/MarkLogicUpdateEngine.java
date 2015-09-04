@@ -43,14 +43,23 @@ public class MarkLogicUpdateEngine extends UpdateEngineMain {
                 context);
     }
 
+    /**
+     * UnRegisters the factory from Jena's UpdateEngineRegistry.
+     */
     public static void unregister() {
         UpdateEngineRegistry.removeFactory(factory);
     }
 
+    /**
+     * Registers the factory with Jena's UpdateEngineRegistry.
+     */
     public static void register() {
         UpdateEngineRegistry.addFactory(factory);
     }
 
+    /**
+     * Creates the UpdateEngine for integration into Jena.
+     */
     public static class MarkLogicUpdateEngineFactory implements
             UpdateEngineFactory {
 
@@ -69,6 +78,10 @@ public class MarkLogicUpdateEngine extends UpdateEngineMain {
 
     }
 
+    /**
+     * Code that implements sending update queries to the MarkLogic
+     * SPARQL UPDATE endpoint.
+     */
     public class MarkLogicUpdateEngineWorker implements UpdateVisitor {
 
         private MarkLogicDatasetGraph markLogicDatasetGraph;

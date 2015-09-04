@@ -583,6 +583,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
     @Override
     public void close() {
         checkIsOpen();
+        this.client.close();
         this.client = null;
     }
 
