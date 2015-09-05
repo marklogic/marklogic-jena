@@ -210,6 +210,9 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
     protected static QueryEngineFactory factory = new MarkLogicQueryEngineFactory() ;
 
 
+    /**
+     * For internal use.
+     */
     protected static class MarkLogicQueryEngineFactory implements QueryEngineFactory {
 
         @Override

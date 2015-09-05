@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 /**
- * This package contains the Jena extensions that wire
+ * Jena extensions that wire
  * MarkLogic functionality into Jena's query processing and
  * graph manipulation APIs.
  */

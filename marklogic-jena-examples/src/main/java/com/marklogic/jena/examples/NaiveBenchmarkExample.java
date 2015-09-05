@@ -24,9 +24,9 @@ import com.marklogic.semantics.jena.MarkLogicDatasetGraph;
  * a naive query over the data.
  * Run it with "gradlew marklogic-jena-examples:jmh"
  */
-public class MarkLogicDatasetGraphNaiveBenchmark {
+public class NaiveBenchmarkExample {
 
-    private static Logger log = LoggerFactory.getLogger(MarkLogicDatasetGraphNaiveBenchmark.class);
+    private static Logger log = LoggerFactory.getLogger(NaiveBenchmarkExample.class);
 	private MarkLogicDatasetGraph markLogicDatasetGraph;
 	private static Dataset dataset;
 	

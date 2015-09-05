@@ -15,24 +15,24 @@
  */
 package com.marklogic.jena.examples;
 
-import java.util.Iterator;
-
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFFormat;
 
-import com.hp.hpl.jena.sparql.core.Quad;
 import com.marklogic.semantics.jena.MarkLogicDatasetGraph;
 
-public class RIOTExamples {
+/**
+ * Using the RDFDataMgr to import/export triples into/out of MarkLogic
+ */
+public class RIOTExample {
 
     private MarkLogicDatasetGraph dsg;
 
-    public RIOTExamples() {
+    public RIOTExample() {
         dsg = ExampleUtils.loadPropsAndInit();
     }
     
-    public void run() {
+    private void run() {
         System.out.println("Loading triples from NT files to MarkLogic");
         RDFDataMgr.read(dsg, "src/main/resources/dbpedia60k.nt", Lang.NTRIPLES);
         
@@ -46,7 +46,7 @@ public class RIOTExamples {
     }
 
     public static void main(String... args) {
-       RIOTExamples example = new RIOTExamples();
+       RIOTExample example = new RIOTExample();
        example.run();
     }
 }

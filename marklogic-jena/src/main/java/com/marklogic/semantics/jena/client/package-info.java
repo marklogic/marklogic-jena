@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 /**
- * This package contains classes that interact with the MarkLogic
+ * Contains classes that interact with the MarkLogic
  * Java Client API.
  */
 package com.marklogic.semantics.jena.client;

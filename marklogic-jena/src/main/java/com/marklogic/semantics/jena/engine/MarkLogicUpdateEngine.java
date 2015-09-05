@@ -28,6 +28,10 @@ import com.marklogic.semantics.jena.MarkLogicDatasetGraph;
 import com.marklogic.semantics.jena.MarkLogicJenaException;
 import com.marklogic.semantics.jena.client.JenaDatabaseClient;
 
+/**
+ * Provides a connection between Jena's update mechanism and SPARQL
+ * UPDATE on MarkLogic.
+ */
 public class MarkLogicUpdateEngine extends UpdateEngineMain {
 
     private static UpdateEngineFactory factory = new MarkLogicUpdateEngineFactory();

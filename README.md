@@ -85,11 +85,7 @@ http://marklogic.github.io/marklogic-jena/marklogic-jena/build/docs/javadoc/
 
 ### Examples
 
-The following examples demonstrate idiomatic usage of the MarkLogic as a Jena DatasetGraph.
-
-(TBD - provide /samples dir)
-
-
+The project at [marklogic-jena-examples](marklogic-jena-examples) contains some Java applications that exercise the functionality of MarkLogic using this library.
 
 
 ## Support

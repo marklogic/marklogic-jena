@@ -25,13 +25,17 @@
         <li>port of an application server</li>
         <li>credentials to read/write/administer the database as needed</li>
     </ul>
+    If you need something to help you configure and deploy MarkLogic
+    application servers, try 
+    <a href="https://github.com/rjrudin/ml-gradle">ml-gradle</a>.
+
     Note: If you are starting with 8.0-4 MarkLogic installation on your local
     machine, the configuration of ml-gradle out of the box will set up a test
     server for you.
 </p>
 <h2>The API</h2>
 <p>
-Jena uses a {@link com.hp.hpl.jena.sparql.core.DatasetGraph} to model a set of RDF graphs.  To create a DatasetGraph that accesses MarkLogic, use {@link com.marklogic.semantics.jena.MarkLogicDatasetGraph}.  You may make a DatasetGraph instance from a <a href="http://github.com/marklogic/java-client-api">Java Client API</a> Database Client, or directly from the factory method.
+Jena uses a {@link com.hp.hpl.jena.sparql.core.DatasetGraph} to model a set of RDF graphs.  To create a DatasetGraph that accesses MarkLogic, use {@link com.marklogic.semantics.jena.MarkLogicDatasetGraph}.  You may make a DatasetGraph instance from a <a href="http://github.com/marklogic/java-client-api">Java Client API</a> Database Client, or directly from the five-argument factory method.
 
 <pre>
 import com.hp.hpl.jena.sparql.core.DatasetGraph;
@@ -62,15 +66,93 @@ dsg = MarkLogicDatasetGraphFactory.createDatasetGraph(
 </pre>
 </p>
 <h2>Graph operations</h2>
-<p>
+<p>Use Jena's CRUD operations to store, retrieve, merge or delete Graphs on the
+MarkLogicDatasetGraph.
+<pre>
+Node graphNode = NodeFactory.createURI("http://example.org/graphs/charles");
+
+String turtle = "@prefix foaf: <http://xmlns.com/foaf/0.1/> ."
+        + "@prefix : <http://example.org/> ."
+        +":charles a foaf:Person ; "
+        + "        foaf:name \"Charles\" ;"
+        + "        foaf:knows :jim ."
+        + ":jim    a foaf:Person ;"
+        + "        foaf:name \"Jim\" ;"
+        + "        foaf:knows :charles .";
+
+// make grpah locally
+Graph graph = GraphFactory.createDefaultGraph();
+RDFDataMgr.read(graph,  new StringReader(turtle), "", Lang.TURTLE);
+
+// store in MarkLogic
+dsg.addGraph(graphNode,  graph);
+
+// Make a triple by hand
+Graph moreTriples = GraphFactory.createDefaultGraph();
+moreTriples.add(new Triple(
+        NodeFactory.createURI("http://example.org/charles"),
+        NodeFactory.createURI("http://example.org/hasDog"),
+        NodeFactory.createURI("http://example.org/vashko")));
+
+// merge it with the graph in MarkLogic
+dsg.mergeGraph(graphNode, moreTriples);
+
+// get the merged graph
+Graph retrievedGraph = dsg.getGraph(graphNode);
+
+// remove the graph
+dsg.removeGraph(graphNode);
+
+// remove all graphs
+dsg.clear();
+</pre>
 </p>
 <pre>
 </pre>
 <h2>SPARQL Queries</h2>
 <p>
+<pre>
+QueryExecution execution = QueryExecutionFactory.create(
+                "PREFIX foaf: <http://xmlns.com/foaf/0.1/> "
+                +"select ?aname ?bname where { ?a foaf:knows ?b ."
+                + "                    ?a foaf:name ?aname ."
+                + "                    ?b foaf:name ?bname }", dsg.toDataset());
+int n = 1;
+for (ResultSet results = execution.execSelect();
+        results.hasNext();
+        n++) {
+    QuerySolution solution = results.next();
+    System.out.println("Solution #" + n ": "
+            + solution.get("aname").asLiteral().getString()
+            +" knows " 
+            + solution.get("bname").asLiteral().getString());
+}
+dsg.close();
+</pre>
 </p>
 <h2>SPARQL Update</h2>
 <p>
+<pre>
+String insertData = "PREFIX foaf: <http://xmlns.com/foaf/0.1/> "
+        + "PREFIX : <http://example.org/> "
+        +"INSERT DATA {GRAPH :g1 {"
+        + ":charles a foaf:Person ; "
+        + "        foaf:name \"Charles\" ;"
+        + "        foaf:knows :jim ."
+        + ":jim    a foaf:Person ;"
+        + "        foaf:name \"Jim\" ;"
+        + "        foaf:knows :charles ."
+        + "} }";
+
+UpdateRequest update = UpdateFactory.create(insertData);
+UpdateProcessor processor = UpdateExecutionFactory.create(update, dsg);
+processor.execute();
+
+update = UpdateFactory.create("PREFIX : <http://example.org/> DROP GRAPH :g1");
+processor = UpdateExecutionFactory.create(update, dsg);
+processor.execute();
+dsg.close();
+</pre>
 </p>
 </body>
 </html>
