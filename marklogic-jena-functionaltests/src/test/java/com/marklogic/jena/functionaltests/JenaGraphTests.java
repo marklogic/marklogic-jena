@@ -87,6 +87,16 @@ public class JenaGraphTests extends ConnectedRESTQA {
 
 	@After
 	public void testCleanUp() throws Exception {
+		if(markLogicDatasetGraphAdmin.getDatabaseClient() != null){
+			markLogicDatasetGraphAdmin.close();
+		}
+		if(markLogicDatasetGraphWriter.getDatabaseClient() != null){
+			markLogicDatasetGraphWriter.close();
+		}
+		if(markLogicDatasetGraphReader.getDatabaseClient() != null){
+			markLogicDatasetGraphReader.close();
+		}
+	
 		clearDB(restPort);
 		adminClient.release();
 		writerClient.release();
@@ -115,7 +125,7 @@ public class JenaGraphTests extends ConnectedRESTQA {
 	 */
 
 	@Test
-	public void test001Crud_admin() {
+	public void testCrud_admin() {
 		// Insert Triples into Graph
 		markLogicDatasetGraphAdmin.clear();
 		Graph g1 = markLogicDatasetGraphAdmin.getDefaultGraph();
@@ -215,7 +225,7 @@ public class JenaGraphTests extends ConnectedRESTQA {
 	}
 
 	@Test
-	public void testAdd_Quads() throws Exception {
+	public void test002Add_Quads() throws Exception {
 		// Add and validate Quad
 		markLogicDatasetGraphWriter.add(NodeFactory.createURI("testing/quad_add"), NodeFactory.createURI("testing/subject_1"),
 				NodeFactory.createURI("testing/predicate_1"), NodeFactory.createLiteral("testing/Object_1"));

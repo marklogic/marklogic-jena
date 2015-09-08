@@ -93,6 +93,15 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 
 	@After
 	public void testCleanUp() throws Exception {
+		if(markLogicDatasetGraphAdmin.getDatabaseClient() != null){
+			markLogicDatasetGraphAdmin.close();
+		}
+		if(markLogicDatasetGraph.getDatabaseClient() != null){
+			markLogicDatasetGraph.close();
+		}
+		if(markLogicDatasetGraphReader.getDatabaseClient() != null){
+			markLogicDatasetGraphReader.close();
+		}
 		clearDB(restPort);
 		adminClient.release();
 		writerClient.release();
@@ -209,7 +218,7 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 	}
 
 	@Test
-	public void test001StringQuery_withbinding() {
+	public void testStringQuery_withbinding() {
 		markLogicDatasetGraph.clear();
 		String file = datasource + "tigers.ttl";
 		// Read triples into dataset
