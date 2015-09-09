@@ -59,8 +59,7 @@ import com.marklogic.semantics.jena.client.WrappingIterator;
  */
 public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements DatasetGraph, GraphStore, Transactional {
 
-	
-	public static final String DEFAULT_GRAPH_URI = "http://marklogic.com/semantics#default-graph";
+    public static final String DEFAULT_GRAPH_URI = "http://marklogic.com/semantics#default-graph";
 	static Logger log = LoggerFactory.getLogger(MarkLogicDatasetGraph.class);
 	
 	private JenaDatabaseClient client;
@@ -93,6 +92,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	public Iterator<Node> listGraphNodes() {
 		log.debug("listing graphs ");
         checkIsOpen();
+        sync();
 		Iterator<String> graphNames = client.listGraphUris();
 		return new WrappingIterator(graphNames);
 	}
@@ -316,7 +316,6 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
      */
     public void setDefaultGraph(Graph g)
     {
-        checkIsOpen();
 	    this.addGraph(NodeFactory.createURI(DEFAULT_GRAPH_URI), g);
 	}
 
@@ -326,6 +325,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	 */
 	public void begin(ReadWrite readWrite) {
         checkIsOpen();
+        sync();
 		client.begin(readWrite);
 	}
 
@@ -335,6 +335,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	 */
 	public void commit() {
         checkIsOpen();
+        sync();
 		client.commit();
 	}
 
@@ -344,6 +345,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	 */
 	public void abort() {
         checkIsOpen();
+        sync();
 		client.abort();
 	}
 
@@ -361,8 +363,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	 * Synonymous with abort();
 	 */
 	public void end() {
-        checkIsOpen();
-		abort();
+        abort();
 	}
 
 	@Override
@@ -396,6 +397,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	@Override
 	public Graph getDefaultGraph() {
         checkIsOpen();
+        sync();
 	    return client.readDefaultGraph();
 	}
 
@@ -405,6 +407,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	@Override
 	public Graph getGraph(Node graphNode) {
         checkIsOpen();
+        sync();
 		return client.readGraph(graphNode.getURI());
 	}
 
@@ -414,6 +417,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
     @Override
 	public void addGraph(Node graphName, Graph graph) {
         checkIsOpen();
+        sync();
 	    client.writeGraph(graphName.getURI(), graph);
 	}
 	
@@ -425,6 +429,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	 */
 	public void mergeGraph(Node graphName, Graph graph) {
         checkIsOpen();
+        sync();
         client.mergeGraph(graphName.getURI(), graph);
     }
 
@@ -434,6 +439,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	@Override
 	public void removeGraph(Node graphName) {
         checkIsOpen();
+        sync();
 		client.deleteGraph(graphName.getURI());
 	}
 	
