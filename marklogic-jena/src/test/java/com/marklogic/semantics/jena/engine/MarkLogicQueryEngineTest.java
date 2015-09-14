@@ -146,23 +146,23 @@ public class MarkLogicQueryEngineTest extends JenaTestBase {
         // add a graph during transaction
         try {
             ds.begin(ReadWrite.WRITE);
-            Triple triple = new Triple(NodeFactory.createURI("s529"),
-                    NodeFactory.createURI("p104"), NodeFactory.createURI("o22"));
+            Triple triple = new Triple(NodeFactory.createURI("http://s529"),
+                    NodeFactory.createURI("http://p104"), NodeFactory.createURI("http://o22"));
             Graph transGraph = GraphFactory.createGraphMem();
             transGraph.add(triple);
             Model model = ModelFactory.createModelForGraph(transGraph);
             ds.addNamedModel("createdDuringTransaction", model);
 
             QueryExecution qe = QueryExecutionFactory.create(
-                    "select ?o where { <s529> ?p ?o}", ds);
+                    "select ?o where { <http://s529> ?p ?o}", ds);
             ResultSet results = qe.execSelect();
             // System.out.println(ResultSetFormatter.asText(results));
             QuerySolution qs = results.next();
-            assertEquals("Query worked during transaction", "o22", qs.get("o").toString());
+            assertEquals("Query worked during transaction", "http://o22", qs.get("o").toString());
             ds.abort();
 
             qe = QueryExecutionFactory.create(
-                    "select ?o where { <s529> ?p ?o}", ds);
+                    "select ?o where { <shttp://529> ?p ?o}", ds);
             results = qe.execSelect();
             assertFalse("Query should not execute against rolled back data",
                     results.hasNext());
@@ -171,15 +171,15 @@ public class MarkLogicQueryEngineTest extends JenaTestBase {
             ds.addNamedModel("createdDuringTransaction", model);
 
             qe = QueryExecutionFactory.create(
-                    "select ?o where { <s529> ?p ?o}", ds);
+                    "select ?o where { <http://s529> ?p ?o}", ds);
             results = qe.execSelect();
             // System.out.println(ResultSetFormatter.asText(results));
             qs = results.next();
-            assertEquals("Query worked during transaction", "o22", qs.get("o").toString());
+            assertEquals("Query worked during transaction", "http://o22", qs.get("o").toString());
             ds.commit();
 
             //setupDataset();
-            qe = QueryExecutionFactory.create("select ?o where {<s529> ?p ?o}", ds);
+            qe = QueryExecutionFactory.create("select ?o where {<http://s529> ?p ?o}", ds);
             results = qe.execSelect();
             assertTrue("Query should execute against committed data",
                     results.hasNext());

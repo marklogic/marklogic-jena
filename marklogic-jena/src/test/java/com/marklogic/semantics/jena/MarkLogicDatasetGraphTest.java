@@ -151,11 +151,11 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
 	@Test
 	public void testQuadsView() {
 	
-		Node newSubject = NodeFactory.createURI("newSubject");
-		Node newProperty = NodeFactory.createURI("newProperty");
+		Node newSubject = NodeFactory.createURI("http://newSubject");
+		Node newProperty = NodeFactory.createURI("http://newProperty");
 		// note, untyped literals are rdf 1.0 and do not round-trip
 		Node newValue = NodeFactory.createLiteral("All New Value!", XSDDatatype.XSDstring);
-		Node newGraph = NodeFactory.createURI("newGraph");
+		Node newGraph = NodeFactory.createURI("http://newGraph");
 		Quad newQuad = new Quad(newGraph, 
 				new Triple(newSubject,
 						newProperty,
@@ -163,11 +163,12 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
 		
 	    DatasetGraph markLogicDatasetGraph = getMarkLogicDatasetGraph();
 	    Dataset ds = DatasetFactory.create(markLogicDatasetGraph);
-	    String askQuery = "ASK WHERE { GRAPH <newGraph> { <newSubject> ?p ?o } }";
+	    String askQuery = "ASK WHERE { GRAPH <http://newGraph> { <http://newSubject> ?p ?o } }";
 	    markLogicDatasetGraph.add(newQuad);
 	    ((MarkLogicDatasetGraph) markLogicDatasetGraph).sync();
 	    
-	    QueryExecution queryExec = QueryExecutionFactory.create(askQuery, ds);
+	    Query askQueryQuery = QueryFactory.create(askQuery);
+	    QueryExecution queryExec = QueryExecutionFactory.create(askQueryQuery, ds);
 	    assertTrue("add quad inserted a graph", queryExec.execAsk());
 	    assertTrue(markLogicDatasetGraph.contains(newQuad));
 	
@@ -311,7 +312,7 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
 	public void testTransactions() {
 		MarkLogicDatasetGraph markLogicDatasetGraph = getMarkLogicDatasetGraph();
 		
-		Node g1 = NodeFactory.createURI("transact1");
+		Node g1 = NodeFactory.createURI("http://transact1");
 		Triple triple = new Triple(NodeFactory.createURI("s10"),
 				NodeFactory.createURI("p10"), NodeFactory.createURI("o10"));
 		Graph transGraph = GraphFactory.createGraphMem();
@@ -330,7 +331,7 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
 		markLogicDatasetGraph.abort();
 		assertFalse(markLogicDatasetGraph.isInTransaction());
 
-    	QueryExecution queryExec = QueryExecutionFactory.create("ASK WHERE { graph <transact1> { ?s ?p ?o }}",
+    	QueryExecution queryExec = QueryExecutionFactory.create("ASK WHERE { graph <http://transact1> { ?s ?p ?o }}",
     			markLogicDatasetGraph.toDataset());
 		assertFalse("transact1 graph must not exist after rollback", queryExec.execAsk());
 		
@@ -340,7 +341,7 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
 		markLogicDatasetGraph.commit();
 		assertFalse(markLogicDatasetGraph.isInTransaction());
 
-    	queryExec = QueryExecutionFactory.create("ASK WHERE {  graph <transact1> { ?s ?p ?o }}",
+    	queryExec = QueryExecutionFactory.create("ASK WHERE {  graph <http://transact1> { ?s ?p ?o }}",
     			markLogicDatasetGraph.toDataset());
 		assertTrue("transact1 graph exists after commit", queryExec.execAsk());
 		
