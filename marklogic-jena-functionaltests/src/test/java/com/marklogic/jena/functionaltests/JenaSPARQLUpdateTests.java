@@ -6,6 +6,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
@@ -122,6 +124,74 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 		markLogicDatasetGraphAdmin = MarkLogicDatasetGraphFactory.createDatasetGraph(adminClient);
 		queryManager = writerClient.newQueryManager();
 	}
+	
+	private List<String> parseResults(ResultSet results, String key) {
+		List<String> strings = new ArrayList<String>();
+		while (results.hasNext()) {
+			QuerySolution qs = results.next();
+			strings.add((String) qs.get(key).asNode().getURI());
+		}
+		return strings;
+	}
+
+	@Test
+	public void testBaseURi() throws Exception {
+		dataSet = DatasetFactory.create(markLogicDatasetGraph);
+		UpdateRequest update = new UpdateRequest();
+		update.add("DROP ALL").add("BASE <http://exampleBase.org/> INSERT DATA { GRAPH <BaseUriTest> { <S1> <P1> <O1>  } }");
+		UpdateAction.execute(update, dataSet);
+		String query = "select ?o where { <S1> ?p ?o }";
+		QueryExecution exec = QueryExecutionFactory.create(query, dataSet);
+		ResultSet results = exec.execSelect();
+		List<String> subjects = parseResults(results, "o");
+		assertEquals("No inference, got back list of size 0", 0, subjects.size());
+
+		Query q = QueryFactory.create(query, "http://exampleBase.org/");
+		exec = QueryExecutionFactory.create(q, dataSet);
+		results = exec.execSelect();
+		subjects = parseResults(results, "o");
+		assertEquals("Got back list of size 1", 1, subjects.size());
+
+		Query q1 = QueryFactory.create(query, "http://no.org/");
+		exec = QueryExecutionFactory.create(q1, dataSet);
+		results = exec.execSelect();
+		subjects = parseResults(results, "o");
+		assertEquals("No base, got back list of size 0", 0, subjects.size());
+
+		Query q2 = QueryFactory.create(query, "null");
+		exec = QueryExecutionFactory.create(q2, dataSet);
+		try {
+			results = exec.execSelect();
+			subjects = parseResults(results, "o");
+			assertEquals("No base, got back list of size 0", 0, subjects.size());
+		} catch (Exception e) {
+			System.out.println(e);
+		}
+
+		Query q3 = QueryFactory.create(query, "");
+		exec = QueryExecutionFactory.create(q3, dataSet);
+		try {
+			results = exec.execSelect();
+			subjects = parseResults(results, "o");
+			assertEquals("No base, got back list of size 0", 0, subjects.size());
+		} catch (Exception e) {
+			System.out.println(e);
+		}
+
+		Query q4 = QueryFactory.create(query, "<http://exampleBase.org/>");
+		exec = QueryExecutionFactory.create(q4, dataSet);
+		Exception exp = null;
+		try {
+			results = exec.execSelect();
+			subjects = parseResults(results, "o");
+			assertEquals("No base, got back list of size 0", 0, subjects.size());
+		} catch (Exception e) {
+			System.out.println(e);
+			exp = e;
+		}
+		assertTrue("Unexpected Exception ", exp.toString().contains("The character violates the grammar rules for URIs/IRIs")
+				&& exp != null);
+	}
 
 	@Test
 	public void testStringAskQuery() {
@@ -171,7 +241,7 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 	}
 
 	@Test
-	public void testDescribeQuery_withbinding() {
+	public void testConstructQuery_withbinding() {
 		markLogicDatasetGraph.clear();
 		Node newgraph = NodeFactory.createURI("http://marklogic.com/graph1");
 
@@ -210,6 +280,7 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 				+ "  ?person <homeTel> ?o .  ?person <fname> ?firstname .} ";
 		QuerySolutionMap binding = new QuerySolutionMap();
 		binding.add("firstname", ResourceFactory.createResource("Joefname"));
+		
 		QueryExecution queryExec = QueryExecutionFactory.create(query1, dataSet, binding);
 		Model results = queryExec.execConstruct();
 		assertTrue(results.getGraph().size() == 1);
@@ -218,7 +289,7 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 	}
 
 	@Test
-	public void testStringQuery_withbinding() {
+	public void test001StringQuery_withbinding() {
 		markLogicDatasetGraph.clear();
 		String file = datasource + "tigers.ttl";
 		// Read triples into dataset
@@ -233,7 +304,7 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 				+ " ?s bb:position ?o." + "}";
 
 		String query2 = "PREFIX  bb: <http://marklogic.com/baseball/players#>  SELECT  ?o FROM <http://marklogic.com/Graph1> WHERE"
-				+ "{ ?s bb:position ?o.} LIMIT 2";
+				+ "{ ?s ?p ?o.}";
 
 		String query3 = "PREFIX  bb: <http://marklogic.com/baseball/players#>"
 				+ "CONSTRUCT{ ?ID bb:position ?o .}  FROM <http://marklogic.com/Graph1> WHERE { ?ID bb:position ?o ."
@@ -267,6 +338,7 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 		assertTrue(queryExec.execAsk());
 
 		// Select
+		binding.add("p", ResourceFactory.createResource("http://marklogic.com/baseball/players#team"));
 		QueryExecution queryExec2 = QueryExecutionFactory.create(query2, dataSet, binding);
 		ResultSet results2 = queryExec2.execSelect();
 
@@ -276,7 +348,7 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 			assertTrue(qs.contains("o"));
 			String obtained = qs.get("o").toString();
 			System.out.println(obtained);
-			assertTrue("Expecting Object node to be::catcher ", obtained.equals("catcher^^http://www.w3.org/2001/XMLSchema#string"));
+			assertTrue("Expecting Object node to be::http://marklogic.com/baseball/rules#Tigers ", obtained.equals("http://marklogic.com/baseball/rules#Tigers"));
 		}
 
 		// Construct with Literal Binding
