@@ -39,6 +39,7 @@ import static org.junit.Assert.fail;
 
 import java.util.Iterator;
 
+import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFFormat;
 import org.junit.After;
@@ -59,6 +60,9 @@ import com.hp.hpl.jena.query.QueryExecutionFactory;
 import com.hp.hpl.jena.query.QueryFactory;
 import com.hp.hpl.jena.query.ReadWrite;
 import com.hp.hpl.jena.query.ResultSet;
+import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.ResourceFactory;
 import com.hp.hpl.jena.sparql.core.DatasetGraph;
 import com.hp.hpl.jena.sparql.core.Quad;
 import com.hp.hpl.jena.sparql.graph.GraphFactory;
@@ -394,4 +398,5 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
         Dataset dataSet = getMarkLogicDatasetGraph("testdata/smallfile.nt").toDataset();
 	    RDFDataMgr.write(System.out, dataSet, RDFFormat.TRIG_PRETTY);
 	}
+	
 }

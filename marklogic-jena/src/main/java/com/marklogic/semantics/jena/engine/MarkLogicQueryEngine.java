@@ -123,6 +123,11 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
     private SPARQLQueryDefinition prepareQueryDefinition(Query query) {
         JenaDatabaseClient client = markLogicDatasetGraph.getDatabaseClient();
         SPARQLQueryDefinition qdef = client.newQueryDefinition(query.toString());
+        if (query.getBaseURI() != null) {
+            qdef.setBaseUri(query.getBaseURI());
+        } else {
+            query.setBaseURI((String) null);
+        }
         if (markLogicDatasetGraph.getRulesets() != null) {
             qdef.setRulesets(markLogicDatasetGraph.getRulesets());
         }

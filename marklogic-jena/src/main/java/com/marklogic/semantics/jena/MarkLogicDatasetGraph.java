@@ -448,7 +448,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	 * Not supported by MarkLogicDatasetGraph.
 	 */
     public long size() {
-	    throw new UnsupportedOperationException("size() not supported on MarkLogicDatasetGraph");
+	    throw new UnsupportedOperationException("Dataset.size()");
 	} 
     
 

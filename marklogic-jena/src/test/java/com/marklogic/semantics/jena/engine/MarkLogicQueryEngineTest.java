@@ -248,5 +248,23 @@ public class MarkLogicQueryEngineTest extends JenaTestBase {
 
     }
 
+    @Test
+    public void testBaseUri() {
+
+        MarkLogicDatasetGraph baseTest = getMarkLogicDatasetGraph();
+        Dataset ds = DatasetFactory.create(baseTest);
+        String query = "select ?o where { <r3> a ?o }";
+        QueryExecution exec = QueryExecutionFactory.create(query, ds);
+        ResultSet results = exec.execSelect();
+        List<String> subjects = project(results, "o");
+        assertEquals("No base, got back list of size 0", 0, subjects.size());
+        
+        Query q = QueryFactory.create(query, "http://example.org/");
+        exec = QueryExecutionFactory.create(q, ds);
+        results = exec.execSelect();
+        subjects = project(results, "o");
+        assertEquals("No base, got back list of size 1", 1, subjects.size());
+
+    }
    
 }
