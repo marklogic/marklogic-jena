@@ -241,7 +241,7 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 	}
 
 	@Test
-	public void testConstructQuery_withbinding() {
+	public void test001ConstructQuery_withbinding() {
 		markLogicDatasetGraph.clear();
 		Node newgraph = NodeFactory.createURI("http://marklogic.com/graph1");
 
@@ -259,13 +259,13 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 				NodeFactory.createURI("john@email.com"));
 
 		markLogicDatasetGraph
-				.add(newgraph, NodeFactory.createURI("Joe"), NodeFactory.createURI("fname"), NodeFactory.createURI("Joefname"));
+				.add(newgraph, NodeFactory.createURI("http://Joe"), NodeFactory.createURI("http://fname"), NodeFactory.createURI("http://Joefname"));
 		markLogicDatasetGraph
-				.add(newgraph, NodeFactory.createURI("Joe"), NodeFactory.createURI("lname"), NodeFactory.createURI("Joelname"));
-		markLogicDatasetGraph.add(newgraph, NodeFactory.createURI("Joe"), NodeFactory.createURI("homeTel"),
-				NodeFactory.createURI("222222222D"));
-		markLogicDatasetGraph.add(newgraph, NodeFactory.createURI("Joe"), NodeFactory.createURI("email"),
-				NodeFactory.createURI("joe@email.com"));
+				.add(newgraph, NodeFactory.createURI("http://Joe"), NodeFactory.createURI("http://lname"), NodeFactory.createURI("http://Joelname"));
+		markLogicDatasetGraph.add(newgraph, NodeFactory.createURI("http://Joe"), NodeFactory.createURI("http://homeTel"),
+				NodeFactory.createURI("http://222222222D"));
+		markLogicDatasetGraph.add(newgraph, NodeFactory.createURI("http://Joe"), NodeFactory.createURI("http://email"),
+				NodeFactory.createURI("http://joe@email.com"));
 
 		markLogicDatasetGraph.add(newgraph, NodeFactory.createURI("jerry"), NodeFactory.createURI("fname"),
 				NodeFactory.createURI("jerryfname"));
@@ -276,20 +276,29 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 		markLogicDatasetGraph.add(newgraph, NodeFactory.createURI("jerry"), NodeFactory.createURI("email"),
 				NodeFactory.createURI("jerry@email.com"));
 
-		String query1 = "CONSTRUCT{ ?person <homeTel> ?o .}  FROM <http://marklogic.com/graph1> WHERE {"
-				+ "  ?person <homeTel> ?o .  ?person <fname> ?firstname .} ";
+		String query = "CONSTRUCT{ ?person <http://homeTel> ?o .}  FROM <http://marklogic.com/graph1> WHERE {"
+				+ "  ?person <http://homeTel> ?o .  ?person <http://fname> ?firstname .} ";
 		QuerySolutionMap binding = new QuerySolutionMap();
-		binding.add("firstname", ResourceFactory.createResource("Joefname"));
+		binding.add("firstname", ResourceFactory.createResource("http://Joefname"));
 		
-		QueryExecution queryExec = QueryExecutionFactory.create(query1, dataSet, binding);
+		QueryExecution queryExec = QueryExecutionFactory.create(query, dataSet, binding);
 		Model results = queryExec.execConstruct();
 		assertTrue(results.getGraph().size() == 1);
-		assertTrue(results.getGraph().contains(Node.ANY, Node.ANY, NodeFactory.createURI("222222222D")));
-
+		assertTrue(results.getGraph().contains(Node.ANY, Node.ANY, NodeFactory.createURI("http://222222222D")));
+		
+		// Query wihtout base URI, bcs of the default base URI in query we should get empty result set Git issue #23
+		String query1 = "CONSTRUCT{ ?person <homeTel> ?o .}  FROM <http://marklogic.com/graph1> WHERE {"
+				+ "  ?person <homeTel> ?o .  ?person <fname> ?firstname .} ";
+		QuerySolutionMap binding1 = new QuerySolutionMap();
+		binding1.add("firstname", ResourceFactory.createResource("jerryfname"));
+		
+		QueryExecution queryExec1 = QueryExecutionFactory.create(query1, dataSet, binding1);
+		Model results1 = queryExec1.execConstruct();
+		assertTrue(results1.getGraph().size() == 0);
 	}
 
 	@Test
-	public void test001StringQuery_withbinding() {
+	public void testStringQuery_withbinding() {
 		markLogicDatasetGraph.clear();
 		String file = datasource + "tigers.ttl";
 		// Read triples into dataset
