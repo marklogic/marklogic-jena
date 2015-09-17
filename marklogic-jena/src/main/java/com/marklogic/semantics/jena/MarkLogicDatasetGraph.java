@@ -43,6 +43,7 @@ import com.hp.hpl.jena.update.GraphStore;
 import com.marklogic.client.io.InputStreamHandle;
 import com.marklogic.client.query.QueryDefinition;
 import com.marklogic.client.semantics.GraphPermissions;
+import com.marklogic.client.semantics.RDFTypes;
 import com.marklogic.client.semantics.SPARQLBindings;
 import com.marklogic.client.semantics.SPARQLQueryDefinition;
 import com.marklogic.client.semantics.SPARQLRuleset;
@@ -135,17 +136,17 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 				try {
 					String xsdType = objectNode.getLiteralDatatypeURI();
 					String fragment = new URI(xsdType).getFragment();
-					bindings.bind(variableName, objectNode.getLiteralLexicalForm(), fragment);
+					bindings.bind(variableName, objectNode.getLiteralLexicalForm(), RDFTypes.valueOf(fragment.toUpperCase()));
 					log.debug("found " + xsdType);
 				} catch (URISyntaxException e) {
-					log.info("Is this an error");
+					throw new MarkLogicJenaException("Unrecognized binding type.  Use XSD only.", e);
 				}
 			} else if (!objectNode.getLiteralLanguage().equals("")) {
 				String languageTag = objectNode.getLiteralLanguage();
 				bindings.bind(variableName, objectNode.getLiteralLexicalForm(), Locale.forLanguageTag(languageTag));
 			} else {
 				// is this a hole, no type string?
-				bindings.bind(variableName, objectNode.getLiteralLexicalForm(), "string");
+				bindings.bind(variableName, objectNode.getLiteralLexicalForm(), RDFTypes.STRING);
 			}
 		}
 		qdef.setBindings(bindings);
