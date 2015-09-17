@@ -21,8 +21,8 @@ import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.NodeFactory;
 
 /**
- * Adapts iterator from MarkLogic's Iterator<String>
- * to Jena's Iterator<Node>
+ * Adapts iterator from MarkLogic's Iterator&lt;String&ge;
+ * to Jena's Iterator&lt;Node$ge;
  */
 public class WrappingIterator implements Iterator<Node> {
 

@@ -478,7 +478,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	
 	/**
 	 * Removes all but the default permissions from a graph.
-	 * @param graphName
+	 * @param graphName the node with the graph's name.
 	 */
 	public void clearPermissions(Node graphName) {
         checkIsOpen();
