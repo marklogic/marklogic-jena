@@ -162,7 +162,7 @@ public class MarkLogicQueryEngineTest extends JenaTestBase {
             ds.abort();
 
             qe = QueryExecutionFactory.create(
-                    "select ?o where { <shttp://529> ?p ?o}", ds);
+                    "select ?o where { <http://s529> ?p ?o}", ds);
             results = qe.execSelect();
             assertFalse("Query should not execute against rolled back data",
                     results.hasNext());
