@@ -447,7 +447,7 @@ public class JenaGraphTests extends ConnectedRESTQA {
 	}
 
 	@Test
-	public void testAddDelete_permissions() {
+	public void test001AddDelete_permissions() {
 		String file = datasource + "rdfxml1.rdf";
 		// Read triples into dataset
 		RDFDataMgr.read(markLogicDatasetGraphWriter, file);
@@ -459,12 +459,19 @@ public class JenaGraphTests extends ConnectedRESTQA {
 		// Add Graph and Validate
 		markLogicDatasetGraphWriter.addGraph(newgraph, g);
 		markLogicDatasetGraphWriter.sync();
+		markLogicDatasetGraphWriter.clearPermissions(newgraph);//
 		assertTrue(markLogicDatasetGraphWriter.containsGraph(newgraph));
 		GraphPermissions permissions = markLogicDatasetGraphAdmin.getPermissions(newgraph);
 		markLogicDatasetGraphWriter.addPermissions(newgraph, permissions.permission("test-eval", Capability.EXECUTE));
 		permissions = markLogicDatasetGraphWriter.getPermissions(newgraph);
 		System.out.println(markLogicDatasetGraphWriter.getPermissions(newgraph));
 		assertTrue("Did not have permission looking for", permissions.get("test-eval").contains(Capability.EXECUTE));
+		//
+		markLogicDatasetGraphWriter.addPermissions(newgraph, permissions.permission("test-eval", Capability.UPDATE));
+		System.out.println(" added one more capability ===="+markLogicDatasetGraphWriter.getPermissions(newgraph));
+		assertTrue(permissions.get("test-eval").size() == 2);
+		//
+		
 		markLogicDatasetGraphWriter.clearPermissions(newgraph);
 		markLogicDatasetGraphWriter.sync();
 		permissions = markLogicDatasetGraphWriter.getPermissions(newgraph);
@@ -477,8 +484,11 @@ public class JenaGraphTests extends ConnectedRESTQA {
 		assertTrue("Did not have permission looking for", permissions.get("test-eval").contains(Capability.EXECUTE));
 
 		// Set UPDATE permissions and validate
-		permissions = permissions.permission("test-eval", Capability.UPDATE);
+		permissions.clear();
+		 permissions = permissions.permission("test-eval", Capability.UPDATE);
 		markLogicDatasetGraphWriter.writePermissions(newgraph, permissions);
+		System.out.println(" added one more capability ===="+markLogicDatasetGraphWriter.getPermissions(newgraph));
+		permissions = markLogicDatasetGraphWriter.getPermissions(newgraph);
 		assertTrue(permissions.get("test-eval").size() == 1);
 		assertTrue("Did not have permission looking for", permissions.get("test-eval").contains(Capability.UPDATE));
 
