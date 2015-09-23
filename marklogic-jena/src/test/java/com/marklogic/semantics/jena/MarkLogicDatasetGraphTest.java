@@ -302,6 +302,15 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
 		assertTrue(graphPermissions.get("rest-writer").contains(Capability.UPDATE));
 		assertTrue(graphPermissions.get("semantics-peon-role").contains(Capability.READ));
 
+		// should replace, not add permissions
+		graphPermissions.clear();
+		markLogicDatasetGraph.writePermissions(g1, graphPermissions.permission("semantics-peon-role", Capability.EXECUTE));
+		graphPermissions = markLogicDatasetGraph.getPermissions(g1);
+		assertTrue(graphPermissions.get("rest-reader").contains(Capability.READ));
+		assertTrue(graphPermissions.get("rest-writer").contains(Capability.UPDATE));
+		assertTrue(graphPermissions.get("semantics-peon-role").contains(Capability.EXECUTE));
+		assertFalse(graphPermissions.get("semantics-peon-role").contains(Capability.READ));
+
 		markLogicDatasetGraph.clearPermissions(g1);
 		graphPermissions = markLogicDatasetGraph.getPermissions(g1);
 		assertNull(graphPermissions.get("semantics-peon-role"));
