@@ -154,7 +154,7 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
 		Node newSubject = NodeFactory.createURI("http://newSubject");
 		Node newProperty = NodeFactory.createURI("http://newProperty");
 		// note, untyped literals are rdf 1.0 and do not round-trip
-		Node newValue = NodeFactory.createLiteral("All New Value!", XSDDatatype.XSDstring);
+		Node newValue = NodeFactory.createLiteral("All New Value!");
 		Node newGraph = NodeFactory.createURI("http://newGraph");
 		Quad newQuad = new Quad(newGraph, 
 				new Triple(newSubject,
