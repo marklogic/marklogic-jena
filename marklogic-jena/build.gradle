@@ -15,7 +15,7 @@ apply plugin: 'eclipse'
 apply plugin: 'maven'
 
 
-version = '1.0.0-SNAPSHOT'
+version = '1.0.0'
 group   = 'com.marklogic'
 
 dependencies {
@@ -24,7 +24,7 @@ dependencies {
        exclude(group: 'ch.qos.logback')
        exclude(group: 'log4j')
     }
-    compile('com.marklogic:java-client-api:3.0-SNAPSHOT') {
+    compile('com.marklogic:java-client-api:3.0.4') {
 	   exclude(group: 'org.slf4j')
        exclude(group: 'ch.qos.logback')
     }
