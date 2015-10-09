@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This library integrates MarkLogic Semantics feature into the [Jena RDF
+This library integrates MarkLogic Semantics into the [Jena RDF
 Framework](http://jena.apache.org) as a persistence and query layer.
 
 ### Before you start
@@ -18,7 +18,7 @@ applications you will need access to a running MarkLogic server.
 
 This API is distributed on Maven Central.
 
-For gradle-based projects include this dependency in `build.gradle`
+For gradle-based projects, include this dependency in `build.gradle`:
 ```
 dependencies {
    compile 'com.marklogic:marklogic-jena:1.0.0'
@@ -36,33 +36,33 @@ For Maven-based projects, use this block in `pom.xml`:
 ```
 
 The [Javadocs](http://marklogic.github.io/marklogic-jena/marklogic-jena/build/docs/javadoc/)
-have quick start examples for how to do graph CRUD, SPARQL query and SPARQL
+have quick start examples for how to do graph CRUD, SPARQL query, and SPARQL
 Update.
 
 
 ### To use the develop branch
 
-1) clone or download marklogic-jena _develop_ branch
+1) Clone or download marklogic-jena _develop_ branch.
 
 ```
 https://github.com/marklogic/marklogic-jena/tree/develop
 ```
 
-2) run gradle target that provisions a testing database for this project.  The command and tests use values recorded in `./gradle.properties` to
+2) Run the gradle target that provisions a testing database for this project.  The command and tests use values recorded in `./gradle.properties` to
 set up a MarkLogic REST instance on localhost.
 
 ```
 gradle :marklogic-jena:mlDeploy
 ```
 
-3) build MarkLogic Jena
+3) Build MarkLogic Jena.
 
 ```
 gradle :marklogic-jena:test
 
 ```
 
-To use in your own projects, deploy into local maven repo or copy snapshot jars from /build directory.
+To use `marklogic-jena` in your own projects, deploy into local maven repo or copy snapshot jars from /build directory.
 
 ```
 gradle install
@@ -81,8 +81,8 @@ library.
 
 ## Support
 
-The markLogic-jena is maintained by MarkLogic Engineering and distributed under
-the [Apache 2.0
+The markLogic-jena project is maintained by MarkLogic Engineering and 
+distributed under the [Apache 2.0
 license](https://github.com/marklogic/java-client-api/blob/master/LICENSE). It
 is designed for use in production applications with MarkLogic Server. Everyone
 is encouraged to file bug reports, feature requests, and pull requests through
