@@ -100,7 +100,7 @@ task createPom << {
             name 'MarkLogic Github Contributors'
             email 'general@developer.marklogic.com'
             organization 'Github Contributors'
-            organizationUrl 'https://github.com/marklogic/java-client-api/graphs/contributors'
+            organizationUrl 'https://github.com/marklogic/marklogic-jena/graphs/contributors'
           		}
           	 }
         }
