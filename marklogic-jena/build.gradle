@@ -46,7 +46,65 @@ sourceSets {
 	}
 }
 
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+
+artifacts {
+    archives  sourcesJar
+    archives  javadocJar
+
+}
+
 javadoc {
     options.overview = "src/main/java/com/marklogic/semantics/jena/overview.html"
 }
+
+task createPom << {
+    pom {
+        project {
+                name 'marklogic-jena'
+               packaging 'jar'
+               description 'Adapter for using MarkLogic with the Jena RDF Framework'
+               url 'https://github.com/marklogic/marklogic-jena'
+ 			 				
+               scm {
+                   url 'git@github.com:marklogic/marklogic-jena.git'
+                   connection 'scm:git@github.com:marklogic/marklogic-jena.git'
+                   developerConnection 'scm:git@github.com:marklogic/marklogic-jena.git'
+               }
+ 
+               licenses {
+                   license {
+                       name 'The Apache Software License, Version 2.0'
+                       url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                   }
+               }
+ 
+         developers {
+          developer {
+            name 'MarkLogic'
+            email 'java-sig@marklogic.com'
+            organization 'MarkLogic'
+            organizationUrl 'https://www.marklogic.com'
+          	}
+          developer {
+            name 'MarkLogic Github Contributors'
+            email 'general@developer.marklogic.com'
+            organization 'Github Contributors'
+            organizationUrl 'https://github.com/marklogic/java-client-api/graphs/contributors'
+          		}
+          	 }
+        }
+    }.writeTo("pom.xml")
+}
+
 
