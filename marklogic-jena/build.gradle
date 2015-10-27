@@ -12,6 +12,7 @@ buildscript {
 apply plugin: 'ml-gradle'
 apply plugin: 'java'
 apply plugin: 'eclipse'
+apply plugin: 'maven-publish'
 apply plugin: 'maven'
 
 
@@ -46,7 +47,6 @@ sourceSets {
 	}
 }
 
-
 task javadocJar(type: Jar, dependsOn: javadoc) {
     classifier = 'javadoc'
     from javadoc.destinationDir
@@ -57,54 +57,69 @@ task sourcesJar(type: Jar, dependsOn: classes) {
     from sourceSets.main.allSource
 }
 
-
-artifacts {
-    archives  sourcesJar
-    archives  javadocJar
-
-}
-
 javadoc {
     options.overview = "src/main/java/com/marklogic/semantics/jena/overview.html"
 }
 
-task createPom << {
-    pom {
-        project {
-                name 'marklogic-jena'
-               packaging 'jar'
-               description 'Adapter for using MarkLogic with the Jena RDF Framework'
-               url 'https://github.com/marklogic/marklogic-jena'
- 			 				
-               scm {
-                   url 'git@github.com:marklogic/marklogic-jena.git'
-                   connection 'scm:git@github.com:marklogic/marklogic-jena.git'
-                   developerConnection 'scm:git@github.com:marklogic/marklogic-jena.git'
-               }
- 
-               licenses {
-                   license {
-                       name 'The Apache Software License, Version 2.0'
-                       url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                   }
-               }
- 
-         developers {
-          developer {
-            name 'MarkLogic'
-            email 'java-sig@marklogic.com'
-            organization 'MarkLogic'
-            organizationUrl 'https://www.marklogic.com'
-          	}
-          developer {
-            name 'MarkLogic Github Contributors'
-            email 'general@developer.marklogic.com'
-            organization 'Github Contributors'
-            organizationUrl 'https://github.com/marklogic/marklogic-jena/graphs/contributors'
-          		}
-          	 }
+Node pomCustomizations = new NodeBuilder(). project {
+        name 'marklogic-jena'
+        packaging 'jar'
+        textdescription 'Adapter for using MarkLogic with the jena RDF Framework'
+        url 'https://github.com/marklogic/marklogic-jena'
+
+        scm {
+            url 'git@github.com:marklogic/marklogic-jena.git'
+                connection 'scm:git@github.com:marklogic/marklogic-jena.git'
+                developerConnection 'scm:git@github.com:marklogic/marklogic-jena.git'
         }
-    }.writeTo("pom.xml")
+
+        licenses {
+            license {
+                name 'The Apache Software License, Version 2.0'
+                    url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+            }
+        }
+ 
+        developers {
+            developer {
+                name 'MarkLogic'
+                    email 'java-sig@marklogic.com'
+                    organization 'MarkLogic'
+                    organizationUrl 'https://www.marklogic.com'
+            }
+            developer {
+                name 'MarkLogic Github Contributors'
+                    email 'general@developer.marklogic.com'
+                    organization 'Github Contributors'
+                    organizationUrl 'https://github.com/marklogic/marklogic-jena/graphs/contributors'
+            }
+        }
 }
 
+publishing {
+  publications {
+    mainJava(MavenPublication) {
+      from components.java
+        
+      pom.withXml { 
+        asNode().append(pomCustomizations.developers)
+        asNode().append(pomCustomizations.name)
+        asNode().append(pomCustomizations.packaging)
+        asNode().append(pomCustomizations.url)
+        asNode().append(pomCustomizations.scm)
+        asNode().append(pomCustomizations.licenses)
+        asNode().appendNode("description", pomCustomizations.textdescription.text)
+      }
 
+      artifact sourcesJar 
+
+      artifact javadocJar 
+
+    }
+  }
+  repositories {
+    maven {
+      url publishUrl
+    }
+  }
+}
