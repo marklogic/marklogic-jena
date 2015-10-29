@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 MarkLogic Corporation
+ * Copyright 2016 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,37 +17,37 @@ package com.marklogic.semantics.jena.engine;
 
 import java.util.Iterator;
 
+import org.apache.jena.graph.Node;
+import org.apache.jena.graph.Triple;
+import org.apache.jena.query.Query;
+import org.apache.jena.query.ResultSet;
 import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RiotException;
-import org.apache.jena.riot.RiotReader;
+import org.apache.jena.sparql.ARQConstants;
+import org.apache.jena.sparql.algebra.Op;
+import org.apache.jena.sparql.core.BasicPattern;
+import org.apache.jena.sparql.core.DatasetGraph;
+import org.apache.jena.sparql.core.Var;
+import org.apache.jena.sparql.engine.ExecutionContext;
+import org.apache.jena.sparql.engine.Plan;
+import org.apache.jena.sparql.engine.QueryEngineFactory;
+import org.apache.jena.sparql.engine.QueryEngineRegistry;
+import org.apache.jena.sparql.engine.QueryIterator;
+import org.apache.jena.sparql.engine.binding.Binding;
+import org.apache.jena.sparql.engine.binding.BindingFactory;
+import org.apache.jena.sparql.engine.binding.BindingMap;
+import org.apache.jena.sparql.engine.iterator.QueryIter1;
+import org.apache.jena.sparql.engine.iterator.QueryIterRoot;
+import org.apache.jena.sparql.engine.iterator.QueryIteratorCheck;
+import org.apache.jena.sparql.engine.iterator.QueryIteratorResultSet;
+import org.apache.jena.sparql.engine.main.QueryEngineMain;
+import org.apache.jena.sparql.resultset.JSONInput;
+import org.apache.jena.sparql.syntax.Template;
+import org.apache.jena.sparql.util.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.hp.hpl.jena.graph.Node;
-import com.hp.hpl.jena.graph.Triple;
-import com.hp.hpl.jena.query.Query;
-import com.hp.hpl.jena.query.ResultSet;
-import com.hp.hpl.jena.sparql.ARQConstants;
-import com.hp.hpl.jena.sparql.algebra.Op;
-import com.hp.hpl.jena.sparql.core.BasicPattern;
-import com.hp.hpl.jena.sparql.core.DatasetGraph;
-import com.hp.hpl.jena.sparql.core.Var;
-import com.hp.hpl.jena.sparql.engine.ExecutionContext;
-import com.hp.hpl.jena.sparql.engine.Plan;
-import com.hp.hpl.jena.sparql.engine.QueryEngineFactory;
-import com.hp.hpl.jena.sparql.engine.QueryEngineRegistry;
-import com.hp.hpl.jena.sparql.engine.QueryIterator;
-import com.hp.hpl.jena.sparql.engine.binding.Binding;
-import com.hp.hpl.jena.sparql.engine.binding.BindingFactory;
-import com.hp.hpl.jena.sparql.engine.binding.BindingMap;
-import com.hp.hpl.jena.sparql.engine.iterator.QueryIter1;
-import com.hp.hpl.jena.sparql.engine.iterator.QueryIterRoot;
-import com.hp.hpl.jena.sparql.engine.iterator.QueryIteratorCheck;
-import com.hp.hpl.jena.sparql.engine.iterator.QueryIteratorResultSet;
-import com.hp.hpl.jena.sparql.engine.main.QueryEngineMain;
-import com.hp.hpl.jena.sparql.resultset.JSONInput;
-import com.hp.hpl.jena.sparql.syntax.Template;
-import com.hp.hpl.jena.sparql.util.Context;
 import com.marklogic.client.io.InputStreamHandle;
 import com.marklogic.client.query.QueryDefinition;
 import com.marklogic.client.semantics.SPARQLQueryDefinition;
@@ -63,7 +63,8 @@ import com.marklogic.semantics.jena.client.JenaDatabaseClient;
  */
 public class MarkLogicQueryEngine extends QueryEngineMain {
 
-	private static Logger log = LoggerFactory.getLogger(MarkLogicQueryEngine.class);
+	@SuppressWarnings("unused")
+    private static Logger log = LoggerFactory.getLogger(MarkLogicQueryEngine.class);
 	private BasicPattern bgp = null;
 	private Template template = null;
 	private MarkLogicDatasetGraph markLogicDatasetGraph;
@@ -186,7 +187,6 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
 
         if (query.isAskType()) {
         	boolean answer = client.executeAsk(qdef);
-        	log.debug("Answer from server is " + answer);
         	QueryIterator qIter1 = QueryIterRoot.create(initial, execCxt) ;
 			qIter = new BooleanQueryIterator(qIter1, execCxt, answer);
         } else if (query.isConstructType() || query.isDescribeType()) {
@@ -194,7 +194,7 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
         	// bindings of s, p, and o to every triple.
         	if (query.isConstructType()) client.executeConstruct(qdef, handle);
         	if (query.isDescribeType()) client.executeDescribe(qdef, handle);
-        	Iterator<Triple> triples = RiotReader.createIteratorTriples(handle.get(), Lang.NTRIPLES, null);
+        	Iterator<Triple> triples = RDFDataMgr.createIteratorTriples(handle.get(), Lang.NTRIPLES, null);
         	QueryIterator qIter1 = QueryIterRoot.create(initial, execCxt) ;
             qIter = new TripleQueryIterator(qIter1, execCxt, triples);
         	query.setConstructTemplate(template);

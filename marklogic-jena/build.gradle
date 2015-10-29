@@ -16,16 +16,16 @@ apply plugin: 'maven-publish'
 apply plugin: 'maven'
 
 
-version = '1.0.0-SNAPSHOT'
+version = '2.0.0-SNAPSHOT'
 group   = 'com.marklogic'
 
 dependencies {
-    compile('org.apache.jena:jena-arq:2.13.0') {
+    compile('org.apache.jena:jena-arq:3.0.1') {
 	   exclude(group: 'org.slf4j')
        exclude(group: 'ch.qos.logback')
        exclude(group: 'log4j')
     }
-    compile('com.marklogic:java-client-api:3.0-SNAPSHOT') {
+    compile('com.marklogic:java-client-api:3.0.4') {
 	   exclude(group: 'org.slf4j')
        exclude(group: 'ch.qos.logback')
     }

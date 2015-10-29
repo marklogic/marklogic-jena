@@ -5,8 +5,8 @@ subprojects {
     apply plugin: 'jacoco'
     jacoco{toolVersion="0.7.4.201502262128"}
 	
-    sourceCompatibility = "1.7"
-    targetCompatibility = "1.7"
+    sourceCompatibility = "1.8"
+    targetCompatibility = "1.8"
 
     configure(allprojects){
         ext.slf4jVersion = '1.7.12'
@@ -18,15 +18,15 @@ subprojects {
         mavenLocal()
     }
 
-jacocoTestReport {
-                    group = "Reporting"
-                    description = "Generate Jacoco coverage reports after running tests."
-                    additionalSourceDirs = files(sourceSets.main.allJava.srcDirs)
-                }
+    jacocoTestReport {
+        group = "Reporting"
+        description = "Generate Jacoco coverage reports after running tests."
+        additionalSourceDirs = files(sourceSets.main.allJava.srcDirs)
+    }
 
     dependencies {
         testCompile group: 'junit', name: 'junit', version: '4.12'
-            testCompile 'org.apache.httpcomponents:httpclient:4.1.1'
+        testCompile 'org.apache.httpcomponents:httpclient:4.1.1'
     }
 
     test{
@@ -38,6 +38,6 @@ jacocoTestReport {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '2.6'
+    gradleVersion = '2.10'
 }
 

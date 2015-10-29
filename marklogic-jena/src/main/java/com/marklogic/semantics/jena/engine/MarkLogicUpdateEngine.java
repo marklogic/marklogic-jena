@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 MarkLogic Corporation
+ * Copyright 2016 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,28 +16,28 @@
 package com.marklogic.semantics.jena.engine;
 
 import org.apache.jena.atlas.lib.Sink;
+import org.apache.jena.sparql.core.DatasetGraph;
+import org.apache.jena.sparql.core.Quad;
+import org.apache.jena.sparql.engine.binding.Binding;
+import org.apache.jena.sparql.modify.UpdateEngine;
+import org.apache.jena.sparql.modify.UpdateEngineFactory;
+import org.apache.jena.sparql.modify.UpdateEngineMain;
+import org.apache.jena.sparql.modify.UpdateEngineRegistry;
+import org.apache.jena.sparql.modify.request.UpdateAdd;
+import org.apache.jena.sparql.modify.request.UpdateClear;
+import org.apache.jena.sparql.modify.request.UpdateCopy;
+import org.apache.jena.sparql.modify.request.UpdateCreate;
+import org.apache.jena.sparql.modify.request.UpdateDataDelete;
+import org.apache.jena.sparql.modify.request.UpdateDataInsert;
+import org.apache.jena.sparql.modify.request.UpdateDeleteWhere;
+import org.apache.jena.sparql.modify.request.UpdateDrop;
+import org.apache.jena.sparql.modify.request.UpdateLoad;
+import org.apache.jena.sparql.modify.request.UpdateModify;
+import org.apache.jena.sparql.modify.request.UpdateMove;
+import org.apache.jena.sparql.modify.request.UpdateVisitor;
+import org.apache.jena.sparql.util.Context;
+import org.apache.jena.update.Update;
 
-import com.hp.hpl.jena.sparql.core.Quad;
-import com.hp.hpl.jena.sparql.engine.binding.Binding;
-import com.hp.hpl.jena.sparql.modify.UpdateEngine;
-import com.hp.hpl.jena.sparql.modify.UpdateEngineFactory;
-import com.hp.hpl.jena.sparql.modify.UpdateEngineMain;
-import com.hp.hpl.jena.sparql.modify.UpdateEngineRegistry;
-import com.hp.hpl.jena.sparql.modify.request.UpdateAdd;
-import com.hp.hpl.jena.sparql.modify.request.UpdateClear;
-import com.hp.hpl.jena.sparql.modify.request.UpdateCopy;
-import com.hp.hpl.jena.sparql.modify.request.UpdateCreate;
-import com.hp.hpl.jena.sparql.modify.request.UpdateDataDelete;
-import com.hp.hpl.jena.sparql.modify.request.UpdateDataInsert;
-import com.hp.hpl.jena.sparql.modify.request.UpdateDeleteWhere;
-import com.hp.hpl.jena.sparql.modify.request.UpdateDrop;
-import com.hp.hpl.jena.sparql.modify.request.UpdateLoad;
-import com.hp.hpl.jena.sparql.modify.request.UpdateModify;
-import com.hp.hpl.jena.sparql.modify.request.UpdateMove;
-import com.hp.hpl.jena.sparql.modify.request.UpdateVisitor;
-import com.hp.hpl.jena.sparql.util.Context;
-import com.hp.hpl.jena.update.GraphStore;
-import com.hp.hpl.jena.update.Update;
 import com.marklogic.client.semantics.SPARQLQueryDefinition;
 import com.marklogic.semantics.jena.MarkLogicDatasetGraph;
 import com.marklogic.semantics.jena.MarkLogicJenaException;
@@ -51,14 +51,14 @@ public class MarkLogicUpdateEngine extends UpdateEngineMain {
 
     private static UpdateEngineFactory factory = new MarkLogicUpdateEngineFactory();
 
-    public MarkLogicUpdateEngine(GraphStore graphStore, Binding inputBinding,
+    public MarkLogicUpdateEngine(DatasetGraph graphStore, Binding inputBinding,
             Context context) {
         super(graphStore, inputBinding, context);
     }
 
     @Override
     protected UpdateVisitor prepareWorker() {
-        return new MarkLogicUpdateEngineWorker(graphStore, inputBinding,
+        return new MarkLogicUpdateEngineWorker(datasetGraph, inputBinding,
                 context);
     }
 
@@ -83,15 +83,15 @@ public class MarkLogicUpdateEngine extends UpdateEngineMain {
             UpdateEngineFactory {
 
         @Override
-        public boolean accept(GraphStore graphStore, Context context) {
+        public boolean accept(DatasetGraph graphStore, Context context) {
             return (graphStore instanceof MarkLogicDatasetGraph);
         }
 
         @Override
-        public UpdateEngine create(GraphStore graphStore, Binding inputBinding,
+        public UpdateEngine create(DatasetGraph datasetGraph, Binding inputBinding,
                 Context context) {
             MarkLogicUpdateEngine engine = new MarkLogicUpdateEngine(
-                    graphStore, inputBinding, context);
+                    datasetGraph, inputBinding, context);
             return engine;
         }
 
@@ -107,7 +107,7 @@ public class MarkLogicUpdateEngine extends UpdateEngineMain {
         private JenaDatabaseClient client;
         private Binding initial;
 
-        public MarkLogicUpdateEngineWorker(GraphStore graphStore,
+        public MarkLogicUpdateEngineWorker(DatasetGraph graphStore,
                 Binding inputBinding, Context context) {
             if (!(graphStore instanceof MarkLogicDatasetGraph)) {
                 throw new MarkLogicJenaException(

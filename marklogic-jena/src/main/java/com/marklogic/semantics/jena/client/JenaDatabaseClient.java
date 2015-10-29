@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 MarkLogic Corporation
+ * Copyright 2016 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,14 +18,16 @@ package com.marklogic.semantics.jena.client;
 import java.util.Iterator;
 import java.util.Timer;
 
+import org.apache.jena.graph.Graph;
+import org.apache.jena.graph.Node;
+import org.apache.jena.query.ReadWrite;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.WriterGraphRIOT;
+import org.apache.jena.sparql.graph.GraphFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.hp.hpl.jena.graph.Graph;
-import com.hp.hpl.jena.graph.Node;
-import com.hp.hpl.jena.query.ReadWrite;
-import com.hp.hpl.jena.sparql.graph.GraphFactory;
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.ResourceNotFoundException;
 import com.marklogic.client.Transaction;
@@ -40,8 +42,8 @@ import com.marklogic.semantics.jena.MarkLogicDatasetGraph;
 import com.marklogic.semantics.jena.MarkLogicTransactionException;
 
 /**
- * A class to encapsulate access to the Java API's DatabaseClient for Jena users.
- * Access the underlying Java API client with getClient();
+ * A class to encapsulate access to the Java API's DatabaseClient for Jena
+ * users. Access the underlying Java API client with getClient();
  */
 public class JenaDatabaseClient {
 
@@ -51,10 +53,15 @@ public class JenaDatabaseClient {
     private DatabaseClient client;
     private Transaction currentTransaction;
     private Timer timer;
-    
+    private static Logger log = LoggerFactory
+            .getLogger(JenaDatabaseClient.class);
+
     /**
      * Constructor.
-     * @param client a Java Client API DatabaseClient.  Can be made with com.marklogic.client.DatabaseClientFactory
+     * 
+     * @param client
+     *            a Java Client API DatabaseClient. Can be made with
+     *            com.marklogic.client.DatabaseClientFactory
      */
     public JenaDatabaseClient(DatabaseClient client) {
         this.client = client;
@@ -74,13 +81,16 @@ public class JenaDatabaseClient {
         timer.cancel();
         client = null;
     }
-    
+
     /**
-     * Create a new {@link com.marklogic.client.semantics.SPARQLQueryDefinition} from
-     * a query String.  You can use the resulting object to configure various
-     * aspects of the query or set binding variables.
-     * @param queryString A SPARQL Query or SPARQL Update.
-     * @return A new {@link com.marklogic.client.semantics.SPARQLQueryDefinition}
+     * Create a new {@link com.marklogic.client.semantics.SPARQLQueryDefinition}
+     * from a query String. You can use the resulting object to configure
+     * various aspects of the query or set binding variables.
+     * 
+     * @param queryString
+     *            A SPARQL Query or SPARQL Update.
+     * @return A new
+     *         {@link com.marklogic.client.semantics.SPARQLQueryDefinition}
      */
     public SPARQLQueryDefinition newQueryDefinition(String queryString) {
         return this.sparqlQueryManager.newQueryDefinition(queryString);
@@ -96,12 +106,14 @@ public class JenaDatabaseClient {
 
     public InputStreamHandle executeConstruct(SPARQLQueryDefinition qdef,
             InputStreamHandle handle) {
-        return this.sparqlQueryManager.executeConstruct(qdef, handle, currentTransaction);
+        return this.sparqlQueryManager.executeConstruct(qdef, handle,
+                currentTransaction);
     }
 
     public InputStreamHandle executeDescribe(SPARQLQueryDefinition qdef,
             InputStreamHandle handle) {
-        return this.sparqlQueryManager.executeDescribe(qdef, handle, currentTransaction);
+        return this.sparqlQueryManager.executeDescribe(qdef, handle,
+                currentTransaction);
     }
 
     public InputStreamHandle executeSelect(SPARQLQueryDefinition qdef,
@@ -112,10 +124,11 @@ public class JenaDatabaseClient {
             this.sparqlQueryManager.setPageLength(limit);
         }
         if (offset != null) {
-            return this.sparqlQueryManager.executeSelect(qdef, handle, offset, currentTransaction);
-        }
-        else {
-            return this.sparqlQueryManager.executeSelect(qdef, handle, currentTransaction);
+            return this.sparqlQueryManager.executeSelect(qdef, handle, offset,
+                    currentTransaction);
+        } else {
+            return this.sparqlQueryManager.executeSelect(qdef, handle,
+                    currentTransaction);
         }
     }
 
@@ -145,7 +158,8 @@ public class JenaDatabaseClient {
     }
 
     public void mergeGraphPermissions(String uri, GraphPermissions permissions) {
-        this.graphManager.mergePermissions(uri, permissions, currentTransaction);
+        this.graphManager
+                .mergePermissions(uri, permissions, currentTransaction);
     }
 
     public void deletePermissions(String uri) {
@@ -153,13 +167,13 @@ public class JenaDatabaseClient {
     }
 
     public void writeGraphPermissions(String uri, GraphPermissions permissions) {
-        this.graphManager.writePermissions(uri, permissions, currentTransaction);
+        this.graphManager
+                .writePermissions(uri, permissions, currentTransaction);
     }
 
     public Transaction openTransaction() {
         return this.client.openTransaction();
     }
-
 
     public Graph readDefaultGraph() {
         return readGraph(MarkLogicDatasetGraph.DEFAULT_GRAPH_URI);
@@ -172,9 +186,9 @@ public class JenaDatabaseClient {
             this.graphManager.read(uri, handle, currentTransaction);
             RDFDataMgr.read(graph, handle.get(), Lang.NTRIPLES);
         } catch (NullPointerException e) {
-            
+            log.debug("RDF Manager Throws execption for empty results");
         } catch (ResourceNotFoundException e) {
-            
+            log.debug("No graph returned by graph manage.  Returning empty graph", e.getMessage());
         }
         // close handle?
         return graph;
@@ -190,37 +204,42 @@ public class JenaDatabaseClient {
 
     /**
      * Puts a quad into the cache, which is periodically sent to MarkLogic
-     * @param g Graph node.
-     * @param s Subject node
-     * @param p Property node.
-     * @param o Object Node.
+     * 
+     * @param g
+     *            Graph node.
+     * @param s
+     *            Subject node
+     * @param p
+     *            Property node.
+     * @param o
+     *            Object Node.
      */
     public void sinkQuad(Node g, Node s, Node p, Node o) {
         cache.add(g, s, p, o);
     }
 
     /**
-     * Flushes the write cache, ensuring consistent server state
-     * before query/delete.
+     * Flushes the write cache, ensuring consistent server state before
+     * query/delete.
      */
     public void sync() {
         cache.forceRun();
     }
-
-    
 
     private void checkCurrentTransaction() {
         if (this.currentTransaction == null) {
             throw new MarkLogicTransactionException("No open transaction");
         }
     }
-    
+
     public void begin(ReadWrite readWrite) {
         if (readWrite == ReadWrite.READ) {
-            throw new MarkLogicTransactionException("MarkLogic only supports write transactions");
+            throw new MarkLogicTransactionException(
+                    "MarkLogic only supports write transactions");
         } else {
             if (this.currentTransaction != null) {
-                throw new MarkLogicTransactionException("Only one open transaction per MarkLogicDatasetGraph instance.");
+                throw new MarkLogicTransactionException(
+                        "Only one open transaction per MarkLogicDatasetGraph instance.");
             }
             this.currentTransaction = openTransaction();
         }
