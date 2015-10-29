@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 MarkLogic Corporation
+ * Copyright 2016 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,10 +43,12 @@ public class WriteCacheTimerTask extends TimerTask {
     private static long DEFAULT_CACHE_MILLIS = 1000;
     private long cacheMillis = DEFAULT_CACHE_MILLIS;
     private Date lastCacheAccess = new Date();
-    private static Node DEFAULT_GRAPH_NODE = NodeFactory.createURI(MarkLogicDatasetGraph.DEFAULT_GRAPH_URI);
-    
-    private static Logger log = LoggerFactory.getLogger(WriteCacheTimerTask.class);
-    
+    private static Node DEFAULT_GRAPH_NODE = NodeFactory
+            .createURI(MarkLogicDatasetGraph.DEFAULT_GRAPH_URI);
+
+    private static Logger log = LoggerFactory
+            .getLogger(WriteCacheTimerTask.class);
+
     public WriteCacheTimerTask(JenaDatabaseClient client) {
         super();
         this.cache = new ConcurrentHashMap<Node, Graph>();
@@ -56,14 +58,15 @@ public class WriteCacheTimerTask extends TimerTask {
     @Override
     public void run() {
         Date now = new Date();
-        if (cache.size() > cacheSize || cache.size() > 0 && now.getTime() - lastCacheAccess.getTime() > cacheMillis) {
+        if (cache.size() > cacheSize || cache.size() > 0
+                && now.getTime() - lastCacheAccess.getTime() > cacheMillis) {
             log.debug("Cache stale, flushing");
             flush();
         } else {
             return;
         }
     }
-    
+
     private synchronized void flush() {
         for (Node graphNode : cache.keySet()) {
             log.debug("Persisting " + graphNode);
@@ -72,7 +75,7 @@ public class WriteCacheTimerTask extends TimerTask {
         lastCacheAccess = new Date();
         cache.clear();
     }
-    
+
     public void forceRun() {
         flush();
     }

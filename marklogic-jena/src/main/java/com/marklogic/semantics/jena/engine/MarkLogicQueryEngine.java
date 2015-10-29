@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 MarkLogic Corporation
+ * Copyright 2016 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,7 +63,8 @@ import com.marklogic.semantics.jena.client.JenaDatabaseClient;
  */
 public class MarkLogicQueryEngine extends QueryEngineMain {
 
-	private static Logger log = LoggerFactory.getLogger(MarkLogicQueryEngine.class);
+	@SuppressWarnings("unused")
+    private static Logger log = LoggerFactory.getLogger(MarkLogicQueryEngine.class);
 	private BasicPattern bgp = null;
 	private Template template = null;
 	private MarkLogicDatasetGraph markLogicDatasetGraph;
@@ -186,7 +187,6 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
 
         if (query.isAskType()) {
         	boolean answer = client.executeAsk(qdef);
-        	log.debug("Answer from server is " + answer);
         	QueryIterator qIter1 = QueryIterRoot.create(initial, execCxt) ;
 			qIter = new BooleanQueryIterator(qIter1, execCxt, answer);
         } else if (query.isConstructType() || query.isDescribeType()) {

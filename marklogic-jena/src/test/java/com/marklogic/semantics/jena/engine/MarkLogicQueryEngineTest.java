@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 MarkLogic Corporation
+ * Copyright 2016 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -110,34 +110,35 @@ public class MarkLogicQueryEngineTest extends JenaTestBase {
 
     @Test
     public void testPagination() {
-        Query query = QueryFactory.create("prefix : <http://example.org/> select ?p ?o where { :r1 ?p ?o}");
+        Query query = QueryFactory
+                .create("prefix : <http://example.org/> select ?p ?o where { :r1 ?p ?o}");
         query.setLimit(5);
         query.setOffset(0);
         QueryExecution queryExec = QueryExecutionFactory.create(query, ds);
         ResultSet results = queryExec.execSelect();
         int i;
-        for (i=0; results.hasNext(); i++) {
+        for (i = 0; results.hasNext(); i++) {
             results.next();
         }
-        assertEquals("Got proper start and offset for query", 4, i );
-        
+        assertEquals("Got proper start and offset for query", 4, i);
+
         query.setLimit(5);
         query.setOffset(1);
         queryExec = QueryExecutionFactory.create(query, ds);
         results = queryExec.execSelect();
-        for (i=0; results.hasNext(); i++) {
+        for (i = 0; results.hasNext(); i++) {
             results.next();
         }
-        assertEquals("Got proper start and offset for query", 3, i );
+        assertEquals("Got proper start and offset for query", 3, i);
         query.setLimit(2);
         query.setOffset(0);
         queryExec = QueryExecutionFactory.create(query, ds);
         results = queryExec.execSelect();
-        for (i=0; results.hasNext(); i++) {
+        for (i = 0; results.hasNext(); i++) {
             @SuppressWarnings("unused")
             QuerySolution qs = results.next();
         }
-        assertEquals("Got proper start and offset for query", 2, i );
+        assertEquals("Got proper start and offset for query", 2, i);
 
     }
 
@@ -147,7 +148,8 @@ public class MarkLogicQueryEngineTest extends JenaTestBase {
         try {
             ds.begin(ReadWrite.WRITE);
             Triple triple = new Triple(NodeFactory.createURI("http://s529"),
-                    NodeFactory.createURI("http://p104"), NodeFactory.createURI("http://o22"));
+                    NodeFactory.createURI("http://p104"),
+                    NodeFactory.createURI("http://o22"));
             Graph transGraph = GraphFactory.createGraphMem();
             transGraph.add(triple);
             Model model = ModelFactory.createModelForGraph(transGraph);
@@ -158,7 +160,8 @@ public class MarkLogicQueryEngineTest extends JenaTestBase {
             ResultSet results = qe.execSelect();
             // System.out.println(ResultSetFormatter.asText(results));
             QuerySolution qs = results.next();
-            assertEquals("Query worked during transaction", "http://o22", qs.get("o").toString());
+            assertEquals("Query worked during transaction", "http://o22", qs
+                    .get("o").toString());
             ds.abort();
 
             qe = QueryExecutionFactory.create(
@@ -175,11 +178,13 @@ public class MarkLogicQueryEngineTest extends JenaTestBase {
             results = qe.execSelect();
             // System.out.println(ResultSetFormatter.asText(results));
             qs = results.next();
-            assertEquals("Query worked during transaction", "http://o22", qs.get("o").toString());
+            assertEquals("Query worked during transaction", "http://o22", qs
+                    .get("o").toString());
             ds.commit();
 
-            //setupDataset();
-            qe = QueryExecutionFactory.create("select ?o where {<http://s529> ?p ?o}", ds);
+            // setupDataset();
+            qe = QueryExecutionFactory.create(
+                    "select ?o where {<http://s529> ?p ?o}", ds);
             results = qe.execSelect();
             assertTrue("Query should execute against committed data",
                     results.hasNext());
@@ -191,7 +196,7 @@ public class MarkLogicQueryEngineTest extends JenaTestBase {
             try {
                 ds.removeNamedModel("createdDuringTransaction");
             } catch (ResourceNotFoundException ex) {
-                //pass
+                // pass
             }
         }
     }
@@ -200,20 +205,22 @@ public class MarkLogicQueryEngineTest extends JenaTestBase {
     public void testBindings() {
         String query = "SELECT ?s ?o where { ?s <http://example.org/p1> ?o }";
         QuerySolutionMap binding = new QuerySolutionMap();
-        binding.add("s", ResourceFactory.createResource("http://example.org/r1"));
+        binding.add("s",
+                ResourceFactory.createResource("http://example.org/r1"));
         QueryExecution exec = QueryExecutionFactory.create(query, ds, binding);
         ResultSet results = exec.execSelect();
         QuerySolution result = results.next();
         assertFalse("Only one result for bound query", results.hasNext());
         assertEquals("string value 0", result.get("o").asLiteral().getValue());
-        
+
         binding = new QuerySolutionMap();
-        binding.add("s", ResourceFactory.createResource("http://example.org/r2"));
+        binding.add("s",
+                ResourceFactory.createResource("http://example.org/r2"));
         exec = QueryExecutionFactory.create(query, ds, binding);
         results = exec.execSelect();
         result = results.next();
         assertFalse("Only one result for bound query", results.hasNext());
-        assertEquals( "string value 2", result.get("o").asLiteral().getValue());
+        assertEquals("string value 2", result.get("o").asLiteral().getValue());
 
     }
 
@@ -225,7 +232,7 @@ public class MarkLogicQueryEngineTest extends JenaTestBase {
         }
         return strings;
     }
-    
+
     @Test
     public void testRulesets() {
         MarkLogicDatasetGraph infTestDsg = getMarkLogicDatasetGraph();
@@ -233,18 +240,20 @@ public class MarkLogicQueryEngineTest extends JenaTestBase {
         String query = "prefix : <http://example.org/> select ?o where { :r3 a ?o }";
         QueryExecution exec = QueryExecutionFactory.create(query, ds);
         ResultSet results = exec.execSelect();
-        
+
         List<String> subjects = project(results, "o");
-        assertEquals("No inference, got back list of size 1", 1, subjects.size());
-        
+        assertEquals("No inference, got back list of size 1", 1,
+                subjects.size());
+
         infTestDsg.withRulesets(SPARQLRuleset.RDFS);
-         // MarkLogicQuery inferringQuery = MarkLogicQuery.create(query);
+        // MarkLogicQuery inferringQuery = MarkLogicQuery.create(query);
         // inferringQuery.setRulesets(SPARQLRuleset.RDFS);
         exec = QueryExecutionFactory.create(query, ds);
         results = exec.execSelect();
         subjects = project(results, "o");
         System.out.println(subjects);
-        assertEquals("Using RDFs got back two class assertions", 2, subjects.size());
+        assertEquals("Using RDFs got back two class assertions", 2,
+                subjects.size());
 
     }
 
@@ -258,7 +267,7 @@ public class MarkLogicQueryEngineTest extends JenaTestBase {
         ResultSet results = exec.execSelect();
         List<String> subjects = project(results, "o");
         assertEquals("No base, got back list of size 0", 0, subjects.size());
-        
+
         Query q = QueryFactory.create(query, "http://example.org/");
         exec = QueryExecutionFactory.create(q, ds);
         results = exec.execSelect();
@@ -266,5 +275,5 @@ public class MarkLogicQueryEngineTest extends JenaTestBase {
         assertEquals("No base, got back list of size 1", 1, subjects.size());
 
     }
-   
+
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 MarkLogic Corporation
+ * Copyright 2016 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package com.marklogic.semantics.jena.engine;
 
 import org.apache.jena.atlas.lib.Sink;
 
+import com.hp.hpl.jena.sparql.core.DatasetGraph;
 import com.hp.hpl.jena.sparql.core.Quad;
 import com.hp.hpl.jena.sparql.engine.binding.Binding;
 import com.hp.hpl.jena.sparql.modify.UpdateEngine;
@@ -88,10 +89,10 @@ public class MarkLogicUpdateEngine extends UpdateEngineMain {
         }
 
         @Override
-        public UpdateEngine create(GraphStore graphStore, Binding inputBinding,
+        public UpdateEngine create(GraphStore datasetGraph, Binding inputBinding,
                 Context context) {
             MarkLogicUpdateEngine engine = new MarkLogicUpdateEngine(
-                    graphStore, inputBinding, context);
+                    datasetGraph, inputBinding, context);
             return engine;
         }
 
@@ -107,7 +108,7 @@ public class MarkLogicUpdateEngine extends UpdateEngineMain {
         private JenaDatabaseClient client;
         private Binding initial;
 
-        public MarkLogicUpdateEngineWorker(GraphStore graphStore,
+        public MarkLogicUpdateEngineWorker(DatasetGraph graphStore,
                 Binding inputBinding, Context context) {
             if (!(graphStore instanceof MarkLogicDatasetGraph)) {
                 throw new MarkLogicJenaException(
