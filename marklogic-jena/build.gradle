@@ -108,7 +108,7 @@ publishing {
         asNode().append(pomCustomizations.url)
         asNode().append(pomCustomizations.scm)
         asNode().append(pomCustomizations.licenses)
-        asNode().appendNode("description", pomCustomizations.textdescription.text)
+        asNode().appendNode("description", pomCustomizations.textdescription.text())
       }
 
       artifact sourcesJar 
