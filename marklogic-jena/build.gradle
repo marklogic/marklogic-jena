@@ -123,3 +123,13 @@ publishing {
     }
   }
 }
+
+uploadArchives {
+  repositories {
+    mavenDeployer {
+      repository(url: "http://cart/archiva/repository/external_non_free") {
+        authentication(userName: mavenUser, password: mavenPass)
+      }
+    }
+  }
+}
