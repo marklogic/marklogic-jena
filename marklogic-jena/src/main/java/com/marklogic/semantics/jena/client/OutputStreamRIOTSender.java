@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 MarkLogic Corporation
+ * Copyright 2016 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,26 +24,25 @@ import com.hp.hpl.jena.graph.Graph;
 import com.marklogic.client.io.OutputStreamSender;
 
 /**
- * Encapsulates a writer that can send an output stream from RIOT
- * to a MarkLogic Java CLient API OutputStreamHandle.
+ * Encapsulates a writer that can send an output stream from RIOT to a MarkLogic
+ * Java CLient API OutputStreamHandle.
  */
 public class OutputStreamRIOTSender implements OutputStreamSender {
 
-	private WriterGraphRIOT writer;
-	private Graph graph;
-	
-	public OutputStreamRIOTSender(WriterGraphRIOT writer) {
-		this.writer = writer;
-	}
+    private WriterGraphRIOT writer;
+    private Graph graph;
 
-	@Override
-	public void write(OutputStream out) throws IOException {
-		this.writer.write(out, graph, null, null, null);
-	}
+    public OutputStreamRIOTSender(WriterGraphRIOT writer) {
+        this.writer = writer;
+    }
 
-	public void setGraph(Graph graph) {
-		this.graph = graph;
-	}
+    @Override
+    public void write(OutputStream out) throws IOException {
+        this.writer.write(out, graph, null, null, null);
+    }
 
-	
+    public void setGraph(Graph graph) {
+        this.graph = graph;
+    }
+
 }

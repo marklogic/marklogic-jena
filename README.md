@@ -1,28 +1,10 @@
-# marklogic-jena v1.0.0-SNAPSHOT
+# marklogic-jena v2.0.0-SNAPSHOT
 
 ## Introduction
 
 This library integrates MarkLogic Semantics feature into the [Jena RDF
 Framework](http://jena.apache.org) as a persistence and query layer.
 
-
-#### Setup Java API Client
-
-These instructions are for pre-release builds of this project.
-
-1) Clone or download Java API client _develop_ branch.
-
-```
-https://github.com/marklogic/java-client-api/tree/develop
-```
-
-2) Build and deploy Java API client.
-
-```
- mvn -Dmaven.test.skip=true -Dmaven.javadoc.skip=true deploy
- ```
-
-You should verify that Java API client has been deployed to your local maven repo.
 
 #### Setup Marklogic
 

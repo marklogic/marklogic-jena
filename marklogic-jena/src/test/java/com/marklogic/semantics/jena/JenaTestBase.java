@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 MarkLogic Corporation
+ * Copyright 2016 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,23 +48,29 @@ public class JenaTestBase {
         String readerUser = props.getProperty("readerUser");
         String readerPassword = props.getProperty("readerPassword");
 
-        adminClient = DatabaseClientFactory.newClient(host, port, adminUser, adminPassword, Authentication.DIGEST);
-        writerClient = DatabaseClientFactory.newClient(host, port, writerUser, writerPassword, Authentication.DIGEST);
-        readerClient = DatabaseClientFactory.newClient(host, port, readerUser, readerPassword, Authentication.DIGEST);
+        adminClient = DatabaseClientFactory.newClient(host, port, adminUser,
+                adminPassword, Authentication.DIGEST);
+        writerClient = DatabaseClientFactory.newClient(host, port, writerUser,
+                writerPassword, Authentication.DIGEST);
+        readerClient = DatabaseClientFactory.newClient(host, port, readerUser,
+                readerPassword, Authentication.DIGEST);
     }
-    
+
     protected static DatasetGraph getJenaDatasetGraph(String fileName) {
         return RDFDataMgr.loadDatasetGraph(fileName);
     }
-    
+
     protected static MarkLogicDatasetGraph getMarkLogicDatasetGraph() {
-    	return getMarkLogicDatasetGraph(null);
+        return getMarkLogicDatasetGraph(null);
     }
-    protected static MarkLogicDatasetGraph getMarkLogicDatasetGraph(String fileName) {
-        MarkLogicDatasetGraph markLogicDatasetGraph = MarkLogicDatasetGraphFactory.createDatasetGraph(writerClient);
-        //markLogicDatasetGraph.clear();
+
+    protected static MarkLogicDatasetGraph getMarkLogicDatasetGraph(
+            String fileName) {
+        MarkLogicDatasetGraph markLogicDatasetGraph = MarkLogicDatasetGraphFactory
+                .createDatasetGraph(writerClient);
+        // markLogicDatasetGraph.clear();
         if (fileName != null) {
-        	RDFDataMgr.read(markLogicDatasetGraph,  fileName);
+            RDFDataMgr.read(markLogicDatasetGraph, fileName);
         }
         // wait for read op to finish
         markLogicDatasetGraph.sync();
