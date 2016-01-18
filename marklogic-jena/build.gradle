@@ -9,6 +9,10 @@ buildscript {
   }
 }
 
+plugins {
+  id 'net.researchgate.release' version '2.3.4'
+}
+
 apply plugin: 'ml-gradle'
 apply plugin: 'java'
 apply plugin: 'eclipse'
