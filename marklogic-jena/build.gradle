@@ -16,7 +16,7 @@ apply plugin: 'maven-publish'
 apply plugin: 'maven'
 
 
-version = '1.0.0-SNAPSHOT'
+version = theVersion
 group   = 'com.marklogic'
 
 dependencies {
@@ -37,6 +37,20 @@ dependencies {
 	testCompile 'com.jayway.restassured:rest-assured:2.5.0'
 	testCompile 'org.hamcrest:hamcrest-all:1.3'
 	testCompile 'junit:junit:4.12'
+}
+
+task setVersion << {
+  Properties props = new Properties() {
+    @Override
+    public synchronized Enumeration<Object> keys() {
+        return Collections.enumeration(new TreeSet<Object>(super.keySet()));
+    }
+  };
+  File propsFile = new File('marklogic-jena/gradle.properties')
+  props.load(propsFile.newDataInputStream())
+  props.setProperty('theVersion', "${newVersion}")
+  props.store(propsFile.newWriter(), null)
+  props.load(propsFile.newDataInputStream())
 }
 
 sourceSets {
