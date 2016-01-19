@@ -16,6 +16,7 @@
 package com.marklogic.semantics.jena.client;
 
 import java.util.Iterator;
+import java.util.Timer;
 
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
@@ -47,8 +48,10 @@ public class JenaDatabaseClient {
 
     private GraphManager graphManager;
     private SPARQLQueryManager sparqlQueryManager;
+    private WriteCacheTimerTask cache;
     private DatabaseClient client;
     private Transaction currentTransaction;
+    private Timer timer;
     
     /**
      * Constructor.
@@ -61,11 +64,25 @@ public class JenaDatabaseClient {
         this.sparqlQueryManager = client.newSPARQLQueryManager();
     }
 
+    /*
+     * Activation of timer-based cache flusing mechanism
+     */
+    public void initializeTimerBasedCache() {
+        this.cache = new WriteCacheTimerTask(this);
+        this.timer = new Timer();
+        timer.scheduleAtFixedRate(cache, 1000, 1000);
+    }
+
     /**
      * Close the connection and free resources
      */
     public void close() {
         client = null;
+        if (cache == null) {
+            return;
+        }
+        cache.cancel();
+        timer.cancel();
     }
     
     /**
@@ -181,19 +198,32 @@ public class JenaDatabaseClient {
         this.graphManager.write(uri, handle, currentTransaction);
     }    
     /**
-     * Sends a quad to MarkLogic
+     * If timer if on puts a quad into the cache, which is periodically sent to MarkLogic
+     * otherwise sends the quad directly
      * @param g Graph node.
      * @param s Subject node
      * @param p Property node.
      * @param o Object Node.
      */
     public void sinkQuad(Node g, Node s, Node p, Node o) {
-        Graph graph = GraphFactory.createDefaultGraph();
-        graph.add(Triple.create(s,p,o));
-        mergeGraph(g.getURI(), graph);
+        if (cache == null) {
+            Graph graph = GraphFactory.createDefaultGraph();
+            graph.add(Triple.create(s,p,o));
+            mergeGraph(g.getURI(), graph);
+            return;
+        }
+        cache.add(g, s, p, o);
     }
 
+    /**
+     * Flushes the write cache, ensuring consistent server state
+     * before query/delete.
+     */
     public void sync() {
+        if (cache == null) {
+            return;
+        }
+        cache.forceRun();
     }
 
     private void checkCurrentTransaction() {
