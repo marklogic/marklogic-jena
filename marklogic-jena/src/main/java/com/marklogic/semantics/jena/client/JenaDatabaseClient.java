@@ -16,7 +16,6 @@
 package com.marklogic.semantics.jena.client;
 
 import java.util.Iterator;
-import java.util.Timer;
 
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
@@ -24,6 +23,7 @@ import org.apache.jena.riot.WriterGraphRIOT;
 
 import com.hp.hpl.jena.graph.Graph;
 import com.hp.hpl.jena.graph.Node;
+import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.query.ReadWrite;
 import com.hp.hpl.jena.sparql.graph.GraphFactory;
 import com.marklogic.client.DatabaseClient;
@@ -47,10 +47,8 @@ public class JenaDatabaseClient {
 
     private GraphManager graphManager;
     private SPARQLQueryManager sparqlQueryManager;
-    private WriteCacheTimerTask cache;
     private DatabaseClient client;
     private Transaction currentTransaction;
-    private Timer timer;
     
     /**
      * Constructor.
@@ -61,17 +59,12 @@ public class JenaDatabaseClient {
         this.graphManager = client.newGraphManager();
         this.graphManager.setDefaultMimetype(RDFMimeTypes.NTRIPLES);
         this.sparqlQueryManager = client.newSPARQLQueryManager();
-        this.cache = new WriteCacheTimerTask(this);
-        this.timer = new Timer();
-        timer.scheduleAtFixedRate(cache, 1000, 1000);
     }
 
     /**
      * Close the connection and free resources
      */
     public void close() {
-        cache.cancel();
-        timer.cancel();
         client = null;
     }
     
@@ -186,28 +179,22 @@ public class JenaDatabaseClient {
         sender.setGraph(graph);
         OutputStreamHandle handle = new OutputStreamHandle(sender);
         this.graphManager.write(uri, handle, currentTransaction);
-    }
-
+    }    
     /**
-     * Puts a quad into the cache, which is periodically sent to MarkLogic
+     * Sends a quad to MarkLogic
      * @param g Graph node.
      * @param s Subject node
      * @param p Property node.
      * @param o Object Node.
      */
     public void sinkQuad(Node g, Node s, Node p, Node o) {
-        cache.add(g, s, p, o);
+        Graph graph = GraphFactory.createDefaultGraph();
+        graph.add(Triple.create(s,p,o));
+        mergeGraph(g.getURI(), graph);
     }
 
-    /**
-     * Flushes the write cache, ensuring consistent server state
-     * before query/delete.
-     */
     public void sync() {
-        cache.forceRun();
     }
-
-    
 
     private void checkCurrentTransaction() {
         if (this.currentTransaction == null) {
@@ -233,9 +220,12 @@ public class JenaDatabaseClient {
     }
 
     public void abort() {
-        checkCurrentTransaction();
-        this.currentTransaction.rollback();
-        this.currentTransaction = null;
+        try {
+          checkCurrentTransaction();
+          currentTransaction.rollback();
+        } finally {
+          currentTransaction = null;
+        }
     }
 
     public boolean isInTransaction() {

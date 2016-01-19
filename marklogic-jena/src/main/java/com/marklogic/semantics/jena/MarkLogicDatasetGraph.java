@@ -63,7 +63,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
     public static final String DEFAULT_GRAPH_URI = "http://marklogic.com/semantics#default-graph";
 	static Logger log = LoggerFactory.getLogger(MarkLogicDatasetGraph.class);
 	
-	private JenaDatabaseClient client;
+	protected JenaDatabaseClient client;
 	
 	/*
      * An inferencing datasetGraph will add ruleset config to each query
@@ -166,7 +166,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements D
 	    client.sinkQuad(null, s, p, o);
 	}
 
-	private Node skolemize(Node s) {
+	protected Node skolemize(Node s) {
 	    if (s.isBlank()) {
 			return NodeFactory.createURI("http://marklogic.com/semantics/blank/" + s.toString());
 		} else {
