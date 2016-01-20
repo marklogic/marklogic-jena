@@ -1,3 +1,0 @@
-[submodule "releasing-script"]
-	path = releasing-script
-	url = git@github.com:Smartlogic-Semaphore-Limited/releasing-script.git
