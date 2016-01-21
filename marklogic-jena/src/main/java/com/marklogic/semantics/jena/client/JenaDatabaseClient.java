@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import com.hp.hpl.jena.graph.Graph;
 import com.hp.hpl.jena.graph.Node;
+import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.query.ReadWrite;
 import com.hp.hpl.jena.sparql.graph.GraphFactory;
 import com.marklogic.client.DatabaseClient;
@@ -64,21 +65,31 @@ public class JenaDatabaseClient {
      *            com.marklogic.client.DatabaseClientFactory
      */
     public JenaDatabaseClient(DatabaseClient client) {
+        this(client, true);
+    }
+
+    public JenaDatabaseClient(DatabaseClient client, boolean periodicFlush) {
         this.client = client;
         this.graphManager = client.newGraphManager();
         this.graphManager.setDefaultMimetype(RDFMimeTypes.NTRIPLES);
         this.sparqlQueryManager = client.newSPARQLQueryManager();
-        this.cache = new WriteCacheTimerTask(this);
-        this.timer = new Timer();
-        timer.scheduleAtFixedRate(cache, 1000, 1000);
+        if (periodicFlush) {
+            this.cache = new WriteCacheTimerTask(this);
+            this.timer = new Timer();
+            timer.scheduleAtFixedRate(cache, 1000, 1000);
+        }
     }
 
     /**
      * Close the connection and free resources
      */
     public void close() {
-        cache.cancel();
-        timer.cancel();
+        if (cache != null) {
+            cache.cancel();
+        }
+        if (timer != null) {
+            timer.cancel();
+        }
         client = null;
     }
 
@@ -200,10 +211,11 @@ public class JenaDatabaseClient {
         sender.setGraph(graph);
         OutputStreamHandle handle = new OutputStreamHandle(sender);
         this.graphManager.write(uri, handle, currentTransaction);
-    }
-
+    }    
     /**
-     * Puts a quad into the cache, which is periodically sent to MarkLogic
+     * If timer is turned on (periodicFlush = true in constructor) 
+     * this method puts a quad into the cache which is periodically sent to MarkLogic
+     * otherwise it sends the quad directly
      * 
      * @param g
      *            Graph node.
@@ -215,7 +227,14 @@ public class JenaDatabaseClient {
      *            Object Node.
      */
     public void sinkQuad(Node g, Node s, Node p, Node o) {
-        cache.add(g, s, p, o);
+        if (cache != null) {
+            cache.add(g, s, p, o);   
+        } else {
+            Graph graph = GraphFactory.createDefaultGraph();
+            graph.add(Triple.create(s,p,o));
+            mergeGraph(g.getURI(), graph);
+            return;
+        }
     }
 
     /**
@@ -223,7 +242,9 @@ public class JenaDatabaseClient {
      * query/delete.
      */
     public void sync() {
-        cache.forceRun();
+        if (cache != null) {
+            cache.forceRun();
+        }
     }
 
     private void checkCurrentTransaction() {
@@ -252,9 +273,12 @@ public class JenaDatabaseClient {
     }
 
     public void abort() {
-        checkCurrentTransaction();
-        this.currentTransaction.rollback();
-        this.currentTransaction = null;
+        try {
+          checkCurrentTransaction();
+          currentTransaction.rollback();
+        } finally {
+          currentTransaction = null;
+        }
     }
 
     public boolean isInTransaction() {
