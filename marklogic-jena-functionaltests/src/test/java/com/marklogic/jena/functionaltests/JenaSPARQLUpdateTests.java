@@ -137,7 +137,7 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 	public void testBaseURi() throws Exception {
 		dataSet = DatasetFactory.create(markLogicDatasetGraph);
 		UpdateRequest update = new UpdateRequest();
-		update.add("DROP ALL").add("BASE <http://exampleBase.org/> INSERT DATA { GRAPH <BaseUriTest> { <S1> <P1> <O1>  } }");
+		update.add("DROP ALL").add("BASE <http://examplebase.org/> INSERT DATA { GRAPH <BaseUriTest> { <S1> <P1> <O1>  } }");
 		UpdateAction.execute(update, dataSet);
 		String query = "select ?o where { <S1> ?p ?o }";
 		QueryExecution exec = QueryExecutionFactory.create(query, dataSet);
@@ -145,7 +145,7 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 		List<String> subjects = parseResults(results, "o");
 		assertEquals("No inference, got back list of size 0", 0, subjects.size());
 
-		Query q = QueryFactory.create(query, "http://exampleBase.org/");
+		Query q = QueryFactory.create(query, "http://examplebase.org/");
 		exec = QueryExecutionFactory.create(q, dataSet);
 		results = exec.execSelect();
 		subjects = parseResults(results, "o");
@@ -177,7 +177,7 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 			System.out.println(e);
 		}
 
-		Query q4 = QueryFactory.create(query, "<http://exampleBase.org/>");
+		Query q4 = QueryFactory.create(query, "<http://examplebase.org/>");
 		exec = QueryExecutionFactory.create(q4, dataSet);
 		Exception exp = null;
 		try {
