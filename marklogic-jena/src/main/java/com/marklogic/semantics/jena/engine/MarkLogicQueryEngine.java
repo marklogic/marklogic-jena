@@ -15,6 +15,7 @@
  */
 package com.marklogic.semantics.jena.engine;
 
+import java.io.ByteArrayInputStream;
 import java.util.Iterator;
 
 import org.apache.jena.graph.Node;
@@ -194,7 +195,13 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
         	// bindings of s, p, and o to every triple.
         	if (query.isConstructType()) client.executeConstruct(qdef, handle);
         	if (query.isDescribeType()) client.executeDescribe(qdef, handle);
-        	Iterator<Triple> triples = RDFDataMgr.createIteratorTriples(handle.get(), Lang.NTRIPLES, null);
+        	Iterator<Triple> triples = null;
+        	try {
+        		triples = RDFDataMgr.createIteratorTriples(handle.get(), Lang.NTRIPLES, null);
+        	} catch (NullPointerException e) {
+        		log.info("Got null result from CONSTRUCT, constructing alternate iterator");
+        		triples = RDFDataMgr.createIteratorTriples(new ByteArrayInputStream(".".getBytes()), Lang.NTRIPLES, null);
+        	}
         	QueryIterator qIter1 = QueryIterRoot.create(initial, execCxt) ;
             qIter = new TripleQueryIterator(qIter1, execCxt, triples);
         	query.setConstructTemplate(template);
