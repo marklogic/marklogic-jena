@@ -16,7 +16,7 @@ apply plugin: 'maven-publish'
 apply plugin: 'maven'
 
 
-version = '1.0.1-SNAPSHOT'
+version = '1.0.1'
 group   = 'com.marklogic'
 
 dependencies {
@@ -25,7 +25,7 @@ dependencies {
        exclude(group: 'ch.qos.logback')
        exclude(group: 'log4j')
     }
-    compile('com.marklogic:java-client-api:3.0.4') {
+    compile('com.marklogic:java-client-api:3.0.5') {
 	   exclude(group: 'org.slf4j')
        exclude(group: 'ch.qos.logback')
     }
