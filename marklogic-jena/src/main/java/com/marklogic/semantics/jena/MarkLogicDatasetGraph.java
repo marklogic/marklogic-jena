@@ -92,7 +92,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
     }
 
     /**
-     * @see org.apache.jena.sparql.core.DatasetGraph
+     * @see com.hp.hpl.jena.sparql.core.DatasetGraph
      */
     @Override
     public Iterator<Node> listGraphNodes() {
@@ -106,7 +106,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
     /**
      * MarkLogicDatasetGraph does not make use of locks.
      * 
-     * @return An instance of org.apache.jena.shared.LockNone
+     * @return An instance of com.hp.hpl.jena.shared.LockNone
      */
     @Override
     public Lock getLock() {
@@ -114,7 +114,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
     }
 
     /**
-     * @see org.apache.jena.sparql.core.DatasetGraph
+     * @see com.hp.hpl.jena.sparql.core.DatasetGraph
      */
     @Override
     public void clear() {
@@ -126,7 +126,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
 
     /**
      * Maps Jena bindings defined by a variable name and a
-     * {@link org.apache.jena.graph.Node} to MarkLogic
+     * {@link com.hp.hpl.jena.graph.Node} to MarkLogic
      * {@link com.marklogic.client.semantics.SPARQLQueryDefinition} bindings.
      * 
      * @param qdef
@@ -171,7 +171,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
     }
 
     /*
-     * @see org.apache.jena.sparql.core.DatasetGraphTriplesQuads Internally uses
+     * @see com.hp.hpl.jena.sparql.core.DatasetGraphTriplesQuads Internally uses
      * a write cache to hold batches of quad updates. @see sync()
      */
     @Override
@@ -194,7 +194,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
     }
 
     /**
-     * @see org.apache.jena.sparql.core.DatasetGraphTriplesQuads Internally uses
+     * @see com.hp.hpl.jena.sparql.core.DatasetGraphTriplesQuads Internally uses
      *      a write cache to hold batches of quad updates. @see sync()
      */
     @Override
@@ -207,7 +207,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
     }
 
     /**
-     * @see org.apache.jena.sparql.core.DatasetGraphTriplesQuads
+     * @see com.hp.hpl.jena.sparql.core.DatasetGraphTriplesQuads
      */
     @Override
     protected void deleteFromDftGraph(Node s, Node p, Node o) {
@@ -225,7 +225,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
     }
 
     /**
-     * @see org.apache.jena.sparql.core.DatasetGraphTriplesQuads
+     * @see com.hp.hpl.jena.sparql.core.DatasetGraphTriplesQuads
      */
     @Override
     protected void deleteFromNamedGraph(Node g, Node s, Node p, Node o) {
@@ -278,7 +278,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
     }
 
     /**
-     * @see org.apache.jena.sparql.core.DatasetGraphBaseFind
+     * @see com.hp.hpl.jena.sparql.core.DatasetGraphBaseFind
      */
     @Override
     protected Iterator<Quad> findInDftGraph(Node s, Node p, Node o) {
@@ -289,7 +289,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
     }
 
     /**
-     * @see org.apache.jena.sparql.core.DatasetGraphBaseFind
+     * @see com.hp.hpl.jena.sparql.core.DatasetGraphBaseFind
      */
     @Override
     protected Iterator<Quad> findInSpecificNamedGraph(Node g, Node s, Node p,
@@ -301,7 +301,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
     }
 
     /**
-     * @see org.apache.jena.sparql.core.DatasetGraphBaseFind
+     * @see com.hp.hpl.jena.sparql.core.DatasetGraphBaseFind
      */
     @Override
     protected Iterator<Quad> findInAnyNamedGraphs(Node s, Node p, Node o) {
@@ -335,7 +335,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
 
     @Override
     /**
-     * @see org.apache.jena.sparql.core.DatasetGraph
+     * @see com.hp.hpl.jena.sparql.core.DatasetGraph
      */
     public void setDefaultGraph(Graph g) {
         this.addGraph(NodeFactory.createURI(DEFAULT_GRAPH_URI), g);
@@ -398,7 +398,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
     }
 
     /**
-     * @see org.apache.jena.sparql.core.DatasetGraph
+     * @see com.hp.hpl.jena.sparql.core.DatasetGraph
      */
     @Override
     public Graph getDefaultGraph() {
@@ -408,7 +408,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
     }
 
     /**
-     * @see org.apache.jena.sparql.core.DatasetGraph
+     * @see com.hp.hpl.jena.sparql.core.DatasetGraph
      */
     @Override
     public Graph getGraph(Node graphNode) {
@@ -418,7 +418,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
     }
 
     /**
-     * @see org.apache.jena.sparql.core.DatasetGraph
+     * @see com.hp.hpl.jena.sparql.core.DatasetGraph
      */
     @Override
     public void addGraph(Node graphName, Graph graph) {
@@ -443,7 +443,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
     }
 
     /**
-     * @see org.apache.jena.sparql.core.DatasetGraph
+     * @see com.hp.hpl.jena.sparql.core.DatasetGraph
      */
     @Override
     public void removeGraph(Node graphName) {
