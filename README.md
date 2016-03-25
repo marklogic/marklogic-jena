@@ -1,4 +1,4 @@
-# marklogic-jena v1.0.0
+# marklogic-jena v1.0.1
 
 ## Introduction
 
@@ -9,47 +9,19 @@ Framework](http://jena.apache.org) as a persistence and query layer.
 
 #### Setup Marklogic
 
-Ensure MarkLogic 8.0-4 is installed and running.  To use `marklogic-jena`
-applications you will need access to a running MarkLogic server.
+#### Setup Marklogic
 
-## Usage
-
-### Quick start
-
-This API is distributed on Maven Central.
-
-For gradle-based projects, include this dependency in `build.gradle`:
-```
-dependencies {
-   compile 'com.marklogic:marklogic-jena:1.0.0'
-}
-```
-
-For Maven-based projects, use this block in `pom.xml`:
-
-```
-<dependency>
-    <groupId>com.marklogic</groupId>
-    <artifactId>marklogic-jena</artifactId>
-    <version>1.0.0</version>
-</dependency>
-```
-
-The [Javadocs](http://marklogic.github.io/marklogic-jena/marklogic-jena/build/docs/javadoc/)
-have quick start examples for how to do graph CRUD, SPARQL query, and SPARQL
-Update.
-
+Ensure MarkLogic (8.0-4 or later) is installed and running.
 
 ### To use the develop branch
 
-1) Clone or download marklogic-jena _develop_ branch.
+1) clone or download marklogic-jena _develop_ branch.
 
 ```
 https://github.com/marklogic/marklogic-jena/tree/develop
 ```
 
-2) Run the gradle target that provisions a testing database for this project.  The command and tests use values recorded in `./gradle.properties` to
-set up a MarkLogic REST instance on localhost.
+2) Run the gradle target that provisions a testing database for this project.  The command and tests use values recorded in `./gradle.properties`.
 
 ```
 gradle :marklogic-jena:mlDeploy
@@ -68,6 +40,28 @@ To use `marklogic-jena` in your own projects, deploy into local maven repo or co
 gradle install
 
 ```
+
+## Usage
+
+### Quick start (Note: draft for future release)
+
+For gradle-based projects include this dependency in `build.gradle`:
+```
+dependencies {
+   compile 'com.marklogic:marklogic-jena:1.0.0'
+}
+```
+
+Maven-based projects use this block in `pom.xml`:
+
+```
+<dependency>
+    <groupId>com.marklogic</groupId>
+    <artifactId>marklogic-jena</artifactId>
+    <version>1.0.0</version>
+</dependency>
+```
+
 ### Javadocs
 
 http://marklogic.github.io/marklogic-jena/marklogic-jena/build/docs/javadoc/

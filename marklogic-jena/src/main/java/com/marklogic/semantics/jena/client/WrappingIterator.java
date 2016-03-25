@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 MarkLogic Corporation
+ * Copyright 2016 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,28 +21,30 @@ import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.NodeFactory;
 
 /**
- * Adapts iterator from MarkLogic's Iterator&lt;String&ge;
- * to Jena's Iterator&lt;Node$ge;
+ * Adapts iterator from MarkLogic's Iterator&lt;String&ge; to Jena's
+ * Iterator&lt;Node$ge;
  */
 public class WrappingIterator implements Iterator<Node> {
 
-	private Iterator<String> iterator;
-	
-	public WrappingIterator(Iterator<String> innerIterator) {
-		this.iterator = innerIterator;
-	}
-	@Override
-	public boolean hasNext() {
-		return this.iterator.hasNext();
-	}
+    private Iterator<String> iterator;
 
-	@Override
-	public Node next() {
-		return NodeFactory.createURI(iterator.next());
-	}
-	@Override
-	public void remove() {
-		iterator.remove();
-	}
+    public WrappingIterator(Iterator<String> innerIterator) {
+        this.iterator = innerIterator;
+    }
+
+    @Override
+    public boolean hasNext() {
+        return this.iterator.hasNext();
+    }
+
+    @Override
+    public Node next() {
+        return NodeFactory.createURI(iterator.next());
+    }
+
+    @Override
+    public void remove() {
+        iterator.remove();
+    }
 
 }

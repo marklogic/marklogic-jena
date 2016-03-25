@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 MarkLogic Corporation
+ * Copyright 2016 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,8 @@
 package com.marklogic.semantics.jena;
 
 /**
- * A generic Runtime Exception that wraps most issues with MarkLogic interaction.
+ * A generic Runtime Exception that wraps most issues with MarkLogic
+ * interaction.
  */
 @SuppressWarnings("serial")
 public class MarkLogicJenaException extends RuntimeException {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 MarkLogic Corporation
+ * Copyright 2016 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,11 @@
  */
 package com.marklogic.semantics.jena.engine;
 
+import java.io.ByteArrayInputStream;
 import java.util.Iterator;
 
 import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RiotException;
 import org.apache.jena.riot.RiotReader;
 import org.slf4j.Logger;
@@ -63,7 +65,8 @@ import com.marklogic.semantics.jena.client.JenaDatabaseClient;
  */
 public class MarkLogicQueryEngine extends QueryEngineMain {
 
-	private static Logger log = LoggerFactory.getLogger(MarkLogicQueryEngine.class);
+	@SuppressWarnings("unused")
+    private static Logger log = LoggerFactory.getLogger(MarkLogicQueryEngine.class);
 	private BasicPattern bgp = null;
 	private Template template = null;
 	private MarkLogicDatasetGraph markLogicDatasetGraph;
@@ -186,7 +189,6 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
 
         if (query.isAskType()) {
         	boolean answer = client.executeAsk(qdef);
-        	log.debug("Answer from server is " + answer);
         	QueryIterator qIter1 = QueryIterRoot.create(initial, execCxt) ;
 			qIter = new BooleanQueryIterator(qIter1, execCxt, answer);
         } else if (query.isConstructType() || query.isDescribeType()) {
@@ -194,7 +196,13 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
         	// bindings of s, p, and o to every triple.
         	if (query.isConstructType()) client.executeConstruct(qdef, handle);
         	if (query.isDescribeType()) client.executeDescribe(qdef, handle);
-        	Iterator<Triple> triples = RiotReader.createIteratorTriples(handle.get(), Lang.NTRIPLES, null);
+        	Iterator<Triple> triples = null;
+        	try {
+        		triples = RiotReader.createIteratorTriples(handle.get(), Lang.NTRIPLES, null);
+        	} catch (NullPointerException e) {
+        		log.info("Got null result from CONSTRUCT, constructing alternate iterator");
+        		triples = RiotReader.createIteratorTriples(new ByteArrayInputStream(".".getBytes()), Lang.NTRIPLES, null);
+        	}
         	QueryIterator qIter1 = QueryIterRoot.create(initial, execCxt) ;
             qIter = new TripleQueryIterator(qIter1, execCxt, triples);
         	query.setConstructTemplate(template);
