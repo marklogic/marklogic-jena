@@ -1,3 +1,7 @@
+plugins {
+    id "com.marklogic.ml-gradle" version "2.1.0"
+}
+
 subprojects {
 
     apply plugin: 'java'
@@ -38,6 +42,6 @@ subprojects {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '2.10'
+    gradleVersion = '2.6'
 }
 
