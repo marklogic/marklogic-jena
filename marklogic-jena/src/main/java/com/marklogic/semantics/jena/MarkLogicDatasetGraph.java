@@ -143,7 +143,11 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
         if (objectNode.isURI()) {
             bindings.bind(variableName, objectNode.getURI());
         } else if (objectNode.isLiteral()) {
-            if (objectNode.getLiteralDatatype() != null) {
+            if (! "".equals(objectNode.getLiteralLanguage())) {
+              String languageTag = objectNode.getLiteralLanguage();
+              bindings.bind(variableName, objectNode.getLiteralLexicalForm(),
+                      Locale.forLanguageTag(languageTag));
+            } else if (objectNode.getLiteralDatatype() != null) {
                 try {
                     String xsdType = objectNode.getLiteralDatatypeURI();
                     String fragment = new URI(xsdType).getFragment();
@@ -155,10 +159,6 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
                     throw new MarkLogicJenaException(
                             "Unrecognized binding type.  Use XSD only.", e);
                 }
-            } else if (! "".equals(objectNode.getLiteralLanguage())) {
-                String languageTag = objectNode.getLiteralLanguage();
-                bindings.bind(variableName, objectNode.getLiteralLexicalForm(),
-                        Locale.forLanguageTag(languageTag));
             } else {
                 // is this a hole, no type string?
                 bindings.bind(variableName, objectNode.getLiteralLexicalForm(),
