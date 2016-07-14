@@ -138,6 +138,22 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
     }
 
     @Test
+    public void testFindByLiteralWithLanguage() {
+        Node g = NodeFactory.createURI("http://example.org/g");
+        Node s = NodeFactory.createURI("s");
+        Node p = NodeFactory.createURI("p");
+        Node o = NodeFactory.createLiteral("abc", "en");
+
+        DatasetGraph markLogicDatasetGraph = getMarkLogicDatasetGraph();
+        markLogicDatasetGraph.add(g, s, p, o);
+        Iterator<Quad> iter = markLogicDatasetGraph.find(g, null, null, o);
+        Quad quad = iter.next();
+
+        assertEquals("abc", quad.getObject().getLiteralLexicalForm());
+        assertEquals("en", quad.getObject().getLiteralLanguage());
+    }
+
+    @Test
     public void testQuadsView() {
 
         Node newSubject = NodeFactory.createURI("http://newSubject");
