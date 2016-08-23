@@ -622,6 +622,11 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
         this.client = null;
     }
 
+    @Override
+    public boolean supportsTransactions() {
+        return true;
+    }
+
     private void checkIsOpen() {
         if (client == null) {
             throw new MarkLogicJenaException("DatabaseGraph is closed");

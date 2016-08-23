@@ -10,7 +10,7 @@ version = '2.0.0-SNAPSHOT'
 group   = 'com.marklogic'
 
 dependencies {
-    compile('org.apache.jena:jena-arq:3.0.1') {
+    compile('org.apache.jena:jena-arq:3.1.0') {
 	   exclude(group: 'org.slf4j')
        exclude(group: 'ch.qos.logback')
        exclude(group: 'log4j')
