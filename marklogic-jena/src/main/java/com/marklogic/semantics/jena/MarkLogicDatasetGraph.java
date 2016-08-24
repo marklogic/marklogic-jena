@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Locale;
 
+import com.hp.hpl.jena.sparql.core.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,10 +36,6 @@ import com.hp.hpl.jena.query.DatasetFactory;
 import com.hp.hpl.jena.query.ReadWrite;
 import com.hp.hpl.jena.shared.Lock;
 import com.hp.hpl.jena.shared.LockNone;
-import com.hp.hpl.jena.sparql.core.DatasetGraph;
-import com.hp.hpl.jena.sparql.core.DatasetGraphTriplesQuads;
-import com.hp.hpl.jena.sparql.core.Quad;
-import com.hp.hpl.jena.sparql.core.Transactional;
 import com.hp.hpl.jena.update.GraphStore;
 import com.marklogic.client.io.InputStreamHandle;
 import com.marklogic.client.query.QueryDefinition;
@@ -57,6 +54,14 @@ import com.marklogic.semantics.jena.client.WrappingIterator;
  * DatasetGraph in a jena-based project. If you know you are using a
  * MarkLogicDatasetGraph, simply cast it in order to use the MarkLogic-specific
  * capabilities.
+ *
+ * Extending DatasetGraphTriplesQuads means
+ * we need only implement four methods
+ *
+ * protected abstract void addToDftGraph(Node s, Node p, Node o) ;
+ * protected abstract void addToNamedGraph(Node g, Node s, Node p, Node o) ;
+ * protected abstract void deleteFromDftGraph(Node s, Node p, Node o) ;
+ * protected abstract void deleteFromNamedGraph(Node g, Node s, Node p, Node o) ;
  */
 public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
         DatasetGraph, GraphStore, Transactional {
@@ -213,10 +218,10 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
     protected void deleteFromDftGraph(Node s, Node p, Node o) {
         checkIsOpen();
         sync();
-        String query = "DELETE  WHERE { ?s ?p ?o }";
         Node s1 = skolemize(s);
         Node p1 = skolemize(p);
         Node o1 = skolemize(o);
+        String query = "DELETE  WHERE { ?s ?p ?o }";
         SPARQLQueryDefinition qdef = client.newQueryDefinition(query);
         qdef.withBinding("s", s1.getURI());
         qdef.withBinding("p", p1.getURI());
@@ -404,7 +409,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
     public Graph getDefaultGraph() {
         checkIsOpen();
         sync();
-        return client.readDefaultGraph();
+        return GraphView.createDefaultGraph(this);
     }
 
     /**
@@ -414,7 +419,8 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
     public Graph getGraph(Node graphNode) {
         checkIsOpen();
         sync();
-        return client.readGraph(graphNode.getURI());
+        return GraphView.createNamedGraph(this, graphNode);
+        //return client.readGraph(graphNode.getURI());
     }
 
     /**
@@ -430,7 +436,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
     /**
      * Merges triples into a graph on the MarkLogic server. mergeGraph() is NOT
      * part of Jena's DatasetGraph interface.
-     * 
+     *
      * @param graphName
      *            The graph to merge with server state.
      * @param graph
