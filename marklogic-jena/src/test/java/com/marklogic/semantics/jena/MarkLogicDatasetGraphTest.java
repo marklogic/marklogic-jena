@@ -15,6 +15,7 @@
  */
 package com.marklogic.semantics.jena;
 
+import static org.apache.jena.datatypes.xsd.XSDDatatype.XSDint;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -24,6 +25,7 @@ import static org.junit.Assert.fail;
 
 import java.util.Iterator;
 
+import org.apache.jena.datatypes.RDFDatatype;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
@@ -116,7 +118,8 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
         g1 = markLogicDatasetGraph.getGraph(NodeFactory
                 .createURI("http://example.org/g1"));
 
-        assertTrue(g1.isIsomorphicWith(n10));
+        // warning behavior change.  add() changed g1 on the server.
+        assertFalse(g1.isIsomorphicWith(n10));
 
         markLogicDatasetGraph.removeGraph(n10Node);
         assertFalse("MarkLogic no longer contains the graph",
@@ -439,4 +442,24 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
         RDFDataMgr.write(System.out, dataSet, RDFFormat.TRIG_PRETTY);
     }
 
+    @Test
+    public void testWriteableView() {
+        MarkLogicDatasetGraph dsg = getMarkLogicDatasetGraph("testdata/smallfile.nt");
+        Graph defaultGraph = dsg.getDefaultGraph();
+        RDFDataMgr.write(System.out, defaultGraph, RDFFormat.TURTLE);
+
+        Triple newTriple = Triple.create(NodeFactory.createURI("http://a"),
+                NodeFactory.createURI("http://b"),
+                NodeFactory.createLiteral("1", XSDint));
+
+        defaultGraph.add(newTriple);
+
+        QueryExecution qe = QueryExecutionFactory.create(
+                "prefix xsd: <http://www.w3.org/2001/XMLSchema#>  ask where { <http://a> ?p  \"1\"^^xsd:int .}", dsg.toDataset());
+        assertTrue(qe.execAsk());
+        defaultGraph.remove(newTriple.getSubject(), newTriple.getPredicate(), newTriple.getObject());
+        qe = QueryExecutionFactory.create(
+                "prefix xsd: <http://www.w3.org/2001/XMLSchema#>  ask where { <http://a> ?p  \"1\"^^xsd:int .}", dsg.toDataset());
+        assertFalse(qe.execAsk());
+    }
 }
