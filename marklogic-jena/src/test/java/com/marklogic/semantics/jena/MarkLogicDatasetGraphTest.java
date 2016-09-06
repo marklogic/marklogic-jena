@@ -445,4 +445,43 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
                 "prefix xsd: <http://www.w3.org/2001/XMLSchema#>  ask where { <http://a> ?p  \"1\"^^xsd:int .}", dsg.toDataset());
         assertFalse(qe.execAsk());
     }
+
+    @Test
+    public void testViewDeletes() {
+        MarkLogicDatasetGraph dsg = getMarkLogicDatasetGraph();
+        Node testUri = NodeFactory.createURI("http://updateablegraph");
+        Graph volatileGraph = dsg.getGraph(testUri);
+        Triple t;
+        Node subj = NodeFactory.createURI("http://s-u-1");
+        Node pred = NodeFactory.createURI("http://p23233");
+        //make a graph with 1000 triples.
+        for (int i=0;i<1000;i++) {
+            t = Triple.create(subj, pred,
+                   NodeFactory.createLiteral(Integer.toString(i), XSDint));
+            log.debug("Adding Triples" + t.toString());
+            volatileGraph.add(t);
+        }
+        for (int i=40;i<60;i++) {
+            t = Triple.create(subj, pred,
+                    NodeFactory.createLiteral(Integer.toString(i), XSDint));
+            log.debug("Removing triple " + t.toString());
+            volatileGraph.delete(t);
+        }
+        t = Triple.create(subj, pred,
+                NodeFactory.createLiteral("30", XSDint));
+        assertTrue(volatileGraph.contains(t));
+        t = Triple.create(subj, pred,
+                NodeFactory.createLiteral("45", XSDint));
+        assertFalse(volatileGraph.contains(t));
+        for (int i=0;i<1000;i++) {
+            t = Triple.create(subj, pred,
+                    NodeFactory.createLiteral(Integer.toString(i), XSDint));
+            log.debug("Removing triple " + t.toString());
+            volatileGraph.delete(t);
+        }
+        dsg.sync();
+        Dataset ds = dsg.toDataset();
+        QueryExecution queryExec = QueryExecutionFactory.create("ASK WHERE { GRAPH <http://updateablegraph> { <http://s-u-1> ?p ?o } }", ds);
+        assertFalse(queryExec.execAsk());
+    }
 }

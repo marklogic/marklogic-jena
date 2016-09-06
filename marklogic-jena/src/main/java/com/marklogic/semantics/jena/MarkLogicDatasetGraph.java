@@ -156,7 +156,6 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
                     bindings.bind(variableName,
                             objectNode.getLiteralLexicalForm(),
                             RDFTypes.valueOf(fragment.toUpperCase()));
-                    log.debug("found " + xsdType);
                 } catch (URISyntaxException e) {
                     throw new MarkLogicJenaException(
                             "Unrecognized binding type.  Use XSD only.", e);
@@ -217,16 +216,11 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
     @Override
     protected void deleteFromDftGraph(Node s, Node p, Node o) {
         checkIsOpen();
-        sync();
+        syncAdds();
         Node s1 = skolemize(s);
         Node p1 = skolemize(p);
         Node o1 = skolemize(o);
-        String query = "DELETE  WHERE { ?s ?p ?o }";
-        SPARQLQueryDefinition qdef = client.newQueryDefinition(query);
-        qdef.withBinding("s", s1.getURI());
-        qdef.withBinding("p", p1.getURI());
-        qdef = bindObject(qdef, "o", o1);
-        client.executeUpdate(qdef);
+        client.sinkDelete(null, s1, p1, o1);
     }
 
     /**
@@ -235,19 +229,11 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
     @Override
     protected void deleteFromNamedGraph(Node g, Node s, Node p, Node o) {
         checkIsOpen();
-        sync();
+        syncAdds();
         Node s1 = skolemize(s);
         Node p1 = skolemize(p);
         Node o1 = skolemize(o);
-        String query = "DELETE WHERE { GRAPH ?g { ?s ?p ?o } }";
-        SPARQLQueryDefinition qdef = client.newQueryDefinition(query);
-        if (g != null) {
-            qdef.withBinding("g", g.getURI());
-        }
-        qdef.withBinding("s", s1.getURI());
-        qdef.withBinding("p", p1.getURI());
-        qdef = bindObject(qdef, "o", o1);
-        client.executeUpdate(qdef);
+        client.sinkDelete(g, s, p, o);
     }
 
     private InputStream selectTriplesInGraph(String graphName, Node s, Node p,
@@ -522,7 +508,16 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
      * Forces the quads in the write cache to flush to the server.
      */
     public void sync() {
-        client.sync();
+        client.syncAdds();
+        client.syncDeletes();
+    }
+
+    /**
+     * Used for deletes, forces the write buffer to sync before
+     * constructing a delete buffer.
+     */
+    public void syncAdds() {
+        client.syncAdds();
     }
 
     /**
