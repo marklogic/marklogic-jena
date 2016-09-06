@@ -166,6 +166,7 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
     	MarkLogicDatasetGraph markLogicDatasetGraph = (MarkLogicDatasetGraph) dsg;
     	JenaDatabaseClient client = markLogicDatasetGraph.getDatabaseClient();
     	markLogicDatasetGraph.sync();
+        markLogicDatasetGraph.syncAdds();
     	QueryIterator qIter = null;
 
         Query query = (Query)context.get(ARQConstants.sysCurrentQuery);

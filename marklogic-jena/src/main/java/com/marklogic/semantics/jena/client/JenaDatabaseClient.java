@@ -50,7 +50,8 @@ public class JenaDatabaseClient {
 
     private GraphManager graphManager;
     private SPARQLQueryManager sparqlQueryManager;
-    private WriteCacheTimerTask cache;
+    private TriplesWriteBuffer writeBuffer;
+    private TriplesDeleteBuffer deleteBuffer;
     private DatabaseClient client;
     private Transaction currentTransaction;
     private Timer timer;
@@ -74,9 +75,11 @@ public class JenaDatabaseClient {
         this.graphManager.setDefaultMimetype(RDFMimeTypes.NTRIPLES);
         this.sparqlQueryManager = client.newSPARQLQueryManager();
         if (periodicFlush) {
-            this.cache = new WriteCacheTimerTask(this);
+            this.writeBuffer = new TriplesWriteBuffer(this);
+            this.deleteBuffer = new TriplesDeleteBuffer(this);
             this.timer = new Timer();
-            timer.scheduleAtFixedRate(cache, 1000, 1000);
+            timer.scheduleAtFixedRate(writeBuffer, 1000, 1000);
+            timer.scheduleAtFixedRate(deleteBuffer, 500, 1000);
         }
     }
 
@@ -84,8 +87,8 @@ public class JenaDatabaseClient {
      * Close the connection and free resources
      */
     public void close() {
-        if (cache != null) {
-            cache.cancel();
+        if (writeBuffer != null) {
+            writeBuffer.cancel();
         }
         if (timer != null) {
             timer.cancel();
@@ -227,8 +230,8 @@ public class JenaDatabaseClient {
      *            Object Node.
      */
     public void sinkQuad(Node g, Node s, Node p, Node o) {
-        if (cache != null) {
-            cache.add(g, s, p, o);   
+        if (writeBuffer != null) {
+            writeBuffer.add(g, s, p, o);
         } else {
             Graph graph = GraphFactory.createDefaultGraph();
             graph.add(Triple.create(s,p,o));
@@ -241,9 +244,26 @@ public class JenaDatabaseClient {
      * Flushes the write cache, ensuring consistent server state before
      * query/delete.
      */
-    public void sync() {
-        if (cache != null) {
-            cache.forceRun();
+    public void syncAdds() {
+        if (writeBuffer != null) {
+            writeBuffer.forceRun();
+        }
+    }
+
+    /**
+     * Flushes the quads accumulated in the delete buffer
+     */
+    public void syncDeletes() {
+        if (deleteBuffer != null) {
+            deleteBuffer.forceRun();
+        }
+    }
+
+    public void sinkDelete(Node g, Node s, Node p, Node o) {
+        if (deleteBuffer != null) {
+            deleteBuffer.add(g, s, p, o);
+        } else {
+            // FIXME  no delete buffer.
         }
     }
 
