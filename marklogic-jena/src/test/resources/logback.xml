@@ -9,11 +9,11 @@
         </encoder>
     </appender>
 
-    <logger name="com.marklogic.client" level="DEBUG" additivity="false">
+    <logger name="com.marklogic.client" level="INFO" additivity="false">
         <appender-ref ref="STDOUT" />
     </logger>
 
-    <logger name="com.marklogic.semantics" level="DEBUG" additivity="false">
+    <logger name="com.marklogic.semantics" level="INFO" additivity="false">
         <appender-ref ref="STDOUT" />
     </logger>
     
