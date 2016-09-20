@@ -22,7 +22,11 @@ public abstract class TripleBuffer extends TimerTask {
     class TriplesHashMap extends ConcurrentHashMap<Node, Graph> {
 
         public int triplesCount() {
-            return values().stream().mapToInt( v -> v.size()).sum();
+            int tripleCount = 0;
+            for (Graph g : values() ) {
+                tripleCount += g.size();
+            }
+            return tripleCount;
         }
     }
 
