@@ -42,6 +42,9 @@ import com.marklogic.client.semantics.SPARQLQueryManager;
 import com.marklogic.semantics.jena.MarkLogicDatasetGraph;
 import com.marklogic.semantics.jena.MarkLogicTransactionException;
 
+import static com.marklogic.semantics.jena.client.TripleBuffer.DEFAULT_CACHE_MILLIS;
+import static com.marklogic.semantics.jena.client.TripleBuffer.DEFAULT_INITIAL_DELAY;
+
 /**
  * A class to encapsulate access to the Java API's DatabaseClient for Jena
  * users. Access the underlying Java API client with getClient();
@@ -78,8 +81,8 @@ public class JenaDatabaseClient {
             this.writeBuffer = new TriplesWriteBuffer(this);
             this.deleteBuffer = new TriplesDeleteBuffer(this);
             this.timer = new Timer();
-            timer.scheduleAtFixedRate(writeBuffer, 1000, 1000);
-            timer.scheduleAtFixedRate(deleteBuffer, 500, 1000);
+            timer.scheduleAtFixedRate(writeBuffer, DEFAULT_INITIAL_DELAY, DEFAULT_CACHE_MILLIS);
+            timer.scheduleAtFixedRate(deleteBuffer, DEFAULT_INITIAL_DELAY + 250, DEFAULT_CACHE_MILLIS);
         }
     }
 
