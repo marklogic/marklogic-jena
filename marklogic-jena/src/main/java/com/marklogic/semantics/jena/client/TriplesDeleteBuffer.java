@@ -42,7 +42,6 @@ public class TriplesDeleteBuffer extends TripleBuffer {
         super(client);
     }
 
-    // we construct a query
     protected synchronized void flush() {
         if (cache.isEmpty()) { return; }
         int bindNumber = 1;
@@ -69,21 +68,12 @@ public class TriplesDeleteBuffer extends TripleBuffer {
             entireQuery.append(graphWrapper);
         }
         entireQuery.append("} ");
-        log.debug(entireQuery.toString());
+        // log.debug(entireQuery.toString());
         qdef.setSparql(entireQuery.toString());
 
         client.executeUpdate(qdef);
         lastCacheAccess = new Date();
         cache.clear();
-    }
-
-    private String triplePatterns(Graph graph) {
-        ArrayList<String> triplePatterns = new ArrayList<>();
-        Iterator<Triple> triples = graph.find(Node.ANY, Node.ANY, Node.ANY);
-        while (triples.hasNext()) {
-            Triple t = triples.next();
-        }
-        return "";
     }
 
     public void forceRun() {

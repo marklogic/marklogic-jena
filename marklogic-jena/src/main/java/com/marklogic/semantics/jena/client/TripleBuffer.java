@@ -19,12 +19,20 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public abstract class TripleBuffer extends TimerTask {
 
-    protected ConcurrentHashMap<Node, Graph> cache;
+    class TriplesHashMap extends ConcurrentHashMap<Node, Graph> {
+
+        public int triplesCount() {
+            return values().stream().mapToInt( v -> v.size()).sum();
+        }
+    }
+
+    protected TriplesHashMap cache;
     protected JenaDatabaseClient client;
 
-    protected static long DEFAULT_CACHE_SIZE = 500;
+    protected final static long DEFAULT_CACHE_SIZE = 199;
     protected long cacheSize = DEFAULT_CACHE_SIZE;
-    protected static long DEFAULT_CACHE_MILLIS = 1000;
+    protected final static long DEFAULT_CACHE_MILLIS = 750;
+    protected final static long DEFAULT_INITIAL_DELAY = 750;
     protected long cacheMillis = DEFAULT_CACHE_MILLIS;
     protected Date lastCacheAccess = new Date();
     protected static Node DEFAULT_GRAPH_NODE = NodeFactory
@@ -35,16 +43,16 @@ public abstract class TripleBuffer extends TimerTask {
 
     public TripleBuffer(JenaDatabaseClient client) {
         super();
-        this.cache = new ConcurrentHashMap<Node, Graph>();
+        this.cache = new TriplesHashMap();
         this.client = client;
     }
 
     @Override
     public void run() {
         Date now = new Date();
-        if (cache.size() > cacheSize || cache.size() > 0
+        if (cache.triplesCount() > cacheSize || cache.size() > 0
                 && now.getTime() - lastCacheAccess.getTime() > cacheMillis) {
-            log.debug("Cache stale, flushing");
+            log.debug("Flushing triples buffer.");
             flush();
         } else {
             return;
@@ -68,6 +76,10 @@ public abstract class TripleBuffer extends TimerTask {
             Graph graph = GraphFactory.createGraphMem();
             graph.add(newTiple);
             cache.put(g, graph);
+        }
+        if (cache.triplesCount() > cacheSize) {
+            log.debug("Size of cache big enough to flush.");
+            flush();
         }
     }
 }

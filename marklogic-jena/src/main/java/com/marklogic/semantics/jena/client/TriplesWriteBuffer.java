@@ -15,10 +15,12 @@
  */
 package com.marklogic.semantics.jena.client;
 
-import java.util.Date;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.marklogic.client.semantics.SPARQLBindings;
+import com.marklogic.client.semantics.SPARQLQueryDefinition;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,10 +44,35 @@ public class TriplesWriteBuffer extends TripleBuffer {
     }
 
     protected synchronized void flush() {
+        if (cache.isEmpty()) { return; }
+        int bindNumber = 1;
+        SPARQLQueryDefinition qdef = client.newQueryDefinition("TMP");
+        SPARQLBindings bindings = qdef.getBindings();
+        StringBuffer entireQuery = new StringBuffer();
+        entireQuery.append("INSERT DATA { ");
         for (Node graphNode : cache.keySet()) {
-            log.debug("Persisting " + graphNode);
-            client.mergeGraph(graphNode.getURI(), cache.get(graphNode));
+            Graph g = cache.get(graphNode);
+            bindings.bind("g" + bindNumber, graphNode.getURI().toString());
+            String graphWrapper = "GRAPH ?g" + bindNumber + " { ";
+
+            List<String> graphPatterns = new ArrayList<>();
+            Iterator<Triple> triples = g.find(Node.ANY, Node.ANY, Node.ANY);
+            while (triples.hasNext()) {
+                Triple t = triples.next();
+                graphPatterns.add("?s" + bindNumber + " ?p" + bindNumber + " ?o" + bindNumber);
+                bindings.bind("s" + bindNumber, t.getSubject().getURI().toString() );
+                bindings.bind("p" + bindNumber, t.getPredicate().getURI().toString() );
+                MarkLogicDatasetGraph.bindObject(qdef, "o" + bindNumber, t.getObject());
+                bindNumber++;
+            }
+            graphWrapper += StringUtils.join(graphPatterns, " . ") + " } ";
+            entireQuery.append(graphWrapper);
         }
+        entireQuery.append("} ");
+        // log.debug(entireQuery.toString());
+        qdef.setSparql(entireQuery.toString());
+
+        client.executeUpdate(qdef);
         lastCacheAccess = new Date();
         cache.clear();
     }
