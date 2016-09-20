@@ -24,3 +24,4 @@ buildSrc/build
 *.ipr
 bin
 creds
+.idea
