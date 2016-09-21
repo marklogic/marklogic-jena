@@ -25,6 +25,9 @@ import static org.junit.Assert.fail;
 
 import java.util.Iterator;
 
+import com.hp.hpl.jena.query.*;
+import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFFormat;
 import org.junit.After;
@@ -36,14 +39,6 @@ import com.hp.hpl.jena.graph.Graph;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.NodeFactory;
 import com.hp.hpl.jena.graph.Triple;
-import com.hp.hpl.jena.query.Dataset;
-import com.hp.hpl.jena.query.DatasetFactory;
-import com.hp.hpl.jena.query.Query;
-import com.hp.hpl.jena.query.QueryExecution;
-import com.hp.hpl.jena.query.QueryExecutionFactory;
-import com.hp.hpl.jena.query.QueryFactory;
-import com.hp.hpl.jena.query.ReadWrite;
-import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.sparql.core.DatasetGraph;
 import com.hp.hpl.jena.sparql.core.Quad;
 import com.hp.hpl.jena.sparql.graph.GraphFactory;
@@ -384,7 +379,7 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
         Iterator<Quad> quads = dsg.find();
         while (quads.hasNext()) {
             Quad q = quads.next();
-            System.out.println(q);
+            log.debug(q.toString());
         }
     }
 
@@ -484,4 +479,91 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
         QueryExecution queryExec = QueryExecutionFactory.create("ASK WHERE { GRAPH <http://updateablegraph> { <http://s-u-1> ?p ?o } }", ds);
         assertFalse(queryExec.execAsk());
     }
+
+
+    private void threadAdds(int start, int end) {
+        MarkLogicDatasetGraph dsg = getMarkLogicDatasetGraph();
+        Node testUri = NodeFactory.createURI("http://updateablegraph");
+        Graph volatileGraph = dsg.getGraph(testUri);
+        Triple t;
+        Node subj = NodeFactory.createURI("http://s-u-2");
+        Node pred = NodeFactory.createURI("http://p23233");
+        //make a graph with 1000 triples.
+        for (int i=start;i<end;i++) {
+            t = Triple.create(subj, pred,
+                    NodeFactory.createLiteral(Integer.toString(i), XSDint));
+            log.debug("Adding Triples" + t.toString());
+            volatileGraph.add(t);
+        }
+        for (int i=start+10;i<start+60;i++) {
+            t = Triple.create(subj, pred,
+                    NodeFactory.createLiteral(Integer.toString(i), XSDint));
+            log.debug("Removing triple " + t.toString());
+            volatileGraph.delete(t);
+        }
+        t = Triple.create(subj, pred,
+                NodeFactory.createLiteral(Integer.toString(start + 30), XSDint));
+        assertFalse(volatileGraph.contains(t));
+        t = Triple.create(subj, pred,
+                NodeFactory.createLiteral(Integer.toString(start+ 80), XSDint));
+        assertTrue(volatileGraph.contains(t));
+        for (int i=0;i<1000;i++) {
+            t = Triple.create(subj, pred,
+                    NodeFactory.createLiteral(Integer.toString(i), XSDint));
+            log.debug("Removing triple " + t.toString());
+            volatileGraph.delete(t);
+        }
+        for (int i=end;i>=start;i--) {
+            t = Triple.create(subj, pred,
+                    NodeFactory.createLiteral(Integer.toString(i), XSDint));
+            log.debug("Removing triple " + t.toString());
+            volatileGraph.delete(t);
+        }
+        dsg.sync();
+        Dataset ds = dsg.toDataset();
+        QueryExecution queryExec = QueryExecutionFactory.create("ASK WHERE { GRAPH <http://updateablegraph> { <http://s-u-2> ?p ?o } }", ds);
+        QuerySolutionMap m = new QuerySolutionMap();
+        Model model = ModelFactory.createDefaultModel();
+        m.add("o", model.createTypedLiteral(start));
+        queryExec.setInitialBinding(m);
+        assertFalse(queryExec.execAsk());
+    }
+
+    @Test
+    public void threadingTest() throws InterruptedException {
+        Runnable task1 = new Runnable() {
+            @Override
+            public void run() {
+                log.info("Starting thread1");
+                threadAdds(0, 1000);
+            }
+        };
+        Runnable task2 = new Runnable() {
+            @Override
+            public void run() {
+                log.info("Starting thread2");
+                threadAdds(1001, 2000);
+            }
+        };
+        Runnable task3 = new Runnable() {
+            @Override
+            public void run() {
+                log.info("Starting thread3");
+                threadAdds(2001, 3000);
+            }
+        };
+
+        Thread t1 = new Thread(task1);
+        Thread t2 = new Thread(task2);
+        Thread t3 = new Thread(task3);
+        t1.start();
+        t2.start();
+        t3.start();
+
+        t1.join();
+        t2.join();
+        t3.join();
+
+    }
+
 }
