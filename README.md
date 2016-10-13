@@ -1,4 +1,4 @@
-# marklogic-jena v2.0.0-SNAPSHOT
+# marklogic-jena v1.0.2-SNAPSHOT
 
 ## Introduction
 
@@ -8,7 +8,7 @@ Framework](http://jena.apache.org) as a persistence and query layer.
 
 #### Setup Marklogic
 
-Ensure MarkLogic (8.0-4 or later) is installed and running.
+Ensure MarkLogic (8.0-6 or later) is installed and running.
 
 #### Setup  MarkLogic Jena
 
@@ -40,12 +40,12 @@ gradle install
 
 ## Usage
 
-### Quick start (Note: draft for future release)
+### Quick start
 
 For gradle-based projects include this dependency in `build.gradle`:
 ```
 dependencies {
-   compile 'com.marklogic:marklogic-jena:1.0.0'
+   compile 'com.marklogic:marklogic-jena:1.0.2'
 }
 ```
 
@@ -55,7 +55,7 @@ Maven-based projects use this block in `pom.xml`:
 <dependency>
     <groupId>com.marklogic</groupId>
     <artifactId>marklogic-jena</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.2</version>
 </dependency>
 ```
 
