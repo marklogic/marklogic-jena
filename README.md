@@ -1,4 +1,4 @@
-# marklogic-jena v1.0.2-SNAPSHOT
+# marklogic-jena v1.0.2
 
 ## Introduction
 
