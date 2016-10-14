@@ -11,7 +11,7 @@ apply plugin: 'java'
 evaluationDependsOn(":marklogic-jena")
 
 dependencies {
-  compile('com.marklogic:marklogic-jena:3.0.2-SNAPSHOT'){
+  compile('com.marklogic:marklogic-jena:3.0.2'){
     changing=true
     exclude(group: 'org.slf4j')
     exclude(group: 'log4j')
