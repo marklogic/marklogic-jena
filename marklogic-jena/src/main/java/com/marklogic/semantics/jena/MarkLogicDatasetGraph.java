@@ -634,14 +634,4 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
             throw new MarkLogicJenaException("DatabaseGraph is closed");
         }
     }
-
-    @Override
-    public void startRequest() {
-        // noop
-    }
-
-    @Override
-    public void finishRequest() {
-        // noop
-    }
 }
