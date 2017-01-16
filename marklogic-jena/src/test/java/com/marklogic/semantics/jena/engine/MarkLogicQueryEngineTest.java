@@ -24,24 +24,24 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.apache.jena.graph.Graph;
+import org.apache.jena.graph.NodeFactory;
+import org.apache.jena.graph.Triple;
+import org.apache.jena.query.Dataset;
+import org.apache.jena.query.DatasetFactory;
+import org.apache.jena.query.Query;
+import org.apache.jena.query.QueryExecution;
+import org.apache.jena.query.QueryExecutionFactory;
+import org.apache.jena.query.QueryFactory;
+import org.apache.jena.query.QuerySolution;
+import org.apache.jena.query.QuerySolutionMap;
+import org.apache.jena.query.ReadWrite;
+import org.apache.jena.query.ResultSet;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.sparql.graph.GraphFactory;
 
-import com.hp.hpl.jena.graph.Graph;
-import com.hp.hpl.jena.graph.NodeFactory;
-import com.hp.hpl.jena.graph.Triple;
-import com.hp.hpl.jena.query.Dataset;
-import com.hp.hpl.jena.query.DatasetFactory;
-import com.hp.hpl.jena.query.Query;
-import com.hp.hpl.jena.query.QueryExecution;
-import com.hp.hpl.jena.query.QueryExecutionFactory;
-import com.hp.hpl.jena.query.QueryFactory;
-import com.hp.hpl.jena.query.QuerySolution;
-import com.hp.hpl.jena.query.QuerySolutionMap;
-import com.hp.hpl.jena.query.ReadWrite;
-import com.hp.hpl.jena.query.ResultSet;
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.hp.hpl.jena.rdf.model.ResourceFactory;
-import com.hp.hpl.jena.sparql.graph.GraphFactory;
 import com.marklogic.client.ResourceNotFoundException;
 import com.marklogic.client.semantics.SPARQLRuleset;
 import com.marklogic.semantics.jena.JenaTestBase;
@@ -54,7 +54,7 @@ public class MarkLogicQueryEngineTest extends JenaTestBase {
     @Before
     public void setupDataset() {
         ds = DatasetFactory
-                .create(getMarkLogicDatasetGraph("testdata/testData.trig"));
+                .wrap(getMarkLogicDatasetGraph("testdata/testData.trig"));
         // ds =
         // DatasetFactory.create(getJenaDatasetGraph("testdata/testData.trig"));
     }
@@ -236,7 +236,7 @@ public class MarkLogicQueryEngineTest extends JenaTestBase {
     @Test
     public void testRulesets() {
         MarkLogicDatasetGraph infTestDsg = getMarkLogicDatasetGraph();
-        Dataset ds = DatasetFactory.create(infTestDsg);
+        Dataset ds = DatasetFactory.wrap(infTestDsg);
         String query = "prefix : <http://example.org/> select ?o where { :r3 a ?o }";
         QueryExecution exec = QueryExecutionFactory.create(query, ds);
         ResultSet results = exec.execSelect();
@@ -261,7 +261,7 @@ public class MarkLogicQueryEngineTest extends JenaTestBase {
     public void testBaseUri() {
 
         MarkLogicDatasetGraph baseTest = getMarkLogicDatasetGraph();
-        Dataset ds = DatasetFactory.create(baseTest);
+        Dataset ds = DatasetFactory.wrap(baseTest);
         String query = "select ?o where { <r3> a ?o }";
         QueryExecution exec = QueryExecutionFactory.create(query, ds);
         ResultSet results = exec.execSelect();

@@ -17,8 +17,8 @@ package com.marklogic.semantics.jena.client;
 
 import java.util.Iterator;
 
-import com.hp.hpl.jena.graph.Node;
-import com.hp.hpl.jena.graph.NodeFactory;
+import org.apache.jena.graph.Node;
+import org.apache.jena.graph.NodeFactory;
 
 /**
  * Adapts iterator from MarkLogic's Iterator&lt;String&ge; to Jena's

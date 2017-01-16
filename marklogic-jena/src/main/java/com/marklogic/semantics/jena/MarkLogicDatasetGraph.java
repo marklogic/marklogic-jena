@@ -24,22 +24,19 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Locale;
 
+import org.apache.jena.graph.Triple;
+import org.apache.jena.sparql.core.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.hp.hpl.jena.graph.Graph;
-import com.hp.hpl.jena.graph.Node;
-import com.hp.hpl.jena.graph.NodeFactory;
-import com.hp.hpl.jena.query.Dataset;
-import com.hp.hpl.jena.query.DatasetFactory;
-import com.hp.hpl.jena.query.ReadWrite;
-import com.hp.hpl.jena.shared.Lock;
-import com.hp.hpl.jena.shared.LockNone;
-import com.hp.hpl.jena.sparql.core.DatasetGraph;
-import com.hp.hpl.jena.sparql.core.DatasetGraphTriplesQuads;
-import com.hp.hpl.jena.sparql.core.Quad;
-import com.hp.hpl.jena.sparql.core.Transactional;
-import com.hp.hpl.jena.update.GraphStore;
+import org.apache.jena.graph.Graph;
+import org.apache.jena.graph.Node;
+import org.apache.jena.graph.NodeFactory;
+import org.apache.jena.query.Dataset;
+import org.apache.jena.query.DatasetFactory;
+import org.apache.jena.query.ReadWrite;
+import org.apache.jena.shared.Lock;
+import org.apache.jena.shared.LockNone;
 import com.marklogic.client.io.InputStreamHandle;
 import com.marklogic.client.query.QueryDefinition;
 import com.marklogic.client.semantics.GraphPermissions;
@@ -57,9 +54,17 @@ import com.marklogic.semantics.jena.client.WrappingIterator;
  * DatasetGraph in a jena-based project. If you know you are using a
  * MarkLogicDatasetGraph, simply cast it in order to use the MarkLogic-specific
  * capabilities.
+ *
+ * Extending DatasetGraphTriplesQuads means
+ * we need only implement four methods
+ *
+ * protected abstract void addToDftGraph(Node s, Node p, Node o) ;
+ * protected abstract void addToNamedGraph(Node g, Node s, Node p, Node o) ;
+ * protected abstract void deleteFromDftGraph(Node s, Node p, Node o) ;
+ * protected abstract void deleteFromNamedGraph(Node g, Node s, Node p, Node o) ;
  */
 public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
-        DatasetGraph, GraphStore, Transactional {
+        DatasetGraph, Transactional {
 
     public static final String DEFAULT_GRAPH_URI = "http://marklogic.com/semantics#default-graph";
     private static Logger log = LoggerFactory
@@ -92,7 +97,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
     }
 
     /**
-     * @see com.hp.hpl.jena.sparql.core.DatasetGraph
+     * @see org.apache.jena.sparql.core.DatasetGraph
      */
     @Override
     public Iterator<Node> listGraphNodes() {
@@ -106,7 +111,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
     /**
      * MarkLogicDatasetGraph does not make use of locks.
      * 
-     * @return An instance of com.hp.hpl.jena.shared.LockNone
+     * @return An instance of org.apache.jena.shared.LockNone
      */
     @Override
     public Lock getLock() {
@@ -114,7 +119,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
     }
 
     /**
-     * @see com.hp.hpl.jena.sparql.core.DatasetGraph
+     * @see org.apache.jena.sparql.core.DatasetGraph
      */
     @Override
     public void clear() {
@@ -126,7 +131,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
 
     /**
      * Maps Jena bindings defined by a variable name and a
-     * {@link com.hp.hpl.jena.graph.Node} to MarkLogic
+     * {@link org.apache.jena.graph.Node} to MarkLogic
      * {@link com.marklogic.client.semantics.SPARQLQueryDefinition} bindings.
      * 
      * @param qdef
@@ -144,22 +149,21 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
         if (objectNode.isURI()) {
             bindings.bind(variableName, objectNode.getURI());
         } else if (objectNode.isLiteral()) {
-            if (objectNode.getLiteralDatatype() != null) {
+            if (! "".equals(objectNode.getLiteralLanguage())) {
+              String languageTag = objectNode.getLiteralLanguage();
+              bindings.bind(variableName, objectNode.getLiteralLexicalForm(),
+                      Locale.forLanguageTag(languageTag));
+            } else if (objectNode.getLiteralDatatype() != null) {
                 try {
                     String xsdType = objectNode.getLiteralDatatypeURI();
                     String fragment = new URI(xsdType).getFragment();
                     bindings.bind(variableName,
                             objectNode.getLiteralLexicalForm(),
                             RDFTypes.valueOf(fragment.toUpperCase()));
-                    log.debug("found " + xsdType);
                 } catch (URISyntaxException e) {
                     throw new MarkLogicJenaException(
                             "Unrecognized binding type.  Use XSD only.", e);
                 }
-            } else if (! "".equals(objectNode.getLiteralLanguage())) {
-                String languageTag = objectNode.getLiteralLanguage();
-                bindings.bind(variableName, objectNode.getLiteralLexicalForm(),
-                        Locale.forLanguageTag(languageTag));
             } else {
                 // is this a hole, no type string?
                 bindings.bind(variableName, objectNode.getLiteralLexicalForm(),
@@ -171,7 +175,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
     }
 
     /*
-     * @see com.hp.hpl.jena.sparql.core.DatasetGraphTriplesQuads Internally uses
+     * @see org.apache.jena.sparql.core.DatasetGraphTriplesQuads Internally uses
      * a write cache to hold batches of quad updates. @see sync()
      */
     @Override
@@ -194,7 +198,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
     }
 
     /**
-     * @see com.hp.hpl.jena.sparql.core.DatasetGraphTriplesQuads Internally uses
+     * @see org.apache.jena.sparql.core.DatasetGraphTriplesQuads Internally uses
      *      a write cache to hold batches of quad updates. @see sync()
      */
     @Override
@@ -207,42 +211,29 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
     }
 
     /**
-     * @see com.hp.hpl.jena.sparql.core.DatasetGraphTriplesQuads
+     * @see org.apache.jena.sparql.core.DatasetGraphTriplesQuads
      */
     @Override
     protected void deleteFromDftGraph(Node s, Node p, Node o) {
         checkIsOpen();
-        sync();
-        String query = "DELETE  WHERE { ?s ?p ?o }";
+        syncAdds();
         Node s1 = skolemize(s);
         Node p1 = skolemize(p);
         Node o1 = skolemize(o);
-        SPARQLQueryDefinition qdef = client.newQueryDefinition(query);
-        qdef.withBinding("s", s1.getURI());
-        qdef.withBinding("p", p1.getURI());
-        qdef = bindObject(qdef, "o", o1);
-        client.executeUpdate(qdef);
+        client.sinkDelete(null, s1, p1, o1);
     }
 
     /**
-     * @see com.hp.hpl.jena.sparql.core.DatasetGraphTriplesQuads
+     * @see org.apache.jena.sparql.core.DatasetGraphTriplesQuads
      */
     @Override
     protected void deleteFromNamedGraph(Node g, Node s, Node p, Node o) {
         checkIsOpen();
-        sync();
+        syncAdds();
         Node s1 = skolemize(s);
         Node p1 = skolemize(p);
         Node o1 = skolemize(o);
-        String query = "DELETE WHERE { GRAPH ?g { ?s ?p ?o } }";
-        SPARQLQueryDefinition qdef = client.newQueryDefinition(query);
-        if (g != null) {
-            qdef.withBinding("g", g.getURI());
-        }
-        qdef.withBinding("s", s1.getURI());
-        qdef.withBinding("p", p1.getURI());
-        qdef = bindObject(qdef, "o", o1);
-        client.executeUpdate(qdef);
+        client.sinkDelete(g, s, p, o);
     }
 
     private InputStream selectTriplesInGraph(String graphName, Node s, Node p,
@@ -278,7 +269,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
     }
 
     /**
-     * @see com.hp.hpl.jena.sparql.core.DatasetGraphBaseFind
+     * @see org.apache.jena.sparql.core.DatasetGraphBaseFind
      */
     @Override
     protected Iterator<Quad> findInDftGraph(Node s, Node p, Node o) {
@@ -289,7 +280,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
     }
 
     /**
-     * @see com.hp.hpl.jena.sparql.core.DatasetGraphBaseFind
+     * @see org.apache.jena.sparql.core.DatasetGraphBaseFind
      */
     @Override
     protected Iterator<Quad> findInSpecificNamedGraph(Node g, Node s, Node p,
@@ -301,7 +292,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
     }
 
     /**
-     * @see com.hp.hpl.jena.sparql.core.DatasetGraphBaseFind
+     * @see org.apache.jena.sparql.core.DatasetGraphBaseFind
      */
     @Override
     protected Iterator<Quad> findInAnyNamedGraphs(Node s, Node p, Node o) {
@@ -335,7 +326,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
 
     @Override
     /**
-     * @see com.hp.hpl.jena.sparql.core.DatasetGraph
+     * @see org.apache.jena.sparql.core.DatasetGraph
      */
     public void setDefaultGraph(Graph g) {
         this.addGraph(NodeFactory.createURI(DEFAULT_GRAPH_URI), g);
@@ -394,31 +385,32 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
      */
     public Dataset toDataset() {
         checkIsOpen();
-        return DatasetFactory.create(this);
+        return DatasetFactory.wrap(this);
     }
 
     /**
-     * @see com.hp.hpl.jena.sparql.core.DatasetGraph
+     * @see org.apache.jena.sparql.core.DatasetGraph
      */
     @Override
     public Graph getDefaultGraph() {
         checkIsOpen();
         sync();
-        return client.readDefaultGraph();
+        return GraphView.createDefaultGraph(this);
     }
 
     /**
-     * @see com.hp.hpl.jena.sparql.core.DatasetGraph
+     * @see org.apache.jena.sparql.core.DatasetGraph
      */
     @Override
     public Graph getGraph(Node graphNode) {
         checkIsOpen();
         sync();
-        return client.readGraph(graphNode.getURI());
+        return GraphView.createNamedGraph(this, graphNode);
+        //return client.readGraph(graphNode.getURI());
     }
 
     /**
-     * @see com.hp.hpl.jena.sparql.core.DatasetGraph
+     * @see org.apache.jena.sparql.core.DatasetGraph
      */
     @Override
     public void addGraph(Node graphName, Graph graph) {
@@ -430,7 +422,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
     /**
      * Merges triples into a graph on the MarkLogic server. mergeGraph() is NOT
      * part of Jena's DatasetGraph interface.
-     * 
+     *
      * @param graphName
      *            The graph to merge with server state.
      * @param graph
@@ -443,7 +435,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
     }
 
     /**
-     * @see com.hp.hpl.jena.sparql.core.DatasetGraph
+     * @see org.apache.jena.sparql.core.DatasetGraph
      */
     @Override
     public void removeGraph(Node graphName) {
@@ -516,7 +508,16 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
      * Forces the quads in the write cache to flush to the server.
      */
     public void sync() {
-        client.sync();
+        client.syncAdds();
+        client.syncDeletes();
+    }
+
+    /**
+     * Used for deletes, forces the write buffer to sync before
+     * constructing a delete buffer.
+     */
+    public void syncAdds() {
+        client.syncAdds();
     }
 
     /**
@@ -621,6 +622,11 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
         checkIsOpen();
         this.client.close();
         this.client = null;
+    }
+
+    @Override
+    public boolean supportsTransactions() {
+        return true;
     }
 
     private void checkIsOpen() {

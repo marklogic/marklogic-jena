@@ -15,12 +15,21 @@
  */
 package com.marklogic.jena.functionaltests;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.FileNotFoundException;
 import java.util.Iterator;
 
+import org.apache.jena.graph.Graph;
+import org.apache.jena.graph.Node;
+import org.apache.jena.graph.NodeFactory;
+import org.apache.jena.graph.Triple;
+import org.apache.jena.query.ReadWrite;
 import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.shared.Lock;
+import org.apache.jena.sparql.core.Quad;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -29,23 +38,11 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
-import com.hp.hpl.jena.graph.Graph;
-import com.hp.hpl.jena.graph.Node;
-import com.hp.hpl.jena.graph.NodeFactory;
-import com.hp.hpl.jena.graph.Triple;
-import com.hp.hpl.jena.query.ReadWrite;
-import com.hp.hpl.jena.shared.Lock;
-import com.hp.hpl.jena.shared.LockNone;
-import com.hp.hpl.jena.sparql.core.Quad;
-import com.hp.hpl.jena.sparql.util.Context;
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.DatabaseClientFactory;
 import com.marklogic.client.DatabaseClientFactory.Authentication;
-import com.marklogic.client.query.QueryDefinition;
 import com.marklogic.client.semantics.Capability;
 import com.marklogic.client.semantics.GraphPermissions;
-import com.marklogic.client.semantics.SPARQLQueryDefinition;
-import com.marklogic.client.semantics.SPARQLRuleset;
 import com.marklogic.semantics.jena.MarkLogicDatasetGraph;
 import com.marklogic.semantics.jena.MarkLogicDatasetGraphFactory;
 
@@ -225,7 +222,7 @@ public class JenaGraphTests extends ConnectedRESTQA {
 	}
 
 	@Test
-	public void test002Add_Quads() throws Exception {
+	public void testAdd_Quads() throws Exception {
 		// Add and validate Quad
 		markLogicDatasetGraphWriter.add(NodeFactory.createURI("testing/quad_add"), NodeFactory.createURI("testing/subject_1"),
 				NodeFactory.createURI("testing/predicate_1"), NodeFactory.createLiteral("testing/Object_1"));
@@ -447,7 +444,7 @@ public class JenaGraphTests extends ConnectedRESTQA {
 	}
 
 	@Test
-	public void test001AddDelete_permissions() {
+	public void testAddDelete_permissions() {
 		String file = datasource + "rdfxml1.rdf";
 		// Read triples into dataset
 		RDFDataMgr.read(markLogicDatasetGraphWriter, file);
@@ -664,5 +661,220 @@ public class JenaGraphTests extends ConnectedRESTQA {
 		}
 		assertTrue(exp.toString().contains("RiotException") && exp != null);
 	}
+	
+	
+	/*
+	 * Add Triples to dataset using multiple threads wihtout a tracsaction, 
+	 * Adds 400 triples to datastore 
+	 */
+	@Test
+	public void testMultiThreadAdd1() throws InterruptedException{
+		final Node uri = NodeFactory.createURI("http://multithreadgraph");  
 
+		class MyRunnable implements Runnable {
+			@Override
+			public void run(){
+				try {
+					markLogicDatasetGraphAdmin.getGraph(uri);
+					for (int j =0 ;j < 100; j++){
+
+						Node subject = NodeFactory.createURI("testNamewithID/"+Thread.currentThread().getId()+"/"+"#lastName");
+						Node predicate = NodeFactory.createURI("testNamewithID/"+Thread.currentThread().getId()+"/"+"#firstName");
+						Node object = NodeFactory.createLiteral(Thread.currentThread().getId()+ "-" + j +"-" +"Object");
+						markLogicDatasetGraphAdmin.add(uri, subject, predicate, object);
+					}
+
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+
+		}  
+
+		Thread t1,t2,t3,t4;
+		t1 = new Thread(new MyRunnable());
+		t1.setName("T1");
+
+		t2 = new Thread(new MyRunnable());
+		t2.setName("T2");
+
+		t3 = new Thread(new MyRunnable());
+		t3.setName("T3");
+
+		t4 = new Thread(new MyRunnable());
+		t4.setName("T4");
+
+		t1.start();
+		t2.start();
+		t3.start();
+		t4.start();
+
+		t1.join();
+		t2.join();
+		t3.join();
+		t4.join();
+
+		Graph mergedgraph = markLogicDatasetGraphAdmin.getGraph(uri);
+		System.out.println("SIZE++++++====="+mergedgraph.size());
+		assertTrue("Graph Size is not Expected seize , Got"+mergedgraph.size(), mergedgraph.size() == 400);
+
+	}
+
+	/*
+	 * Add triples to datastore using multiple threads and same interface,
+	 * Should add 5 sets of 100 triples to datastore
+	 */
+	@Test
+	public void testMultiThreadAdd_Trx() throws InterruptedException{
+		final Node uri = NodeFactory.createURI("http://multithreadgraph");  
+		final int graphSize;
+
+		class MyRunnable implements Runnable {
+			MarkLogicDatasetGraph dataSetGraph = MarkLogicDatasetGraphFactory.createDatasetGraph("localhost", 8014, "rest-admin", "x",
+					Authentication.DIGEST);
+			@Override
+			public void run(){
+				try {
+					dataSetGraph.begin(ReadWrite.WRITE);
+					dataSetGraph.getGraph(uri);
+					for (int j =0 ;j < 100; j++){
+
+						Node subject = NodeFactory.createURI("testNamewithID/"+Thread.currentThread().getId()+"/"+"#lastName");
+						Node predicate = NodeFactory.createURI("testNamewithID/"+Thread.currentThread().getId()+"/"+"#firstName");
+						Node object = NodeFactory.createLiteral(Thread.currentThread().getId()+ "-" + j +"-" +"Object");
+						dataSetGraph.add(uri, subject, predicate, object);
+					}
+					dataSetGraph.sync();
+					dataSetGraph.commit();
+
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				finally{
+					try {
+						if(dataSetGraph.isInTransaction())
+							dataSetGraph.end();
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					try {
+						if(dataSetGraph.getDatabaseClient() != null)
+							dataSetGraph.close();
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			}
+
+		}  
+
+		Thread t1,t2,t3,t4,t5;
+		t1 = new Thread(new MyRunnable());
+		t1.setName("T1");
+
+		t2 = new Thread(new MyRunnable());
+		t2.setName("T2");
+
+		t3 = new Thread(new MyRunnable());
+		t3.setName("T3");
+
+		t4 = new Thread(new MyRunnable());
+		t4.setName("T4");
+
+		t5 = new Thread(new MyRunnable());
+		t5.setName("T5");
+
+		t1.start();
+		t2.start();
+		t3.start();
+		t4.start();
+		t5.start();
+
+		t1.join();
+		t2.join();
+		t3.join();
+		t4.join();
+		t5.join();
+
+		Graph mergedgraph = markLogicDatasetGraphAdmin.getGraph(uri);
+		System.out.println("FINAL SIZE++++++====="+mergedgraph.size());
+		assertTrue("Graph Size is not Expected seize , Got"+mergedgraph.size(), mergedgraph.size() == 500);
+
+
+	}
+
+	/*
+	 * Add same triples set to datastore using multiple threads and same interface,
+	 * should only add three set's of 100 triples to datastore but query should only return 100 triples 
+	 * eliminating the duplicates
+	 */
+	@Test
+	public void testMultiThreadAddDuplicate_Trx() throws InterruptedException{
+		final Node uri = NodeFactory.createURI("http://multithreadgraph");  
+		final int graphSize;
+
+		class MyRunnable implements Runnable {
+			MarkLogicDatasetGraph dataSetGraph = MarkLogicDatasetGraphFactory.createDatasetGraph("localhost", 8014, "rest-admin", "x",
+					Authentication.DIGEST);
+			@Override
+			public void run(){
+				try {
+					dataSetGraph.begin(ReadWrite.WRITE);
+					dataSetGraph.getGraph(uri);
+					for (int j =0 ;j < 100; j++){
+
+						Node subject = NodeFactory.createURI("testNamewithID/#lastName");
+						Node predicate = NodeFactory.createURI("testNamewithID/#firstName");
+						Node object = NodeFactory.createLiteral(j +"-" +"Object");
+						dataSetGraph.add(uri, subject, predicate, object);
+					}
+					dataSetGraph.sync();
+					dataSetGraph.commit();
+
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				finally{
+					try {
+						if(dataSetGraph.isInTransaction())
+							dataSetGraph.end();
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					try {
+						if(dataSetGraph.getDatabaseClient() != null)
+							dataSetGraph.close();
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			}
+
+		}  
+
+		Thread t1,t2,t3;
+		t1 = new Thread(new MyRunnable());
+		t1.setName("T1");
+
+		t2 = new Thread(new MyRunnable());
+		t2.setName("T2");
+
+		t3 = new Thread(new MyRunnable());
+		t3.setName("T3");
+
+		t1.start();
+		t2.start();
+		t3.start();
+
+		t1.join();
+		t2.join();
+		t3.join();
+
+		Graph mergedgraph = markLogicDatasetGraphAdmin.getGraph(uri);
+		System.out.println("FINAL SIZE++++++====="+mergedgraph.size());
+		assertTrue("Graph Size is not Expected seize , Got"+mergedgraph.size(), mergedgraph.size() == 100);
+
+	}
+	
+	
 }

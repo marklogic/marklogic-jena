@@ -19,24 +19,23 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
-import com.hp.hpl.jena.graph.Graph;
-import com.hp.hpl.jena.graph.Node;
-import com.hp.hpl.jena.graph.NodeFactory;
-import com.hp.hpl.jena.query.Dataset;
-import com.hp.hpl.jena.query.DatasetFactory;
-import com.hp.hpl.jena.query.Query;
-import com.hp.hpl.jena.query.QueryExecution;
-import com.hp.hpl.jena.query.QueryExecutionFactory;
-import com.hp.hpl.jena.query.QueryFactory;
-import com.hp.hpl.jena.query.QuerySolution;
-import com.hp.hpl.jena.query.QuerySolutionMap;
-import com.hp.hpl.jena.query.ReadWrite;
-import com.hp.hpl.jena.query.ResultSet;
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.ResourceFactory;
-import com.hp.hpl.jena.update.GraphStore;
-import com.hp.hpl.jena.update.UpdateAction;
-import com.hp.hpl.jena.update.UpdateRequest;
+import org.apache.jena.graph.Graph;
+import org.apache.jena.graph.Node;
+import org.apache.jena.graph.NodeFactory;
+import org.apache.jena.query.Dataset;
+import org.apache.jena.query.DatasetFactory;
+import org.apache.jena.query.Query;
+import org.apache.jena.query.QueryExecution;
+import org.apache.jena.query.QueryExecutionFactory;
+import org.apache.jena.query.QueryFactory;
+import org.apache.jena.query.QuerySolution;
+import org.apache.jena.query.QuerySolutionMap;
+import org.apache.jena.query.ReadWrite;
+import org.apache.jena.query.ResultSet;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.update.UpdateAction;
+import org.apache.jena.update.UpdateRequest;
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.DatabaseClientFactory;
 import com.marklogic.client.DatabaseClientFactory.Authentication;
@@ -138,7 +137,7 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 	public void testBaseURi() throws Exception {
 		dataSet = DatasetFactory.create(markLogicDatasetGraph);
 		UpdateRequest update = new UpdateRequest();
-		update.add("DROP ALL").add("BASE <http://exampleBase.org/> INSERT DATA { GRAPH <BaseUriTest> { <S1> <P1> <O1>  } }");
+		update.add("DROP ALL").add("BASE <http://examplebase.org/> INSERT DATA { GRAPH <BaseUriTest> { <S1> <P1> <O1>  } }");
 		UpdateAction.execute(update, dataSet);
 		String query = "select ?o where { <S1> ?p ?o }";
 		QueryExecution exec = QueryExecutionFactory.create(query, dataSet);
@@ -146,7 +145,7 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 		List<String> subjects = parseResults(results, "o");
 		assertEquals("No inference, got back list of size 0", 0, subjects.size());
 
-		Query q = QueryFactory.create(query, "http://exampleBase.org/");
+		Query q = QueryFactory.create(query, "http://examplebase.org/");
 		exec = QueryExecutionFactory.create(q, dataSet);
 		results = exec.execSelect();
 		subjects = parseResults(results, "o");
@@ -178,7 +177,7 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 			System.out.println(e);
 		}
 
-		Query q4 = QueryFactory.create(query, "<http://exampleBase.org/>");
+		Query q4 = QueryFactory.create(query, "<http://examplebase.org/>");
 		exec = QueryExecutionFactory.create(q4, dataSet);
 		Exception exp = null;
 		try {
@@ -510,7 +509,7 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 		String file = datasource + "tigers.ttl";
 		// Read triples into dataset
 		RDFDataMgr.read(markLogicDatasetGraph, file);
-		GraphStore graphstore = markLogicDatasetGraph;
+		MarkLogicDatasetGraph graphstore = markLogicDatasetGraph;
 		markLogicDatasetGraph.sync();
 
 		dataSet = DatasetFactory.create(markLogicDatasetGraph);
@@ -548,7 +547,7 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 
 	@Test
 	public void testSPARQLUpdate() {
-		GraphStore graphstore = markLogicDatasetGraph;
+		MarkLogicDatasetGraph graphstore = markLogicDatasetGraph;
 		UpdateRequest update = new UpdateRequest();
 		// Clear all data and Insert two graphs
 		update.add("DROP ALL").add("BASE <http://example.org/> INSERT DATA { GRAPH <http://example.org/copy1> { <s1> <p1> <o1>  } }")

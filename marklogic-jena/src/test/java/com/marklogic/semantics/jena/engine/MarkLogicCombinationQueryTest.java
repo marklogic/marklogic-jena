@@ -22,10 +22,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.hp.hpl.jena.query.Dataset;
-import com.hp.hpl.jena.query.DatasetFactory;
-import com.hp.hpl.jena.query.QueryExecution;
-import com.hp.hpl.jena.query.QueryExecutionFactory;
+import org.apache.jena.query.Dataset;
+import org.apache.jena.query.DatasetFactory;
+import org.apache.jena.query.QueryExecution;
+import org.apache.jena.query.QueryExecutionFactory;
 import com.marklogic.client.document.XMLDocumentManager;
 import com.marklogic.client.io.Format;
 import com.marklogic.client.io.StringHandle;
@@ -47,7 +47,7 @@ public class MarkLogicCombinationQueryTest extends JenaTestBase {
     public void setupDataset() {
         dsg = getMarkLogicDatasetGraph("testdata/testData.trig");
 
-        ds = DatasetFactory.create(dsg);
+        ds = DatasetFactory.wrap(dsg);
 
         String tripleDocOne =
 

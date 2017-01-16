@@ -20,7 +20,7 @@ import java.io.OutputStream;
 
 import org.apache.jena.riot.WriterGraphRIOT;
 
-import com.hp.hpl.jena.graph.Graph;
+import org.apache.jena.graph.Graph;
 import com.marklogic.client.io.OutputStreamSender;
 
 /**

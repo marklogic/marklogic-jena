@@ -15,6 +15,7 @@
  */
 package com.marklogic.semantics.jena;
 
+import static org.apache.jena.datatypes.xsd.XSDDatatype.XSDint;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -24,30 +25,26 @@ import static org.junit.Assert.fail;
 
 import java.util.Iterator;
 
+import org.apache.jena.datatypes.RDFDatatype;
+import org.apache.jena.graph.Graph;
+import org.apache.jena.graph.Node;
+import org.apache.jena.graph.NodeFactory;
+import org.apache.jena.graph.Triple;
+import org.apache.jena.query.*;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFFormat;
+import org.apache.jena.sparql.core.DatasetGraph;
+import org.apache.jena.sparql.core.Quad;
+import org.apache.jena.sparql.graph.GraphFactory;
+import org.apache.jena.update.UpdateAction;
+import org.apache.jena.update.UpdateRequest;
 import org.junit.After;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.hp.hpl.jena.graph.Graph;
-import com.hp.hpl.jena.graph.Node;
-import com.hp.hpl.jena.graph.NodeFactory;
-import com.hp.hpl.jena.graph.Triple;
-import com.hp.hpl.jena.query.Dataset;
-import com.hp.hpl.jena.query.DatasetFactory;
-import com.hp.hpl.jena.query.Query;
-import com.hp.hpl.jena.query.QueryExecution;
-import com.hp.hpl.jena.query.QueryExecutionFactory;
-import com.hp.hpl.jena.query.QueryFactory;
-import com.hp.hpl.jena.query.ReadWrite;
-import com.hp.hpl.jena.query.ResultSet;
-import com.hp.hpl.jena.sparql.core.DatasetGraph;
-import com.hp.hpl.jena.sparql.core.Quad;
-import com.hp.hpl.jena.sparql.graph.GraphFactory;
-import com.hp.hpl.jena.update.UpdateAction;
-import com.hp.hpl.jena.update.UpdateRequest;
 import com.marklogic.client.semantics.Capability;
 import com.marklogic.client.semantics.GraphPermissions;
 
@@ -116,7 +113,8 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
         g1 = markLogicDatasetGraph.getGraph(NodeFactory
                 .createURI("http://example.org/g1"));
 
-        assertTrue(g1.isIsomorphicWith(n10));
+        // warning behavior change.  add() changed g1 on the server.
+        assertFalse(g1.isIsomorphicWith(n10));
 
         markLogicDatasetGraph.removeGraph(n10Node);
         assertFalse("MarkLogic no longer contains the graph",
@@ -138,6 +136,22 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
     }
 
     @Test
+    public void testFindByLiteralWithLanguage() {
+        Node g = NodeFactory.createURI("http://example.org/g");
+        Node s = NodeFactory.createURI("s");
+        Node p = NodeFactory.createURI("p");
+        Node o = NodeFactory.createLiteral("abc", "en");
+
+        DatasetGraph markLogicDatasetGraph = getMarkLogicDatasetGraph();
+        markLogicDatasetGraph.add(g, s, p, o);
+        Iterator<Quad> iter = markLogicDatasetGraph.find(g, null, null, o);
+        Quad quad = iter.next();
+
+        assertEquals("abc", quad.getObject().getLiteralLexicalForm());
+        assertEquals("en", quad.getObject().getLiteralLanguage());
+    }
+
+    @Test
     public void testQuadsView() {
 
         Node newSubject = NodeFactory.createURI("http://newSubject");
@@ -149,7 +163,7 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
                 newValue));
 
         DatasetGraph markLogicDatasetGraph = getMarkLogicDatasetGraph();
-        Dataset ds = DatasetFactory.create(markLogicDatasetGraph);
+        Dataset ds = DatasetFactory.wrap(markLogicDatasetGraph);
         String askQuery = "ASK WHERE { GRAPH <http://newGraph> { <http://newSubject> ?p ?o } }";
         markLogicDatasetGraph.add(newQuad);
         ((MarkLogicDatasetGraph) markLogicDatasetGraph).sync();
@@ -382,7 +396,7 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
         Iterator<Quad> quads = dsg.find();
         while (quads.hasNext()) {
             Quad q = quads.next();
-            System.out.println(q);
+            log.debug(q.toString());
         }
     }
 
@@ -421,6 +435,143 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
         Dataset dataSet = getMarkLogicDatasetGraph("testdata/smallfile.nt")
                 .toDataset();
         RDFDataMgr.write(System.out, dataSet, RDFFormat.TRIG_PRETTY);
+    }
+
+    @Test
+    public void testWriteableView() {
+        MarkLogicDatasetGraph dsg = getMarkLogicDatasetGraph("testdata/smallfile.nt");
+        Graph defaultGraph = dsg.getDefaultGraph();
+        RDFDataMgr.write(System.out, defaultGraph, RDFFormat.TURTLE);
+
+        Triple newTriple = Triple.create(NodeFactory.createURI("http://a"),
+                NodeFactory.createURI("http://b"),
+                NodeFactory.createLiteral("1", XSDint));
+
+        defaultGraph.add(newTriple);
+
+        QueryExecution qe = QueryExecutionFactory.create(
+                "prefix xsd: <http://www.w3.org/2001/XMLSchema#>  ask where { <http://a> ?p  \"1\"^^xsd:int .}", dsg.toDataset());
+        assertTrue(qe.execAsk());
+        defaultGraph.remove(newTriple.getSubject(), newTriple.getPredicate(), newTriple.getObject());
+        qe = QueryExecutionFactory.create(
+                "prefix xsd: <http://www.w3.org/2001/XMLSchema#>  ask where { <http://a> ?p  \"1\"^^xsd:int .}", dsg.toDataset());
+        assertFalse(qe.execAsk());
+    }
+
+    @Test
+    public void testViewDeletes() {
+        MarkLogicDatasetGraph dsg = getMarkLogicDatasetGraph();
+        Node testUri = NodeFactory.createURI("http://updateablegraph");
+        Graph volatileGraph = dsg.getGraph(testUri);
+        Triple t;
+        Node subj = NodeFactory.createURI("http://s-u-1");
+        Node pred = NodeFactory.createURI("http://p23233");
+        //make a graph with 1000 triples.
+        for (int i=0;i<1000;i++) {
+            t = Triple.create(subj, pred,
+                   NodeFactory.createLiteral(Integer.toString(i), XSDint));
+            log.debug("Adding Triples" + t.toString());
+            volatileGraph.add(t);
+        }
+        for (int i=40;i<60;i++) {
+            t = Triple.create(subj, pred,
+                    NodeFactory.createLiteral(Integer.toString(i), XSDint));
+            log.debug("Removing triple " + t.toString());
+            volatileGraph.delete(t);
+        }
+        t = Triple.create(subj, pred,
+                NodeFactory.createLiteral("30", XSDint));
+        assertTrue(volatileGraph.contains(t));
+        t = Triple.create(subj, pred,
+                NodeFactory.createLiteral("45", XSDint));
+        assertFalse(volatileGraph.contains(t));
+        for (int i=0;i<1000;i++) {
+            t = Triple.create(subj, pred,
+                    NodeFactory.createLiteral(Integer.toString(i), XSDint));
+            log.debug("Removing triple " + t.toString());
+            volatileGraph.delete(t);
+        }
+        dsg.sync();
+        Dataset ds = dsg.toDataset();
+        QueryExecution queryExec = QueryExecutionFactory.create("ASK WHERE { GRAPH <http://updateablegraph> { <http://s-u-1> ?p ?o } }", ds);
+        assertFalse(queryExec.execAsk());
+    }
+
+
+    private void threadAdds(int start, int end) {
+        MarkLogicDatasetGraph dsg = getMarkLogicDatasetGraph();
+        Node testUri = NodeFactory.createURI("http://updateablegraph");
+        Graph volatileGraph = dsg.getGraph(testUri);
+        Triple t;
+        Node subj = NodeFactory.createURI("http://s-u-2");
+        Node pred = NodeFactory.createURI("http://p23233");
+        //make a graph with 1000 triples.
+        for (int i=start;i<end;i++) {
+            t = Triple.create(subj, pred,
+                    NodeFactory.createLiteral(Integer.toString(i), XSDint));
+            log.debug("Adding Triples" + t.toString());
+            volatileGraph.add(t);
+        }
+        for (int i=start+10;i<start+60;i++) {
+            t = Triple.create(subj, pred,
+                    NodeFactory.createLiteral(Integer.toString(i), XSDint));
+            log.debug("Removing triple " + t.toString());
+            volatileGraph.delete(t);
+        }
+        t = Triple.create(subj, pred,
+                NodeFactory.createLiteral(Integer.toString(start + 30), XSDint));
+        assertFalse(volatileGraph.contains(t));
+        t = Triple.create(subj, pred,
+                NodeFactory.createLiteral(Integer.toString(start+ 80), XSDint));
+        assertTrue(volatileGraph.contains(t));
+        for (int i=0;i<1000;i++) {
+            t = Triple.create(subj, pred,
+                    NodeFactory.createLiteral(Integer.toString(i), XSDint));
+            log.debug("Removing triple " + t.toString());
+            volatileGraph.delete(t);
+        }
+        for (int i=end;i>=start;i--) {
+            t = Triple.create(subj, pred,
+                    NodeFactory.createLiteral(Integer.toString(i), XSDint));
+            log.debug("Removing triple " + t.toString());
+            volatileGraph.delete(t);
+        }
+        dsg.sync();
+        Dataset ds = dsg.toDataset();
+        QueryExecution queryExec = QueryExecutionFactory.create("ASK WHERE { GRAPH <http://updateablegraph> { <http://s-u-2> ?p ?o } }", ds);
+        QuerySolutionMap m = new QuerySolutionMap();
+        Model model = ModelFactory.createDefaultModel();
+        m.add("o", model.createTypedLiteral(start));
+        queryExec.setInitialBinding(m);
+        assertFalse(queryExec.execAsk());
+    }
+
+    @Test
+    public void threadingTest() throws InterruptedException {
+        Runnable task1 = () -> {
+            log.info("Starting thread1");
+            threadAdds(0, 1000);
+        };
+        Runnable task2 = () -> {
+            log.info("Starting thread2");
+            threadAdds(1001, 2000);
+        };
+        Runnable task3 = () -> {
+            log.info("Starting thread3");
+            threadAdds(2001, 3000);
+        };
+
+        Thread t1 = new Thread(task1);
+        Thread t2 = new Thread(task2);
+        Thread t3 = new Thread(task3);
+        t1.start();
+        t2.start();
+        t3.start();
+
+        t1.join();
+        t2.join();
+        t3.join();
+
     }
 
 }

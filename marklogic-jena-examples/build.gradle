@@ -1,30 +1,17 @@
-// example marklogic-jena project.  Uses your local maven repository
-buildscript {
-  repositories {
-    mavenCentral()
-    maven {url "http://developer.marklogic.com/maven2/"}
-    maven {url "http://rjrudin.github.io/marklogic-java/releases"}
-  }
-  dependencies {
-    classpath "com.rjrudin:ml-gradle:2.0b5"
-  }
-}
 plugins {
     id 'me.champeau.gradle.jmh' version '0.1.3'
 }
 
 apply plugin: 'me.champeau.gradle.jmh'
-apply plugin: 'ml-gradle'
+apply plugin: 'com.marklogic.ml-gradle'
 apply plugin: 'eclipse'
 apply plugin: 'java'
 
 
-// this directive should be uncommented for development environments
-// otherwise the examples can run from centrally distributed marklogic-jena
 evaluationDependsOn(":marklogic-jena")
 
 dependencies {
-  compile('com.marklogic:marklogic-jena:1.0.0'){
+  compile('com.marklogic:marklogic-jena:3.0.2'){
     changing=true
     exclude(group: 'org.slf4j')
     exclude(group: 'log4j')

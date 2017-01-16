@@ -18,12 +18,12 @@ package com.marklogic.semantics.jena.client;
 import java.io.InputStream;
 import java.util.Iterator;
 
-import com.hp.hpl.jena.graph.Node;
-import com.hp.hpl.jena.graph.NodeFactory;
-import com.hp.hpl.jena.query.QuerySolution;
-import com.hp.hpl.jena.query.ResultSet;
-import com.hp.hpl.jena.sparql.core.Quad;
-import com.hp.hpl.jena.sparql.resultset.JSONInput;
+import org.apache.jena.graph.Node;
+import org.apache.jena.graph.NodeFactory;
+import org.apache.jena.query.QuerySolution;
+import org.apache.jena.query.ResultSet;
+import org.apache.jena.sparql.core.Quad;
+import org.apache.jena.sparql.resultset.JSONInput;
 
 /**
  * Returns quads as elements in an iterator, by processing the special purpose

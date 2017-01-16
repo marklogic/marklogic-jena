@@ -19,17 +19,17 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import org.apache.jena.graph.NodeFactory;
+import org.apache.jena.query.DatasetFactory;
+import org.apache.jena.query.QueryExecution;
+import org.apache.jena.query.QueryExecutionFactory;
+import org.apache.jena.query.ReadWrite;
+import org.apache.jena.sparql.core.DatasetGraph;
+import org.apache.jena.update.UpdateAction;
+import org.apache.jena.update.UpdateRequest;
 import org.junit.After;
 import org.junit.Test;
 
-import com.hp.hpl.jena.graph.NodeFactory;
-import com.hp.hpl.jena.query.DatasetFactory;
-import com.hp.hpl.jena.query.QueryExecution;
-import com.hp.hpl.jena.query.QueryExecutionFactory;
-import com.hp.hpl.jena.query.ReadWrite;
-import com.hp.hpl.jena.sparql.core.DatasetGraph;
-import com.hp.hpl.jena.update.UpdateAction;
-import com.hp.hpl.jena.update.UpdateRequest;
 import com.marklogic.client.semantics.Capability;
 import com.marklogic.client.semantics.GraphPermissions;
 import com.marklogic.semantics.jena.JenaTestBase;
@@ -51,7 +51,7 @@ public class MarkLogicUpdatesTest extends JenaTestBase {
 
         QueryExecution askQuery = QueryExecutionFactory
                 .create("BASE <http://example.org/> ASK WHERE { GRAPH <update3> { <s1> <p1> <o1>  }}",
-                        DatasetFactory.create(gs));
+                        DatasetFactory.wrap(gs));
         assertTrue("update action must update database.", askQuery.execAsk());
 
     }
