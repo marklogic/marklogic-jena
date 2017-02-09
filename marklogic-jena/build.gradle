@@ -15,7 +15,7 @@ dependencies {
        exclude(group: 'ch.qos.logback')
        exclude(group: 'log4j')
     }
-    compile('com.marklogic:java-client-api:3.0-SNAPSHOT') {
+    compile('com.marklogic:marklogic-client-api:4.0-SNAPSHOT') {
 	   exclude(group: 'org.slf4j')
        exclude(group: 'ch.qos.logback')
     }
@@ -109,6 +109,10 @@ publishing {
   }
   repositories {
     maven {
+      credentials {
+          username "$nexusUser"
+          password "$nexusPassword"
+      }
       url publishUrl
     }
   }

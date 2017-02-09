@@ -24,7 +24,8 @@ import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.sparql.core.DatasetGraph;
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.DatabaseClientFactory;
-import com.marklogic.client.DatabaseClientFactory.Authentication;
+
+import javax.net.ssl.SSLContext;
 
 public class JenaTestBase {
     protected static DatabaseClient readerClient;
@@ -48,12 +49,12 @@ public class JenaTestBase {
         String readerUser = props.getProperty("readerUser");
         String readerPassword = props.getProperty("readerPassword");
 
-        adminClient = DatabaseClientFactory.newClient(host, port, adminUser,
-                adminPassword, Authentication.DIGEST);
-        writerClient = DatabaseClientFactory.newClient(host, port, writerUser,
-                writerPassword, Authentication.DIGEST);
-        readerClient = DatabaseClientFactory.newClient(host, port, readerUser,
-                readerPassword, Authentication.DIGEST);
+        adminClient = DatabaseClientFactory.newClient(host, port,
+                new DatabaseClientFactory.DigestAuthContext(adminUser, adminPassword));
+        writerClient = DatabaseClientFactory.newClient(host, port,
+                new DatabaseClientFactory.DigestAuthContext(writerUser, writerPassword));
+        readerClient = DatabaseClientFactory.newClient(host, port,
+                new DatabaseClientFactory.DigestAuthContext(readerUser, readerPassword));
     }
 
     protected static DatasetGraph getJenaDatasetGraph(String fileName) {

@@ -25,3 +25,4 @@ buildSrc/build
 bin
 creds
 .idea
+*/gradle/wrapper/gradle-wrapper.properties

@@ -9,13 +9,13 @@ import org.openjdk.jmh.annotations.State;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.hp.hpl.jena.query.Dataset;
-import com.hp.hpl.jena.query.DatasetFactory;
-import com.hp.hpl.jena.query.QueryExecution;
-import com.hp.hpl.jena.query.QueryExecutionFactory;
-import com.hp.hpl.jena.query.QuerySolution;
-import com.hp.hpl.jena.query.ResultSet;
-import com.hp.hpl.jena.query.ResultSetFormatter;
+import org.apache.jena.query.Dataset;
+import org.apache.jena.query.DatasetFactory;
+import org.apache.jena.query.QueryExecution;
+import org.apache.jena.query.QueryExecutionFactory;
+import org.apache.jena.query.QuerySolution;
+import org.apache.jena.query.ResultSet;
+import org.apache.jena.query.ResultSetFormatter;
 import com.marklogic.semantics.jena.MarkLogicDatasetGraph;
 
 @State(value = Scope.Thread)
@@ -34,7 +34,7 @@ public class NaiveBenchmarkExample {
 	public void configure() {
 	    markLogicDatasetGraph = ExampleUtils.loadPropsAndInit();
 	    RDFDataMgr.read(markLogicDatasetGraph, "test.owl", Lang.RDFXML);
-        dataset = DatasetFactory.create(markLogicDatasetGraph);
+        dataset = DatasetFactory.wrap(markLogicDatasetGraph);
 	}
 	
     @Benchmark
