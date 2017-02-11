@@ -105,13 +105,13 @@ public class JenaGraphTests extends ConnectedRESTQA {
 	public void setUp() throws Exception {
 		createUserRolesWithPrevilages("test-eval", "xdbc:eval", "xdbc:eval-in", "xdmp:eval-in", "any-uri", "xdbc:invoke");
 		createRESTUser("eval-user", "x", "test-eval", "rest-admin", "rest-writer", "rest-reader");
-		adminClient = DatabaseClientFactory.newClient("localhost", restPort, dbName, "rest-admin", "x", Authentication.DIGEST);
-		writerClient = DatabaseClientFactory.newClient("localhost", restPort, dbName, "rest-writer", "x", Authentication.DIGEST);
-		readerClient = DatabaseClientFactory.newClient("localhost", restPort, dbName, "rest-reader", "x", Authentication.DIGEST);
-		evalClient = DatabaseClientFactory.newClient("localhost", uberPort, dbName, "eval-user", "x", Authentication.DIGEST);
+		adminClient = DatabaseClientFactory.newClient(TEST_HOST, restPort, dbName, "rest-admin", "x", Authentication.DIGEST);
+		writerClient = DatabaseClientFactory.newClient(TEST_HOST, restPort, dbName, "rest-writer", "x", Authentication.DIGEST);
+		readerClient = DatabaseClientFactory.newClient(TEST_HOST, restPort, dbName, "rest-reader", "x", Authentication.DIGEST);
+		evalClient = DatabaseClientFactory.newClient(TEST_HOST, uberPort, dbName, "eval-user", "x", Authentication.DIGEST);
 		markLogicDatasetGraphWriter = MarkLogicDatasetGraphFactory.createDatasetGraph(writerClient);
 		markLogicDatasetGraphReader = MarkLogicDatasetGraphFactory.createDatasetGraph(readerClient);
-		markLogicDatasetGraphAdmin = MarkLogicDatasetGraphFactory.createDatasetGraph("localhost", 8014, "rest-admin", "x",
+		markLogicDatasetGraphAdmin = MarkLogicDatasetGraphFactory.createDatasetGraph(TEST_HOST, 8014, "rest-admin", "x",
 				Authentication.DIGEST);
 	}
 
