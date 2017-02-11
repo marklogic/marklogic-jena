@@ -87,7 +87,10 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
      * Creates a new MarkLogicDatasetGraph using the supplied DatabaseClient. If
      * this client can write to the database, then the DatasetGraph is
      * initialized with a default graph.
-     * 
+     *
+     * MarkLogicDatasetGraph is a long-lived object.  Use the same one for the
+     * duration of your session.
+     *
      * @param jenaClient
      *            specifies the connection to the MarkLogic server. Obtain from
      *            DatabaseClientFactory.

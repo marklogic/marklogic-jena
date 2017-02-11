@@ -48,6 +48,8 @@ import static com.marklogic.semantics.jena.client.TripleBuffer.DEFAULT_INITIAL_D
 /**
  * A class to encapsulate access to the Java API's DatabaseClient for Jena
  * users. Access the underlying Java API client with getClient();
+ * The DatabaseClient is a long-lived object.  You should expect to reuse
+ * a single client for all connections that share state (username, password, etc.)
  */
 public class JenaDatabaseClient {
 
