@@ -62,6 +62,10 @@ public abstract class TripleBuffer extends TimerTask {
         this.client = client;
     }
 
+    public void setCacheInterval(long millis) {
+        this.cacheMillis = millis;
+    }
+
     @Override
     public void run() {
         Date now = new Date();

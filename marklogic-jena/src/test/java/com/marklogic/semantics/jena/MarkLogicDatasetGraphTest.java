@@ -398,6 +398,16 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
             Quad q = quads.next();
             log.debug(q.toString());
         }
+
+        // set timer and do it again.
+        dsg.getDatabaseClient().setTimerCacheInterval(10000L);
+        dsg.clear();
+        getMarkLogicDatasetGraph("testdata/test.owl");
+        quads = dsg.find();
+        while (quads.hasNext()) {
+            Quad q = quads.next();
+            log.debug(q.toString());
+        }
     }
 
     @Test(expected = MarkLogicJenaException.class)

@@ -83,8 +83,8 @@ public class JenaDatabaseClient {
             this.writeBuffer = new TriplesWriteBuffer(this);
             this.deleteBuffer = new TriplesDeleteBuffer(this);
             this.timer = new Timer();
-            timer.scheduleAtFixedRate(writeBuffer, DEFAULT_INITIAL_DELAY, DEFAULT_CACHE_MILLIS);
-            timer.scheduleAtFixedRate(deleteBuffer, DEFAULT_INITIAL_DELAY + 250, DEFAULT_CACHE_MILLIS);
+            timer.schedule(writeBuffer, DEFAULT_INITIAL_DELAY, DEFAULT_CACHE_MILLIS);
+            timer.schedule(deleteBuffer, DEFAULT_INITIAL_DELAY + 250, DEFAULT_CACHE_MILLIS);
         }
     }
 
@@ -100,6 +100,16 @@ public class JenaDatabaseClient {
         }
         client = null;
     }
+
+    /**
+     * Set the interval at which the write and delete cache flush to MarkLogic.
+     * Provided for internal diagnostic tuning.
+     */
+    public void setTimerCacheInterval(long millis) {
+        writeBuffer.setCacheInterval(millis);
+        deleteBuffer.setCacheInterval(millis);
+    }
+
 
     /**
      * Create a new {@link com.marklogic.client.semantics.SPARQLQueryDefinition}
