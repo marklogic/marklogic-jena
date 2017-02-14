@@ -104,10 +104,21 @@ public class JenaDatabaseClient {
     /**
      * Set the interval at which the write and delete cache flush to MarkLogic.
      * Provided for internal diagnostic tuning.
+     * @param millis The interval, in milliseconds at which the local write
+     *               and delete buffers are to be flushed.
      */
     public void setTimerCacheInterval(long millis) {
         writeBuffer.setCacheInterval(millis);
         deleteBuffer.setCacheInterval(millis);
+    }
+
+    /**
+     * Get the current interval for sending write and delete requests
+     * to the server.
+     * @return The current setting for writing and deleting triples, in milliseconds.
+     */
+    public long getTimerCacheInterval() {
+        return writeBuffer.cacheMillis;
     }
 
 

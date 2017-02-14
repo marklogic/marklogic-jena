@@ -1,4 +1,4 @@
-# marklogic-jena v3.0.2-SNAPSHOT
+# marklogic-jena v3.0.3-SNAPSHOT
 
 ## Introduction
 
@@ -45,7 +45,7 @@ gradle install
 For gradle-based projects include this dependency in `build.gradle`:
 ```
 dependencies {
-   compile 'com.marklogic:marklogic-jena:3.0.2'
+   compile 'com.marklogic:marklogic-jena:3.0.3'
 }
 ```
 
@@ -55,7 +55,7 @@ Maven-based projects use this block in `pom.xml`:
 <dependency>
     <groupId>com.marklogic</groupId>
     <artifactId>marklogic-jena</artifactId>
-    <version>3.0.2</version>
+    <version>3.0.3</version>
 </dependency>
 ```
 
@@ -65,7 +65,9 @@ http://marklogic.github.io/marklogic-jena/marklogic-jena/build/docs/javadoc/
 
 ### Examples
 
-The project at [marklogic-jena-examples](marklogic-jena-examples) contains some Java applications that exercise the functionality of MarkLogic using this library.
+The project at [marklogic-jena-examples](marklogic-jena-examples) contains some
+Java applications that exercise the functionality of MarkLogic using this
+library.
 
 
 ## Support

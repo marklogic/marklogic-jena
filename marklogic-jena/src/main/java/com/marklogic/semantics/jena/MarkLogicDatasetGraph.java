@@ -385,6 +385,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
     /**
      * Gets a view of the DatasetGraph as a Dataset, which is used to back
      * queries.
+     * @return The DatasetGraph, wrapped in a Dataset interface.
      */
     public Dataset toDataset() {
         checkIsOpen();
