@@ -730,7 +730,7 @@ public class JenaGraphTests extends ConnectedRESTQA {
 		final int graphSize;
 
 		class MyRunnable implements Runnable {
-			MarkLogicDatasetGraph dataSetGraph = MarkLogicDatasetGraphFactory.createDatasetGraph("localhost", 8014, "rest-admin", "x",
+			MarkLogicDatasetGraph dataSetGraph = MarkLogicDatasetGraphFactory.createDatasetGraph(TEST_HOST, 8014, "rest-admin", "x",
 					Authentication.DIGEST);
 			@Override
 			public void run(){
@@ -814,7 +814,7 @@ public class JenaGraphTests extends ConnectedRESTQA {
 		final int graphSize;
 
 		class MyRunnable implements Runnable {
-			MarkLogicDatasetGraph dataSetGraph = MarkLogicDatasetGraphFactory.createDatasetGraph("localhost", 8014, "rest-admin", "x",
+			MarkLogicDatasetGraph dataSetGraph = MarkLogicDatasetGraphFactory.createDatasetGraph(TEST_HOST, 8014, "rest-admin", "x",
 					Authentication.DIGEST);
 			@Override
 			public void run(){

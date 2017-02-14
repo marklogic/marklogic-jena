@@ -81,7 +81,7 @@ public abstract class ConnectedRESTQA {
 
 			DefaultHttpClient client = new DefaultHttpClient();
 			client.getCredentialsProvider().setCredentials(
-					new AuthScope("f23-runner", 8002),
+					new AuthScope(TEST_HOST, 8002),
 					new UsernamePasswordCredentials("admin", "admin"));
 
 			HttpPost post = new HttpPost(TEST_URL + ":8002"+ "/manage/v2/databases?format=json");
