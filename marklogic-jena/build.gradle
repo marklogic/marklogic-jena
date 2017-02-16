@@ -109,10 +109,6 @@ publishing {
   }
   repositories {
     maven {
-      credentials {
-          username "$nexusUser"
-          password "$nexusPassword"
-      }
       url publishUrl
     }
   }
