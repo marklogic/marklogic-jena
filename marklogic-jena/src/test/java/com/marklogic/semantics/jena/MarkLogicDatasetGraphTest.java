@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 MarkLogic Corporation
+ * Copyright 2016-2017 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -394,6 +394,16 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
         MarkLogicDatasetGraph dsg = getMarkLogicDatasetGraph("testdata/test.owl");
 
         Iterator<Quad> quads = dsg.find();
+        while (quads.hasNext()) {
+            Quad q = quads.next();
+            log.debug(q.toString());
+        }
+
+        // set timer and do it again.
+        dsg.getDatabaseClient().setTimerCacheInterval(10000L);
+        dsg.clear();
+        getMarkLogicDatasetGraph("testdata/test.owl");
+        quads = dsg.find();
         while (quads.hasNext()) {
             Quad q = quads.next();
             log.debug(q.toString());

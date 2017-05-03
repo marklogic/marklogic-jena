@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 MarkLogic Corporation
+ * Copyright 2015-2017 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -105,13 +105,13 @@ public class JenaGraphTests extends ConnectedRESTQA {
 	public void setUp() throws Exception {
 		createUserRolesWithPrevilages("test-eval", "xdbc:eval", "xdbc:eval-in", "xdmp:eval-in", "any-uri", "xdbc:invoke");
 		createRESTUser("eval-user", "x", "test-eval", "rest-admin", "rest-writer", "rest-reader");
-		adminClient = DatabaseClientFactory.newClient("localhost", restPort, dbName, "rest-admin", "x", Authentication.DIGEST);
-		writerClient = DatabaseClientFactory.newClient("localhost", restPort, dbName, "rest-writer", "x", Authentication.DIGEST);
-		readerClient = DatabaseClientFactory.newClient("localhost", restPort, dbName, "rest-reader", "x", Authentication.DIGEST);
-		evalClient = DatabaseClientFactory.newClient("localhost", uberPort, dbName, "eval-user", "x", Authentication.DIGEST);
+		adminClient = DatabaseClientFactory.newClient(TEST_HOST, restPort, dbName, "rest-admin", "x", Authentication.DIGEST);
+		writerClient = DatabaseClientFactory.newClient(TEST_HOST, restPort, dbName, "rest-writer", "x", Authentication.DIGEST);
+		readerClient = DatabaseClientFactory.newClient(TEST_HOST, restPort, dbName, "rest-reader", "x", Authentication.DIGEST);
+		evalClient = DatabaseClientFactory.newClient(TEST_HOST, uberPort, dbName, "eval-user", "x", Authentication.DIGEST);
 		markLogicDatasetGraphWriter = MarkLogicDatasetGraphFactory.createDatasetGraph(writerClient);
 		markLogicDatasetGraphReader = MarkLogicDatasetGraphFactory.createDatasetGraph(readerClient);
-		markLogicDatasetGraphAdmin = MarkLogicDatasetGraphFactory.createDatasetGraph("localhost", 8014, "rest-admin", "x",
+		markLogicDatasetGraphAdmin = MarkLogicDatasetGraphFactory.createDatasetGraph(TEST_HOST, 8014, "rest-admin", "x",
 				Authentication.DIGEST);
 	}
 
@@ -730,7 +730,7 @@ public class JenaGraphTests extends ConnectedRESTQA {
 		final int graphSize;
 
 		class MyRunnable implements Runnable {
-			MarkLogicDatasetGraph dataSetGraph = MarkLogicDatasetGraphFactory.createDatasetGraph("localhost", 8014, "rest-admin", "x",
+			MarkLogicDatasetGraph dataSetGraph = MarkLogicDatasetGraphFactory.createDatasetGraph(TEST_HOST, 8014, "rest-admin", "x",
 					Authentication.DIGEST);
 			@Override
 			public void run(){
@@ -814,7 +814,7 @@ public class JenaGraphTests extends ConnectedRESTQA {
 		final int graphSize;
 
 		class MyRunnable implements Runnable {
-			MarkLogicDatasetGraph dataSetGraph = MarkLogicDatasetGraphFactory.createDatasetGraph("localhost", 8014, "rest-admin", "x",
+			MarkLogicDatasetGraph dataSetGraph = MarkLogicDatasetGraphFactory.createDatasetGraph(TEST_HOST, 8014, "rest-admin", "x",
 					Authentication.DIGEST);
 			@Override
 			public void run(){

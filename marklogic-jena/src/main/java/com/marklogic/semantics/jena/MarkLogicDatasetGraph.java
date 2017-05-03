@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 MarkLogic Corporation
+ * Copyright 2016-2017 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -87,7 +87,10 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
      * Creates a new MarkLogicDatasetGraph using the supplied DatabaseClient. If
      * this client can write to the database, then the DatasetGraph is
      * initialized with a default graph.
-     * 
+     *
+     * MarkLogicDatasetGraph is a long-lived object.  Use the same one for the
+     * duration of your session.
+     *
      * @param jenaClient
      *            specifies the connection to the MarkLogic server. Obtain from
      *            DatabaseClientFactory.
@@ -382,6 +385,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
     /**
      * Gets a view of the DatasetGraph as a Dataset, which is used to back
      * queries.
+     * @return The DatasetGraph, wrapped in a Dataset interface.
      */
     public Dataset toDataset() {
         checkIsOpen();

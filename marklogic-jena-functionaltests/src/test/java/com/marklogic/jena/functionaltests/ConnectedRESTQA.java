@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2015 MarkLogic Corporation
+ * Copyright 2014-2017 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -72,18 +72,19 @@ public abstract class ConnectedRESTQA {
 	 *  @param dbName
 	 */
 	private static final org.apache.logging.log4j.Logger logger = LogManager.getLogger(ConnectedRESTQA.class);
-	
 
-	
+	public static String TEST_HOST = "localhost";
+	public static String TEST_URL = "http://" + TEST_HOST;
+
 	public static void createDB(String dbName)	{
 		try {	
 
 			DefaultHttpClient client = new DefaultHttpClient();
 			client.getCredentialsProvider().setCredentials(
-					new AuthScope("localhost", 8002),
+					new AuthScope(TEST_HOST, 8002),
 					new UsernamePasswordCredentials("admin", "admin"));
 
-			HttpPost post = new HttpPost("http://localhost:8002"+ "/manage/v2/databases?format=json");
+			HttpPost post = new HttpPost(TEST_URL + ":8002"+ "/manage/v2/databases?format=json");
 			String JSONString = "[{\"database-name\":\""+ dbName + "\"}]";
 
 			post.addHeader("Content-type", "application/json");
@@ -108,9 +109,9 @@ public abstract class ConnectedRESTQA {
 		try{
 		DefaultHttpClient client = new DefaultHttpClient();
 		client.getCredentialsProvider().setCredentials(
-				new AuthScope("localhost", 8002),
+				new AuthScope(TEST_HOST, 8002),
 				new UsernamePasswordCredentials("admin", "admin"));
-		HttpGet getrequest = new HttpGet("http://localhost:8002/manage/v2/properties?format=json");
+		HttpGet getrequest = new HttpGet(TEST_URL + ":8002/manage/v2/properties?format=json");
 		HttpResponse resp = client.execute(getrequest);
 		jstream =resp.getEntity().getContent();
 		JsonNode jnode= new ObjectMapper().readTree(jstream);
@@ -135,7 +136,7 @@ public abstract class ConnectedRESTQA {
 			// writing error to Log
 			e.printStackTrace();
 			
-			return "localhost";
+			return TEST_HOST;
 		}
 		finally{
 			jstream =null;
@@ -148,9 +149,9 @@ public abstract class ConnectedRESTQA {
 		try{
 			DefaultHttpClient client = new DefaultHttpClient();
 			client.getCredentialsProvider().setCredentials(
-					new AuthScope("localhost", 8002),
+					new AuthScope(TEST_HOST, 8002),
 					new UsernamePasswordCredentials("admin", "admin"));
-			HttpPost post = new HttpPost("http://localhost:8002"+ "/manage/v2/forests?format=json");
+			HttpPost post = new HttpPost(TEST_URL + ":8002"+ "/manage/v2/forests?format=json");
 //			System.out.println( getBootStrapHostFromML());
 			String hName = getBootStrapHostFromML();
 			String JSONString = 
@@ -184,9 +185,9 @@ public abstract class ConnectedRESTQA {
 		try{
 			DefaultHttpClient client = new DefaultHttpClient();
 			client.getCredentialsProvider().setCredentials(
-					new AuthScope("localhost", 8002),
+					new AuthScope(TEST_HOST, 8002),
 					new UsernamePasswordCredentials("admin", "admin"));
-			HttpPost post = new HttpPost("http://localhost:8002"+ "/manage/v2/forests?format=json");
+			HttpPost post = new HttpPost(TEST_URL + ":8002"+ "/manage/v2/forests?format=json");
 			String JSONString = 
 					"{\"database\":\""+ 
 							dbName + 
@@ -217,10 +218,10 @@ public abstract class ConnectedRESTQA {
 			DefaultHttpClient client = new DefaultHttpClient();
 
 			client.getCredentialsProvider().setCredentials(
-					new AuthScope("localhost", 8002),
+					new AuthScope(TEST_HOST, 8002),
 					new UsernamePasswordCredentials("admin", "admin"));
 
-			HttpPost post = new HttpPost("http://localhost:8002"+ "/v1/rest-apis?format=json");
+			HttpPost post = new HttpPost(TEST_URL + ":8002"+ "/v1/rest-apis?format=json");
 			//			
 			String JSONString = 
 					"{ \"rest-api\": {\"name\":\""+
@@ -257,11 +258,11 @@ public abstract class ConnectedRESTQA {
 		DefaultHttpClient client = new DefaultHttpClient();
 
 		client.getCredentialsProvider().setCredentials(
-				new AuthScope("localhost", 8002),
+				new AuthScope(TEST_HOST, 8002),
 				new UsernamePasswordCredentials("admin", "admin"));
 		String  body = "{\"content-database\": \""+dbName+"\",\"group-name\": \"Default\"}";
 
-		HttpPut put = new HttpPut("http://localhost:8002/manage/v2/servers/"+restServerName+"/properties?server-type=http");
+		HttpPut put = new HttpPut(TEST_URL + ":8002/manage/v2/servers/"+restServerName+"/properties?server-type=http");
 		put.addHeader("Content-type", "application/json");
 		put.setEntity(new StringEntity(body));
 
@@ -280,11 +281,11 @@ public abstract class ConnectedRESTQA {
 		DefaultHttpClient client = new DefaultHttpClient();
 
 		client.getCredentialsProvider().setCredentials(
-				new AuthScope("localhost", 8002),
+				new AuthScope(TEST_HOST, 8002),
 				new UsernamePasswordCredentials("admin", "admin"));
 		String  body = "{ \"default-user\":\""+userName+"\",\"authentication\": \""+authType+"\",\"group-name\": \"Default\"}";
 
-		HttpPut put = new HttpPut("http://localhost:8002/manage/v2/servers/"+restServerName+"/properties?server-type=http");
+		HttpPut put = new HttpPut(TEST_URL + ":8002/manage/v2/servers/"+restServerName+"/properties?server-type=http");
 		put.addHeader("Content-type", "application/json");
 		put.setEntity(new StringEntity(body));
 
@@ -303,9 +304,9 @@ public abstract class ConnectedRESTQA {
 			DefaultHttpClient client = new DefaultHttpClient();
 
 			client.getCredentialsProvider().setCredentials(
-					new AuthScope("localhost", 8002),
+					new AuthScope(TEST_HOST, 8002),
 					new UsernamePasswordCredentials("admin", "admin"));
-			HttpPost post = new HttpPost("http://localhost:8002"+ "/v1/rest-apis?format=json");
+			HttpPost post = new HttpPost(TEST_URL + ":8002"+ "/v1/rest-apis?format=json");
 			//			
 			String JSONString = 
 					"{ \"rest-api\": {\"name\":\""+
@@ -391,9 +392,9 @@ public abstract class ConnectedRESTQA {
 		try{
 			DefaultHttpClient client = new DefaultHttpClient();
 			client.getCredentialsProvider().setCredentials(
-					new AuthScope("localhost", 8002),
+					new AuthScope(TEST_HOST, 8002),
 					new UsernamePasswordCredentials("admin", "admin"));
-			HttpGet getrequest = new HttpGet("http://localhost:8002/manage/v2/roles/"+roleName);
+			HttpGet getrequest = new HttpGet(TEST_URL + ":8002/manage/v2/roles/"+roleName);
 			HttpResponse resp = client.execute(getrequest);
 
 			if( resp.getStatusLine().getStatusCode() == 200)
@@ -405,7 +406,7 @@ public abstract class ConnectedRESTQA {
 				String[] roleNames ={"rest-reader","rest-writer"};
 				client = new DefaultHttpClient();
 				client.getCredentialsProvider().setCredentials(
-						new AuthScope("localhost", 8002),
+						new AuthScope(TEST_HOST, 8002),
 						new UsernamePasswordCredentials("admin", "admin"));
 
 				ObjectMapper mapper = new ObjectMapper();
@@ -434,7 +435,7 @@ public abstract class ConnectedRESTQA {
 				permArray.add(getPermissionNode(roleNames[1],Capability.UPDATE).get("permission").get(0));
 				mainNode.withArray("permission").addAll(permArray);
 				System.out.println(mainNode.toString());
-				HttpPost post = new HttpPost("http://localhost:8002"+ "/manage/v2/roles?format=json");
+				HttpPost post = new HttpPost(TEST_URL + ":8002"+ "/manage/v2/roles?format=json");
 				post.addHeader("Content-type", "application/json");
 				post.setEntity(new StringEntity(mainNode.toString()));
 
@@ -464,9 +465,9 @@ public abstract class ConnectedRESTQA {
 		try{
 			DefaultHttpClient client = new DefaultHttpClient();
 			client.getCredentialsProvider().setCredentials(
-					new AuthScope("localhost", 8002),
+					new AuthScope(TEST_HOST, 8002),
 					new UsernamePasswordCredentials("admin", "admin"));
-			HttpGet getrequest = new HttpGet("http://localhost:8002"+ "/manage/v2/users/"+usrName);
+			HttpGet getrequest = new HttpGet(TEST_URL + ":8002"+ "/manage/v2/users/"+usrName);
 			HttpResponse resp = client.execute(getrequest);
 
 			if( resp.getStatusLine().getStatusCode() == 200)
@@ -477,7 +478,7 @@ public abstract class ConnectedRESTQA {
 				System.out.println("User dont exist");
 				client = new DefaultHttpClient();
 				client.getCredentialsProvider().setCredentials(
-						new AuthScope("localhost", 8002),
+						new AuthScope(TEST_HOST, 8002),
 						new UsernamePasswordCredentials("admin", "admin"));
 
 				ObjectMapper mapper = new ObjectMapper();
@@ -492,7 +493,7 @@ public abstract class ConnectedRESTQA {
 				mainNode.withArray("role").addAll(childArray);
 				//System.out.println(type + mainNode.path("range-element-indexes").path("range-element-index").toString());
 				System.out.println(mainNode.toString());
-				HttpPost post = new HttpPost("http://localhost:8002"+ "/manage/v2/users?format=json");
+				HttpPost post = new HttpPost(TEST_URL + ":8002"+ "/manage/v2/users?format=json");
 				post.addHeader("Content-type", "application/json");
 				post.setEntity(new StringEntity(mainNode.toString()));
 
@@ -561,9 +562,9 @@ public abstract class ConnectedRESTQA {
 		try{
 			DefaultHttpClient client = new DefaultHttpClient();
 			client.getCredentialsProvider().setCredentials(
-					new AuthScope("localhost", 8002),
+					new AuthScope(TEST_HOST, 8002),
 					new UsernamePasswordCredentials("admin", "admin"));
-			HttpGet getrequest = new HttpGet("http://localhost:8002"+ "/manage/v2/users/"+usrName);
+			HttpGet getrequest = new HttpGet(TEST_URL + ":8002"+ "/manage/v2/users/"+usrName);
 			HttpResponse resp = client.execute(getrequest);
 
 			if( resp.getStatusLine().getStatusCode() == 200)
@@ -574,7 +575,7 @@ public abstract class ConnectedRESTQA {
 				System.out.println("User dont exist");
 				client = new DefaultHttpClient();
 				client.getCredentialsProvider().setCredentials(
-						new AuthScope("localhost", 8002),
+						new AuthScope(TEST_HOST, 8002),
 						new UsernamePasswordCredentials("admin", "admin"));
 
 				ObjectMapper mapper = new ObjectMapper();
@@ -591,7 +592,7 @@ public abstract class ConnectedRESTQA {
 				mainNode.setAll(colections);
 				//System.out.println(type + mainNode.path("range-element-indexes").path("range-element-index").toString());
 				System.out.println(mainNode.toString());
-				HttpPost post = new HttpPost("http://localhost:8002"+ "/manage/v2/users?format=json");
+				HttpPost post = new HttpPost(TEST_URL + ":8002"+ "/manage/v2/users?format=json");
 				post.addHeader("Content-type", "application/json");
 				post.setEntity(new StringEntity(mainNode.toString()));
 
@@ -619,10 +620,10 @@ public abstract class ConnectedRESTQA {
 			DefaultHttpClient client = new DefaultHttpClient();
 
 			client.getCredentialsProvider().setCredentials(
-					new AuthScope("localhost", 8002),
+					new AuthScope(TEST_HOST, 8002),
 					new UsernamePasswordCredentials("admin", "admin"));
 
-			HttpDelete delete = new HttpDelete("http://localhost:8002/manage/v2/users/"+usrName);
+			HttpDelete delete = new HttpDelete(TEST_URL + ":8002/manage/v2/users/"+usrName);
 
 			HttpResponse response = client.execute(delete);
 			if(response.getStatusLine().getStatusCode()== 202){
@@ -639,10 +640,10 @@ public abstract class ConnectedRESTQA {
 			DefaultHttpClient client = new DefaultHttpClient();
 
 			client.getCredentialsProvider().setCredentials(
-					new AuthScope("localhost", 8002),
+					new AuthScope(TEST_HOST, 8002),
 					new UsernamePasswordCredentials("admin", "admin"));
 
-			HttpDelete delete = new HttpDelete("http://localhost:8002/manage/v2/roles/"+roleName);
+			HttpDelete delete = new HttpDelete(TEST_URL + ":8002/manage/v2/roles/"+roleName);
 
 			HttpResponse response = client.execute(delete);
 			if(response.getStatusLine().getStatusCode()== 202){
@@ -670,10 +671,10 @@ public abstract class ConnectedRESTQA {
 			DefaultHttpClient client = new DefaultHttpClient();
 
 			client.getCredentialsProvider().setCredentials(
-					new AuthScope("localhost", 8002),
+					new AuthScope(TEST_HOST, 8002),
 					new UsernamePasswordCredentials("admin", "admin"));
 
-			HttpDelete delete = new HttpDelete("http://localhost:8002/v1/rest-apis/"+restServerName+"?include=content&include=modules");
+			HttpDelete delete = new HttpDelete(TEST_URL + ":8002/v1/rest-apis/"+restServerName+"?include=content&include=modules");
 
 			HttpResponse response = client.execute(delete);
 			if(response.getStatusLine().getStatusCode()== 202){
@@ -692,10 +693,10 @@ public abstract class ConnectedRESTQA {
 			DefaultHttpClient client = new DefaultHttpClient();
 
 			client.getCredentialsProvider().setCredentials(
-					new AuthScope("localhost", 8002),
+					new AuthScope(TEST_HOST, 8002),
 					new UsernamePasswordCredentials("admin", "admin"));
 
-			HttpDelete delete = new HttpDelete("http://localhost:8002/v1/rest-apis/"+restServerName+"&include=modules");
+			HttpDelete delete = new HttpDelete(TEST_URL + ":8002/v1/rest-apis/"+restServerName+"&include=modules");
 			HttpResponse response = client.execute(delete);
 
 			if(response.getStatusLine().getStatusCode()== 202){
@@ -714,10 +715,10 @@ public abstract class ConnectedRESTQA {
 			DefaultHttpClient client = new DefaultHttpClient();
 
 			client.getCredentialsProvider().setCredentials(
-					new AuthScope("localhost", 8002),
+					new AuthScope(TEST_HOST, 8002),
 					new UsernamePasswordCredentials("admin", "admin"));
 
-			HttpPost post = new HttpPost("http://localhost:8002"+ "/manage/v2/forests/"+fName);
+			HttpPost post = new HttpPost(TEST_URL + ":8002"+ "/manage/v2/forests/"+fName);
 			//			
 			List<NameValuePair> urlParameters = new ArrayList<NameValuePair>();
 			urlParameters.add(new BasicNameValuePair("state", "detach"));
@@ -746,10 +747,10 @@ public abstract class ConnectedRESTQA {
 		try{
 			DefaultHttpClient client = new DefaultHttpClient();
 			client.getCredentialsProvider().setCredentials(
-					new AuthScope("localhost", 8002),
+					new AuthScope(TEST_HOST, 8002),
 					new UsernamePasswordCredentials("admin", "admin"));
 
-			HttpDelete delete = new HttpDelete("http://localhost:8002/manage/v2/forests/"+fName+"?level=full");
+			HttpDelete delete = new HttpDelete(TEST_URL + ":8002/manage/v2/forests/"+fName+"?level=full");
 			client.execute(delete);
 
 		}catch (Exception e) {
@@ -765,10 +766,10 @@ public abstract class ConnectedRESTQA {
 		try{
 			DefaultHttpClient client = new DefaultHttpClient();
 			client.getCredentialsProvider().setCredentials(
-					new AuthScope("localhost", 8002),
+					new AuthScope(TEST_HOST, 8002),
 					new UsernamePasswordCredentials("admin", "admin"));
 
-			HttpDelete delete = new HttpDelete("http://localhost:8002/manage/v2/databases/"+dbName);
+			HttpDelete delete = new HttpDelete(TEST_URL + ":8002/manage/v2/databases/"+dbName);
 			client.execute(delete);
 
 		}catch (Exception e) {
@@ -781,9 +782,9 @@ public abstract class ConnectedRESTQA {
 		try{
 			DefaultHttpClient client = new DefaultHttpClient();
 			client.getCredentialsProvider().setCredentials(
-					new AuthScope("localhost", port),
+					new AuthScope(TEST_HOST, port),
 					new UsernamePasswordCredentials("admin", "admin"));
-			String uri = "http://localhost:"+port+"/v1/search/";
+			String uri = TEST_URL + ":"+port+"/v1/search/";
 			HttpDelete delete = new HttpDelete(uri);
 			client.execute(delete);
 
@@ -799,12 +800,12 @@ public abstract class ConnectedRESTQA {
 			while(count <20){
 				DefaultHttpClient client = new DefaultHttpClient();
 				client.getCredentialsProvider().setCredentials(
-						new AuthScope("localhost", 8001),
+						new AuthScope(TEST_HOST, 8001),
 						new UsernamePasswordCredentials("admin", "admin"));
 
 				count++;
 				try{
-					HttpGet getrequest = new HttpGet("http://localhost:8001/admin/v1/timestamp");
+					HttpGet getrequest = new HttpGet(TEST_URL + ":8001/admin/v1/timestamp");
 					HttpResponse response = client.execute(getrequest);
 					if(response.getStatusLine().getStatusCode() == 503){Thread.sleep(5000);}
 					else if(response.getStatusLine().getStatusCode() == 200){
@@ -902,16 +903,16 @@ public abstract class ConnectedRESTQA {
 		try{
 			DefaultHttpClient client = new DefaultHttpClient();
 			client.getCredentialsProvider().setCredentials(
-					new AuthScope("localhost", 8002),
+					new AuthScope(TEST_HOST, 8002),
 					new UsernamePasswordCredentials("admin", "admin"));
-			HttpGet getrequest = new HttpGet("http://localhost:8002"+ "/manage/v2/databases/"+dbName+"/properties?format=json");
+			HttpGet getrequest = new HttpGet(TEST_URL + ":8002"+ "/manage/v2/databases/"+dbName+"/properties?format=json");
 			HttpResponse response1 = client.execute(getrequest);
 			jsonstream =response1.getEntity().getContent();
 			JsonNode jnode= new ObjectMapper().readTree(jsonstream);
 			if(!jnode.isNull()){       	
 				((ObjectNode)jnode).put(prop, propValue);
 				//            System.out.println(jnode.toString()+"\n"+ response1.getStatusLine().getStatusCode());
-				HttpPut put = new HttpPut("http://localhost:8002"+ "/manage/v2/databases/"+dbName+"/properties?format=json");
+				HttpPut put = new HttpPut(TEST_URL + ":8002"+ "/manage/v2/databases/"+dbName+"/properties?format=json");
 				put.addHeader("Content-type", "application/json");
 				put.setEntity(new StringEntity(jnode.toString()));
 
@@ -942,16 +943,16 @@ public abstract class ConnectedRESTQA {
 		try{
 			DefaultHttpClient client = new DefaultHttpClient();
 			client.getCredentialsProvider().setCredentials(
-					new AuthScope("localhost", 8002),
+					new AuthScope(TEST_HOST, 8002),
 					new UsernamePasswordCredentials("admin", "admin"));
-			HttpGet getrequest = new HttpGet("http://localhost:8002"+ "/manage/v2/databases/"+dbName+"/properties?format=json");
+			HttpGet getrequest = new HttpGet(TEST_URL + ":8002"+ "/manage/v2/databases/"+dbName+"/properties?format=json");
 			HttpResponse response1 = client.execute(getrequest);
 			jsonstream =response1.getEntity().getContent();
 			JsonNode jnode= new ObjectMapper().readTree(jsonstream);
 			if(!jnode.isNull()){       	
 				((ObjectNode)jnode).put(prop, propValue)   ;
 				//            System.out.println(jnode.toString()+"\n"+ response1.getStatusLine().getStatusCode());
-				HttpPut put = new HttpPut("http://localhost:8002"+ "/manage/v2/databases/"+dbName+"/properties?format=json");
+				HttpPut put = new HttpPut(TEST_URL + ":8002"+ "/manage/v2/databases/"+dbName+"/properties?format=json");
 				put.addHeader("Content-type", "application/json");
 				put.setEntity(new StringEntity(jnode.toString()));
 
@@ -987,9 +988,9 @@ public abstract class ConnectedRESTQA {
 		try{
 			DefaultHttpClient client = new DefaultHttpClient();
 			client.getCredentialsProvider().setCredentials(
-					new AuthScope("localhost", 8002),
+					new AuthScope(TEST_HOST, 8002),
 					new UsernamePasswordCredentials("admin", "admin"));
-			HttpGet getrequest = new HttpGet("http://localhost:8002"+ "/manage/v2/databases/"+dbName+"/properties?format=json");
+			HttpGet getrequest = new HttpGet(TEST_URL + ":8002"+ "/manage/v2/databases/"+dbName+"/properties?format=json");
 			HttpResponse response1 = client.execute(getrequest);
 			jsonstream =response1.getEntity().getContent();
 			ObjectMapper mapper = new ObjectMapper();
@@ -1014,7 +1015,7 @@ public abstract class ConnectedRESTQA {
 					}
 				}
 
-				HttpPut put = new HttpPut("http://localhost:8002"+ "/manage/v2/databases/"+dbName+"/properties?format=json");
+				HttpPut put = new HttpPut(TEST_URL + ":8002"+ "/manage/v2/databases/"+dbName+"/properties?format=json");
 				put.addHeader("Content-type", "application/json");
 				put.setEntity(new StringEntity(jnode.toString()));
 
@@ -1397,9 +1398,9 @@ public abstract class ConnectedRESTQA {
 		try{
 			DefaultHttpClient client = new DefaultHttpClient();
 			client.getCredentialsProvider().setCredentials(
-					new AuthScope("localhost", 8002),
+					new AuthScope(TEST_HOST, 8002),
 					new UsernamePasswordCredentials("admin", "admin"));
-			HttpGet getrequest = new HttpGet("http://localhost:8002"+ "/manage/v2/databases/"+dbName+"/properties?format=json");
+			HttpGet getrequest = new HttpGet(TEST_URL + ":8002"+ "/manage/v2/databases/"+dbName+"/properties?format=json");
 			HttpResponse response1 = client.execute(getrequest);
 			jsonstream =response1.getEntity().getContent();
 			ObjectMapper mapper = new ObjectMapper();
@@ -1423,7 +1424,7 @@ public abstract class ConnectedRESTQA {
 					}
 				}
 
-				HttpPut put = new HttpPut("http://localhost:8002"+ "/manage/v2/databases/"+dbName+"/properties?format=json");
+				HttpPut put = new HttpPut(TEST_URL + ":8002"+ "/manage/v2/databases/"+dbName+"/properties?format=json");
 				put.addHeader("Content-type", "application/json");
 				put.setEntity(new StringEntity(jnode.toString()));
 
@@ -1574,10 +1575,10 @@ public abstract class ConnectedRESTQA {
 
 		DefaultHttpClient client = new DefaultHttpClient();
 		client.getCredentialsProvider().setCredentials(
-				new AuthScope("localhost", 8002),
+				new AuthScope(TEST_HOST, 8002),
 				new UsernamePasswordCredentials("admin", "admin"));
 
-		HttpPost post = new HttpPost("http://localhost:8002/manage/v2/databases/"+ dbName + "/temporal/axes?format=json");
+		HttpPost post = new HttpPost(TEST_URL + ":8002/manage/v2/databases/"+ dbName + "/temporal/axes?format=json");
 
 		post.addHeader("Content-type", "application/json");
 		post.addHeader("accept", "application/json");
@@ -1613,10 +1614,10 @@ public abstract class ConnectedRESTQA {
 	{
 		DefaultHttpClient client = new DefaultHttpClient();
 		client.getCredentialsProvider().setCredentials(
-				new AuthScope("localhost", 8002),
+				new AuthScope(TEST_HOST, 8002),
 				new UsernamePasswordCredentials("admin", "admin"));
 
-		HttpDelete del = new HttpDelete("http://localhost:8002/manage/v2/databases/"+ dbName + "/temporal/axes/" + axisName + "?format=json");
+		HttpDelete del = new HttpDelete(TEST_URL + ":8002/manage/v2/databases/"+ dbName + "/temporal/axes/" + axisName + "?format=json");
 
 		del.addHeader("Content-type", "application/json");
 		del.addHeader("accept", "application/json");
@@ -1663,10 +1664,10 @@ public abstract class ConnectedRESTQA {
 
 		DefaultHttpClient client = new DefaultHttpClient();
 		client.getCredentialsProvider().setCredentials(
-				new AuthScope("localhost", 8002),
+				new AuthScope(TEST_HOST, 8002),
 				new UsernamePasswordCredentials("admin", "admin"));
 
-		HttpPost post = new HttpPost("http://localhost:8002/manage/v2/databases/"+ dbName + "/temporal/collections?format=json");
+		HttpPost post = new HttpPost(TEST_URL + ":8002/manage/v2/databases/"+ dbName + "/temporal/collections?format=json");
 
 		post.addHeader("Content-type", "application/json");
 		post.addHeader("accept", "application/json");
@@ -1718,10 +1719,10 @@ public abstract class ConnectedRESTQA {
 
 		DefaultHttpClient client = new DefaultHttpClient();
 		client.getCredentialsProvider().setCredentials(
-				new AuthScope("localhost", 8002),
+				new AuthScope(TEST_HOST, 8002),
 				new UsernamePasswordCredentials("admin", "admin"));
 
-		HttpPut put = new HttpPut("http://localhost:8002/manage/v2/databases/"+ dbName + "/temporal/collections/lsqt/properties?collection=" + collectionName);
+		HttpPut put = new HttpPut(TEST_URL + ":8002/manage/v2/databases/"+ dbName + "/temporal/collections/lsqt/properties?collection=" + collectionName);
 
 		put.addHeader("Content-type", "application/json");
 		put.addHeader("accept", "application/json");
@@ -1758,10 +1759,10 @@ public abstract class ConnectedRESTQA {
 	{
 		DefaultHttpClient client = new DefaultHttpClient();
 		client.getCredentialsProvider().setCredentials(
-				new AuthScope("localhost", 8002),
+				new AuthScope(TEST_HOST, 8002),
 				new UsernamePasswordCredentials("admin", "admin"));
 
-		HttpDelete del = new HttpDelete("http://localhost:8002/manage/v2/databases/"+ dbName + "/temporal/collections?collection=" + collectionName + "&format=json");
+		HttpDelete del = new HttpDelete(TEST_URL + ":8002/manage/v2/databases/"+ dbName + "/temporal/collections?collection=" + collectionName + "&format=json");
 
 		del.addHeader("Content-type", "application/json");
 		del.addHeader("accept", "application/json");
@@ -1789,11 +1790,11 @@ public abstract class ConnectedRESTQA {
 		try{
 			DefaultHttpClient client = new DefaultHttpClient();
 			client.getCredentialsProvider().setCredentials(
-					new AuthScope("localhost", 8011),
+					new AuthScope(TEST_HOST, 8011),
 					new UsernamePasswordCredentials("admin", "admin"));
 			String document ="<foo>a space b</foo>";
 			String  perm = "perm:rest-writer=read&perm:rest-writer=insert&perm:rest-writer=update&perm:rest-writer=execute";
-			HttpPut put = new HttpPut("http://localhost:8011/v1/documents?uri=/a%20b&"+perm);
+			HttpPut put = new HttpPut(TEST_URL + ":8011/v1/documents?uri=/a%20b&"+perm);
 			put.addHeader("Content-type", "application/xml");
 			put.setEntity(new StringEntity(document)); 	
 			HttpResponse response = client.execute(put);
@@ -1814,11 +1815,11 @@ public abstract class ConnectedRESTQA {
 		DefaultHttpClient client = new DefaultHttpClient();
 
 		client.getCredentialsProvider().setCredentials(
-				new AuthScope("localhost", 8002),
+				new AuthScope(TEST_HOST, 8002),
 				new UsernamePasswordCredentials("admin", "admin"));
 		String  body = "{\"authentication\": \""+level+"\"}";
 
-		HttpPut put = new HttpPut("http://localhost:8002/manage/v2/servers/"+restServerName+"/properties?server-type=http&group-id=Default");
+		HttpPut put = new HttpPut(TEST_URL + ":8002/manage/v2/servers/"+restServerName+"/properties?server-type=http&group-id=Default");
 		put.addHeader("Content-type", "application/json");
 		put.setEntity(new StringEntity(body));
 
@@ -1834,11 +1835,11 @@ public abstract class ConnectedRESTQA {
 		DefaultHttpClient client = new DefaultHttpClient();
 
 		client.getCredentialsProvider().setCredentials(
-				new AuthScope("localhost", 8002),
+				new AuthScope(TEST_HOST, 8002),
 				new UsernamePasswordCredentials("admin", "admin"));
 		String  body = "{\"default-user\": \""+usr+"\"}";
 
-		HttpPut put = new HttpPut("http://localhost:8002/manage/v2/servers/"+restServerName+"/properties?server-type=http&group-id=Default");
+		HttpPut put = new HttpPut(TEST_URL + ":8002/manage/v2/servers/"+restServerName+"/properties?server-type=http&group-id=Default");
 		put.addHeader("Content-type", "application/json");
 		put.setEntity(new StringEntity(body));
 
@@ -1865,10 +1866,10 @@ public abstract class ConnectedRESTQA {
 		try {			
 			DefaultHttpClient client = new DefaultHttpClient();
 			client.getCredentialsProvider().setCredentials(
-					new AuthScope("localhost", 8002),
+					new AuthScope(TEST_HOST, 8002),
 					new UsernamePasswordCredentials("admin", "admin"));
 			
-				HttpPut put = new HttpPut("http://localhost:8002"+ "/manage/v2/databases/"+dbName+"/properties?format=json");
+				HttpPut put = new HttpPut(TEST_URL + ":8002"+ "/manage/v2/databases/"+dbName+"/properties?format=json");
 				put.addHeader("Content-type", "application/json");
 				put.setEntity(new StringEntity(jnode.toString()));
 
