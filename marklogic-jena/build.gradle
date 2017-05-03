@@ -6,12 +6,12 @@ apply plugin: 'maven-publish'
 apply plugin: 'maven'
 
 
-version = '3.0.3-SNAPSHOT'
+version = '3.0.3'
 group   = 'com.marklogic'
 
 dependencies {
     compile('org.apache.jena:jena-arq:3.2.0')
-    compile('com.marklogic:marklogic-client-api:4.0-SNAPSHOT')
+    compile('com.marklogic:marklogic-client-api:4.0.1')
 
 	compile("org.slf4j:slf4j-api:$slf4jVersion")
 	compile "ch.qos.logback:logback-classic:$logbackVersion"
