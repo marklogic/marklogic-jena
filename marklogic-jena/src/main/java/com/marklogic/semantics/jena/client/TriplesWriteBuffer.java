@@ -69,7 +69,8 @@ public class TriplesWriteBuffer extends TripleBuffer {
             entireQuery.append(graphWrapper);
         }
         entireQuery.append("} ");
-        // log.debug(entireQuery.toString());
+        //log.debug(entireQuery.toString());
+        //log.debug(cache.keySet().toString());
         qdef.setSparql(entireQuery.toString());
 
         client.executeUpdate(qdef);
