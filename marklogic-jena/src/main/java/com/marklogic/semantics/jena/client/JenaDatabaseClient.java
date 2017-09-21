@@ -136,7 +136,9 @@ public class JenaDatabaseClient {
         return this.sparqlQueryManager.newQueryDefinition(queryString);
     }
 
-    public void executeUpdate(SPARQLQueryDefinition qdef) {
+    // synchronization needed because of setting of page length
+    public synchronized void executeUpdate(SPARQLQueryDefinition qdef) {
+        this.sparqlQueryManager.clearPageLength();
         this.sparqlQueryManager.executeUpdate(qdef, currentTransaction);
     }
 
@@ -156,7 +158,8 @@ public class JenaDatabaseClient {
                 currentTransaction);
     }
 
-    public InputStreamHandle executeSelect(SPARQLQueryDefinition qdef,
+    // synchronization needed because of setting of page length
+    public synchronized InputStreamHandle executeSelect(SPARQLQueryDefinition qdef,
             InputStreamHandle handle, Long offset, Long limit) {
         if (limit == null) {
             this.sparqlQueryManager.clearPageLength();

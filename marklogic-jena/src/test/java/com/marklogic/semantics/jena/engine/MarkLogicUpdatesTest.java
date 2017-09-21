@@ -56,6 +56,32 @@ public class MarkLogicUpdatesTest extends JenaTestBase {
 
     }
 
+    /* this issue verifies a single-threaded version of isse #62 */
+    @Test
+    public void testQueryManagerState() {
+        DatasetGraph gs = getMarkLogicDatasetGraph();
+        UpdateRequest update = new UpdateRequest();
+        update.add("INSERT DATA { <s2> <p1> <o1> }");
+        update.add("DROP ALL")
+                .add("CREATE GRAPH <http://example/update1>")
+                .add("BASE <http://example.org/> INSERT DATA { GRAPH <http://example.org/update2> { <s1> <p1> <o1>  } }")
+                .add("BASE <http://example.org/> INSERT DATA { GRAPH <http://example.org/update3> { <s1> <p1> <o1>  } }");
+
+        UpdateAction.execute(update, gs);
+
+        QueryExecution selectQuery = QueryExecutionFactory
+                .create("select ?s where { ?s ?p ?o } limit 100",
+                        DatasetFactory.wrap(gs));
+        selectQuery.execSelect();
+
+        update = new UpdateRequest();
+        update.add("INSERT DATA { <s2> <p1> <o1> }");
+        // no error means pageLength is handled properly
+
+        UpdateAction.execute(update, gs);
+
+    }
+
     @Test
     public void testUpdateTransactions() {
         MarkLogicDatasetGraph dsg = getMarkLogicDatasetGraph();
