@@ -6,7 +6,7 @@ apply plugin: 'maven-publish'
 apply plugin: 'maven'
 
 
-version = '3.0.3-SNAPSHOT'
+version = '3.0.4'
 group   = 'com.marklogic'
 
 dependencies {
