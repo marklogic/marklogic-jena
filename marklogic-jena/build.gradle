@@ -101,6 +101,10 @@ publishing {
   }
   repositories {
     maven {
+      credentials {
+        username mavenUser
+        password mavenPassword
+      }
       url publishUrl
     }
   }
