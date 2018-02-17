@@ -101,9 +101,11 @@ publishing {
   }
   repositories {
     maven {
-      credentials {
-        username mavenUser
-        password mavenPassword
+      if ( project.hasProperty("mavenUser")) { 
+        credentials {
+          username mavenUser
+          password mavenPassword
+        }
       }
       url publishUrl
     }
