@@ -82,7 +82,7 @@ promise a specific resolution or timeframe for any request.
 
 In addition, MarkLogic provides technical support for [release
 tags](https://github.com/marklogic/marklogic-jena/releases) of `marklogic-jena`
-licensed customers under the terms outlined in the [Support
+to licensed customers under the terms outlined in the [Support
 Handbook](http://www.marklogic.com/files/Mark_Logic_Support_Handbook.pdf). For
 more information or to sign up for support, visit
 [help.marklogic.com](http://help.marklogic.com).
