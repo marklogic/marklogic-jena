@@ -1,4 +1,4 @@
-# marklogic-jena v3.0.5
+# marklogic-jena v3.0.6
 
 ## Introduction
 
@@ -46,7 +46,7 @@ gradle install
 For gradle-based projects include this dependency in `build.gradle`:
 ```
 dependencies {
-   compile 'com.marklogic:marklogic-jena:3.0.5'
+   compile 'com.marklogic:marklogic-jena:3.0.6'
 }
 ```
 
@@ -56,7 +56,7 @@ Maven-based projects use this block in `pom.xml`:
 <dependency>
     <groupId>com.marklogic</groupId>
     <artifactId>marklogic-jena</artifactId>
-    <version>3.0.5</version>
+    <version>3.0.6</version>
 </dependency>
 ```
 
@@ -83,7 +83,7 @@ promise a specific resolution or timeframe for any request.
 
 In addition, MarkLogic provides technical support for [release
 tags](https://github.com/marklogic/marklogic-jena/releases) of `marklogic-jena`
-licensed customers under the terms outlined in the [Support
+to licensed customers under the terms outlined in the [Support
 Handbook](http://www.marklogic.com/files/Mark_Logic_Support_Handbook.pdf). For
 more information or to sign up for support, visit
 [help.marklogic.com](http://help.marklogic.com).
