@@ -1,4 +1,4 @@
-# marklogic-jena v3.0.3-SNAPSHOT
+# marklogic-jena v3.0.6
 
 ## Introduction
 
@@ -45,7 +45,7 @@ gradle install
 For gradle-based projects include this dependency in `build.gradle`:
 ```
 dependencies {
-   compile 'com.marklogic:marklogic-jena:3.0.3'
+   compile 'com.marklogic:marklogic-jena:3.0.6'
 }
 ```
 
@@ -55,7 +55,7 @@ Maven-based projects use this block in `pom.xml`:
 <dependency>
     <groupId>com.marklogic</groupId>
     <artifactId>marklogic-jena</artifactId>
-    <version>3.0.3</version>
+    <version>3.0.6</version>
 </dependency>
 ```
 
