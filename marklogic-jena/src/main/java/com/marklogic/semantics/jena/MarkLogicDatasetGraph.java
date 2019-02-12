@@ -24,7 +24,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Locale;
 
-import org.apache.jena.graph.Triple;
+import org.apache.jena.query.TxnType;
 import org.apache.jena.sparql.core.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,8 +63,7 @@ import com.marklogic.semantics.jena.client.WrappingIterator;
  * protected abstract void deleteFromDftGraph(Node s, Node p, Node o) ;
  * protected abstract void deleteFromNamedGraph(Node g, Node s, Node p, Node o) ;
  */
-public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
-        DatasetGraph, Transactional {
+public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads {
 
     public static final String DEFAULT_GRAPH_URI = "http://marklogic.com/semantics#default-graph";
     private static Logger log = LoggerFactory
@@ -335,14 +334,31 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
         this.addGraph(NodeFactory.createURI(DEFAULT_GRAPH_URI), g);
     }
 
+    /**
+     * Start a write transaction, which must be specified with TxnType.WRITE
+     */
+    @Override
+    public void begin(TxnType type) {
+        checkIsOpen();
+        sync();
+        client.begin(type);
+    }
     @Override
     /**
-     * Start a transaction.
+     * Start a write transaction, which must be specified with ReadWrite.WRITE
      */
     public void begin(ReadWrite readWrite) {
         checkIsOpen();
         sync();
         client.begin(readWrite);
+    }
+
+    /**
+     * Always true because transactions execute in write mode.
+     */
+    @Override
+    public boolean promote(Promote mode) {
+        return true;
     }
 
     @Override
@@ -380,6 +396,22 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads implements
      */
     public void end() {
         abort();
+    }
+
+    /**
+     * Always ReadWrite.WRITE because transactions execute in write mode.
+     */
+    @Override
+    public ReadWrite transactionMode() {
+        return ReadWrite.WRITE;
+    }
+
+    /**
+     * Always TxnType.WRITE because transactions execute in write mode.
+     */
+    @Override
+    public TxnType transactionType() {
+        return TxnType.WRITE;
     }
 
     /**

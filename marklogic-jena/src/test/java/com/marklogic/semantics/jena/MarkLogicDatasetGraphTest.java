@@ -352,6 +352,12 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
         } catch (MarkLogicTransactionException e) {
             // pass
         }
+        try {
+            markLogicDatasetGraph.begin(TxnType.READ);
+            fail("MarkLogic only supports write transactions");
+        } catch (MarkLogicTransactionException e) {
+            // pass
+        }
         assertFalse(markLogicDatasetGraph.isInTransaction());
         markLogicDatasetGraph.begin(ReadWrite.WRITE);
         assertTrue(markLogicDatasetGraph.isInTransaction());
@@ -365,7 +371,7 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
         assertFalse("transact1 graph must not exist after rollback",
                 queryExec.execAsk());
 
-        markLogicDatasetGraph.begin(ReadWrite.WRITE);
+        markLogicDatasetGraph.begin(TxnType.WRITE);
         assertTrue(markLogicDatasetGraph.isInTransaction());
         markLogicDatasetGraph.addGraph(g1, transGraph);
         markLogicDatasetGraph.commit();

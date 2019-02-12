@@ -22,6 +22,7 @@ import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.query.ReadWrite;
+import org.apache.jena.query.TxnType;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.WriterGraphRIOT;
@@ -303,16 +304,25 @@ public class JenaDatabaseClient {
     }
 
     public void begin(ReadWrite readWrite) {
-        if (readWrite == ReadWrite.READ) {
+        if (readWrite != ReadWrite.WRITE) {
             throw new MarkLogicTransactionException(
                     "MarkLogic only supports write transactions");
-        } else {
-            if (this.currentTransaction != null) {
-                throw new MarkLogicTransactionException(
-                        "Only one open transaction per MarkLogicDatasetGraph instance.");
-            }
-            this.currentTransaction = openTransaction();
         }
+        begin();
+    }
+    public void begin(TxnType type) {
+        if (type != TxnType.WRITE) {
+            throw new MarkLogicTransactionException(
+                    "MarkLogic only supports write transactions");
+        }
+        begin();
+    }
+    private void begin() {
+        if (this.currentTransaction != null) {
+            throw new MarkLogicTransactionException(
+                    "Only one open transaction per MarkLogicDatasetGraph instance.");
+        }
+        this.currentTransaction = openTransaction();
     }
 
     public void commit() {
