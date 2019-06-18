@@ -69,21 +69,3 @@ http://marklogic.github.io/marklogic-jena/marklogic-jena/build/docs/javadoc/
 The project at [marklogic-jena-examples](marklogic-jena-examples) contains some
 Java applications that exercise the functionality of MarkLogic using this
 library.
-
-
-## Support
-
-The markLogic-jena project is maintained by MarkLogic Engineering and 
-distributed under the [Apache 2.0
-license](https://github.com/marklogic/java-client-api/blob/master/LICENSE). It
-is designed for use in production applications with MarkLogic Server. Everyone
-is encouraged to file bug reports, feature requests, and pull requests through
-GitHub. This input is critical and will be carefully considered, but we can’t
-promise a specific resolution or timeframe for any request. 
-
-In addition, MarkLogic provides technical support for [release
-tags](https://github.com/marklogic/marklogic-jena/releases) of `marklogic-jena`
-to licensed customers under the terms outlined in the [Support
-Handbook](http://www.marklogic.com/files/Mark_Logic_Support_Handbook.pdf). For
-more information or to sign up for support, visit
-[help.marklogic.com](http://help.marklogic.com).
