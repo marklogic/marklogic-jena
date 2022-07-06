@@ -16,7 +16,6 @@
 package com.marklogic.semantics.jena.client;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 import com.marklogic.client.semantics.SPARQLBindings;
 import com.marklogic.client.semantics.SPARQLQueryDefinition;
@@ -26,9 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
-import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.graph.Triple;
-import org.apache.jena.sparql.graph.GraphFactory;
 import com.marklogic.semantics.jena.MarkLogicDatasetGraph;
 
 /**

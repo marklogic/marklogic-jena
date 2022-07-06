@@ -22,6 +22,7 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.ResultSet;
+import org.apache.jena.query.ResultSetFactory;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RiotException;
@@ -36,14 +37,13 @@ import org.apache.jena.sparql.engine.QueryEngineFactory;
 import org.apache.jena.sparql.engine.QueryEngineRegistry;
 import org.apache.jena.sparql.engine.QueryIterator;
 import org.apache.jena.sparql.engine.binding.Binding;
+import org.apache.jena.sparql.engine.binding.BindingBuilder;
 import org.apache.jena.sparql.engine.binding.BindingFactory;
-import org.apache.jena.sparql.engine.binding.BindingMap;
 import org.apache.jena.sparql.engine.iterator.QueryIter1;
 import org.apache.jena.sparql.engine.iterator.QueryIterRoot;
 import org.apache.jena.sparql.engine.iterator.QueryIteratorCheck;
 import org.apache.jena.sparql.engine.iterator.QueryIteratorResultSet;
 import org.apache.jena.sparql.engine.main.QueryEngineMain;
-import org.apache.jena.sparql.resultset.JSONInput;
 import org.apache.jena.sparql.syntax.Template;
 import org.apache.jena.sparql.util.Context;
 import org.slf4j.Logger;
@@ -65,7 +65,7 @@ import com.marklogic.semantics.jena.client.JenaDatabaseClient;
 public class MarkLogicQueryEngine extends QueryEngineMain {
 
 	@SuppressWarnings("unused")
-    private static Logger log = LoggerFactory.getLogger(MarkLogicQueryEngine.class);
+	private final static Logger log = LoggerFactory.getLogger(MarkLogicQueryEngine.class);
 	private BasicPattern bgp = null;
 	private Template template = null;
 	private MarkLogicDatasetGraph markLogicDatasetGraph;
@@ -75,8 +75,8 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
 	 * gets the factory for making MarkLogicQueryEngine.
 	 * @return a QueryEngineFactory that makes MarkLogicQueryEngine instances.
 	 */
-	static public QueryEngineFactory getFactory() { return factory ; } 
-	
+	static public QueryEngineFactory getFactory() { return factory ; }
+
 	/**
 	 * Registers the factory with Jena's QueryEngineRegistry.
 	 */
@@ -87,14 +87,14 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
     /**
      * Removes the factory from Jena's QueryEngineRegistry.
      */
-    static public void unregister()     { 
+    static public void unregister()     {
         QueryEngineRegistry.removeFactory(factory);
     }
 
     /**
      * Constructor.
      * @param query A Jena Query.  This engine does not use all parts of the Query hierarchy.
-     * @param datasetGraph The MarkLogic instance viewed through Jena. Must be a MarkLogicDatasetGraph. 
+     * @param datasetGraph The MarkLogic instance viewed through Jena. Must be a MarkLogicDatasetGraph.
      * @param initial Bindings for the query.
      * @param context
      */
@@ -103,20 +103,18 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
         super(query, datasetGraph, initial, context);
         bgp = new BasicPattern();
         bgp.add(new Triple(
-                Var.alloc("s"), 
-                Var.alloc("p"), 
+                Var.alloc("s"),
+                Var.alloc("p"),
                 Var.alloc("o")));
         template = new Template(bgp);
         this.markLogicDatasetGraph = (MarkLogicDatasetGraph) datasetGraph;
         this.initial = initial;
     }
-    
+
     /**
      * Constructor.
      * @param query A Jena Query.  This engine does not use all parts of the Query hierarchy.
-     * @param datasetGraph The MarkLogic instance viewed through Jena. Must be a MarkLogicDatasetGraph. 
-     * @param initial Bindings for the query.
-     * @param context
+     * @param dataset The MarkLogic instance viewed through Jena. Must be a MarkLogicDatasetGraph.
      */
     private MarkLogicQueryEngine(Query query, DatasetGraph dataset) {
         this(query, dataset, null, null);
@@ -152,74 +150,73 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
             }
         }
     }
-    
+
     @Override
     /**
      * Evaluation hook for all queries.
      */
     public QueryIterator eval(Op op, DatasetGraph dsg, Binding initial, Context context)
     {
-    	// see if this can be null
-    	ExecutionContext execCxt = new ExecutionContext(context, null, dsg, null);
-        if (! (dsg instanceof MarkLogicDatasetGraph))
-    		throw new MarkLogicJenaException("This query engine only works for MarkLogic-backed triple stores");
-    	MarkLogicDatasetGraph markLogicDatasetGraph = (MarkLogicDatasetGraph) dsg;
-    	JenaDatabaseClient client = markLogicDatasetGraph.getDatabaseClient();
-    	markLogicDatasetGraph.sync();
-        markLogicDatasetGraph.syncAdds();
-    	QueryIterator qIter = null;
+      // see if this can be null
+      ExecutionContext execCxt = new ExecutionContext(context, null, dsg, null);
+      MarkLogicDatasetGraph markLogicDatasetGraph = (MarkLogicDatasetGraph) originalDataset;
+      JenaDatabaseClient client = markLogicDatasetGraph.getDatabaseClient();
+      markLogicDatasetGraph.sync();
+      markLogicDatasetGraph.syncAdds();
+      QueryIterator qIter = null;
 
-        Query query = (Query)context.get(ARQConstants.sysCurrentQuery);
-        
-        Long limit = null;
-        Long offset = null;
-        if (query.hasLimit()) {
-            limit = query.getLimit();
-            query.setLimit(Query.NOLIMIT);
-        }
-        if (query.hasOffset()) {
-            // offset is off-by-one from 'start'
-            offset = query.getOffset() + 1;
-            query.setOffset(Query.NOLIMIT);
-        }
-        
-        SPARQLQueryDefinition qdef = prepareQueryDefinition(query);
+      Query query = (Query)context.get(ARQConstants.sysCurrentQuery);
 
-        InputStreamHandle handle = new InputStreamHandle();
+      Long limit = null;
+      Long offset = null;
+      if (query.hasLimit()) {
+          limit = query.getLimit();
+          query.setLimit(Query.NOLIMIT);
+      }
+      if (query.hasOffset()) {
+          // offset is off-by-one from 'start'
+          offset = query.getOffset() + 1;
+          query.setOffset(Query.NOLIMIT);
+      }
 
-        if (query.isAskType()) {
-        	boolean answer = client.executeAsk(qdef);
-        	QueryIterator qIter1 = QueryIterRoot.create(initial, execCxt) ;
-			qIter = new BooleanQueryIterator(qIter1, execCxt, answer);
-        } else if (query.isConstructType() || query.isDescribeType()) {
-        	// what I need to create here is a QueryIterator that contains
-        	// bindings of s, p, and o to every triple.
-        	if (query.isConstructType()) client.executeConstruct(qdef, handle);
-        	if (query.isDescribeType()) client.executeDescribe(qdef, handle);
-        	Iterator<Triple> triples = null;
-        	try {
-        		triples = RDFDataMgr.createIteratorTriples(handle.get(), Lang.NTRIPLES, null);
-        	} catch (NullPointerException e) {
-        		log.info("Got null result from CONSTRUCT, constructing alternate iterator");
-        		triples = RDFDataMgr.createIteratorTriples(new ByteArrayInputStream(".".getBytes()), Lang.NTRIPLES, null);
-        	}
-        	QueryIterator qIter1 = QueryIterRoot.create(initial, execCxt) ;
-            qIter = new TripleQueryIterator(qIter1, execCxt, triples);
-        	query.setConstructTemplate(template);
-        	//throw new MarkLogicJenaException("Construct Type Supported by Engine Layer");
-        } else if (query.isSelectType()) {
-            client.executeSelect(qdef, handle, offset, limit);
-            ResultSet results = JSONInput.fromJSON(handle.get());
-            qIter = new QueryIteratorResultSet(results);
+      SPARQLQueryDefinition qdef = prepareQueryDefinition(query);
+
+      InputStreamHandle handle = new InputStreamHandle();
+
+      if (query.isAskType()) {
+        boolean answer = client.executeAsk(qdef);
+        QueryIterator qIter1 = QueryIterRoot.create(initial, execCxt) ;
+        qIter = new BooleanQueryIterator(qIter1, execCxt, answer);
+      } else if (query.isConstructType() || query.isDescribeType()) {
+        // what I need to create here is a QueryIterator that contains
+        // bindings of s, p, and o to every triple.
+        if (query.isConstructType()) client.executeConstruct(qdef, handle);
+        if (query.isDescribeType()) client.executeDescribe(qdef, handle);
+        Iterator<Triple> triples = null;
+        if(handle.get() != null) {
+          triples = RDFDataMgr.createIteratorTriples(handle.get(), Lang.NTRIPLES, null);
         } else {
-            handle.close();
-        	throw new MarkLogicJenaException("Unrecognized Query Type");
+          log.info("Got null result from CONSTRUCT, constructing alternate iterator");
+          triples = RDFDataMgr.createIteratorTriples(new ByteArrayInputStream(".".getBytes()), Lang.NTRIPLES, null);
         }
-     // Wrap with something to check for closed iterators.
-        qIter = QueryIteratorCheck.check(qIter, execCxt) ;
-        return qIter;
+        QueryIterator qIter1 = QueryIterRoot.create(initial, execCxt) ;
+          qIter = new TripleQueryIterator(qIter1, execCxt, triples);
+        query.setConstructTemplate(template);
+        //throw new MarkLogicJenaException("Construct Type Supported by Engine Layer");
+      } else if (query.isSelectType()) {
+        client.executeSelect(qdef, handle, offset, limit);
+        ResultSet results = ResultSetFactory.fromJSON(handle.get());
+        qIter = new QueryIteratorResultSet(results);
+      } else {
+        handle.close();
+        throw new MarkLogicJenaException("Unrecognized Query Type");
+      }
+      // Wrap with something to check for closed iterators.
+      qIter = QueryIteratorCheck.check(qIter, execCxt) ;
+      return qIter;
     }
-	// ---- Factory
+
+    // ---- Factory
     protected static QueryEngineFactory factory = new MarkLogicQueryEngineFactory() ;
 
 
@@ -259,7 +256,7 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
      */
     class BooleanQueryIterator extends QueryIter1 implements QueryIterator {
     	private boolean answer;
-    	
+
 		public BooleanQueryIterator(QueryIterator input, ExecutionContext ctx, Boolean answer) {
 			super(input, ctx);
 			this.answer = answer;
@@ -293,7 +290,7 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
     class TripleQueryIterator extends QueryIter1 {
 
     	private Iterator<Triple> triples;
-    	
+
 		public TripleQueryIterator(QueryIterator input, ExecutionContext execCxt, Iterator<Triple> triples) {
 			super(input, execCxt);
 			this.triples = triples;
@@ -309,11 +306,11 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
 			// we need a binding that's ?s ?p ?o
 			try {
 				Triple triple = triples.next();
-				BindingMap binding = BindingFactory.create();
+				BindingBuilder binding = BindingFactory.builder();
 				binding.add(Var.alloc("s"), triple.getSubject());
 				binding.add(Var.alloc("p"), triple.getPredicate());
 				binding.add(Var.alloc("o"), triple.getObject());
-				return binding;
+				return binding.build();
 			} catch (RiotException e) {
 				// bug in empty results for describe.  this is
 				// a workaround. TODO

@@ -10,8 +10,8 @@ version = '3.0-SNAPSHOT'
 group   = 'com.marklogic'
 
 dependencies {
-    compile('org.apache.jena:jena-arq:3.10.0')
-    compile('com.marklogic:marklogic-client-api:4.2.0')
+    compile('org.apache.jena:jena-arq:4.3.2')
+    compile('com.marklogic:marklogic-client-api:5.5.3')
 
     compile("org.slf4j:slf4j-api:$slf4jVersion")
     compile "ch.qos.logback:logback-classic:$logbackVersion"

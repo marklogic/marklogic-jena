@@ -15,9 +15,7 @@
  */
 package com.marklogic.semantics.jena.engine;
 
-import org.apache.jena.atlas.lib.Sink;
 import org.apache.jena.sparql.core.DatasetGraph;
-import org.apache.jena.sparql.core.Quad;
 import org.apache.jena.sparql.engine.binding.Binding;
 import org.apache.jena.sparql.modify.UpdateEngine;
 import org.apache.jena.sparql.modify.UpdateEngineFactory;
@@ -120,8 +118,7 @@ public class MarkLogicUpdateEngine extends UpdateEngineMain {
         }
 
         private void exec(Update update) {
-            SPARQLQueryDefinition qdef = client.newQueryDefinition(update
-                    .toString());
+            SPARQLQueryDefinition qdef = client.newQueryDefinition(update);
             if (markLogicDatasetGraph.getRulesets() != null) {
                 qdef.setRulesets(markLogicDatasetGraph.getRulesets());
             }
@@ -186,22 +183,6 @@ public class MarkLogicUpdateEngine extends UpdateEngineMain {
         @Override
         public void visit(UpdateModify update) {
             exec(update);
-        }
-
-        /**
-         * Not required by this implementation.
-         */
-        @Override
-        public Sink<Quad> createInsertDataSink() {
-            return null;
-        }
-
-        /**
-         * Not required by this implementation.
-         */
-        @Override
-        public Sink<Quad> createDeleteDataSink() {
-            return null;
         }
 
     }

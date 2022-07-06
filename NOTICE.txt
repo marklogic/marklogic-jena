@@ -31,7 +31,7 @@ Made available under the Apache License 2.0. See Appendix for full text.
 
 Source materials are available for download at: https://github.com/apache/httpcomponents-client 
 
-Apache Jena ARQ 3.4.0 
+Apache Jena ARQ 4.3.2
 
 Attribution Statements
 http://jena.apache.org/
