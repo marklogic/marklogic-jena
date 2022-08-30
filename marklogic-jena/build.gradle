@@ -10,7 +10,7 @@ version = '3.0-SNAPSHOT'
 group   = 'com.marklogic'
 
 dependencies {
-    api('org.apache.jena:jena-arq:3.10.0')
+    api('org.apache.jena:jena-arq:3.17.0')
     api('com.marklogic:marklogic-client-api:5.5.3')
 
     implementation "org.slf4j:slf4j-api:$slf4jVersion"
