@@ -1,5 +1,8 @@
 {
-  "user-name":"j-rest-writer", 
+  "user-name": "j-rest-writer",
   "password": "x",
-  "role":["rest-writer"]
+  "role": [
+    "rest-writer",
+    "semantics-peon-role"
+  ]
 }

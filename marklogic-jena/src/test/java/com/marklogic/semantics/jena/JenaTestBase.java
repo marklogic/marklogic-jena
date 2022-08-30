@@ -27,6 +27,8 @@ import com.marklogic.client.DatabaseClientFactory;
 
 import javax.net.ssl.SSLContext;
 
+import static org.junit.Assert.assertTrue;
+
 public class JenaTestBase {
     protected static DatabaseClient readerClient;
     protected static DatabaseClient writerClient;
@@ -51,10 +53,13 @@ public class JenaTestBase {
 
         adminClient = DatabaseClientFactory.newClient(host, port,
                 new DatabaseClientFactory.DigestAuthContext(adminUser, adminPassword));
+        assertTrue(adminClient.checkConnection().isConnected());
         writerClient = DatabaseClientFactory.newClient(host, port,
                 new DatabaseClientFactory.DigestAuthContext(writerUser, writerPassword));
+        assertTrue(writerClient.checkConnection().isConnected());
         readerClient = DatabaseClientFactory.newClient(host, port,
                 new DatabaseClientFactory.DigestAuthContext(readerUser, readerPassword));
+        assertTrue(readerClient.checkConnection().isConnected());
     }
 
     protected static DatasetGraph getJenaDatasetGraph(String fileName) {
