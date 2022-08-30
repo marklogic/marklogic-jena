@@ -1,113 +1,101 @@
+plugins {
+  id "java-library"
+  id "maven-publish"
+  id "signing"
+}
 
 apply plugin: 'com.marklogic.ml-gradle'
-apply plugin: 'java'
-apply plugin: 'eclipse'
-apply plugin: 'maven-publish'
-apply plugin: 'maven'
 
+group = "com.marklogic"
+version = "3.1.0-SNAPSHOT"
 
-version = '3.0-SNAPSHOT'
-group   = 'com.marklogic'
+sourceCompatibility = "11"
+targetCompatibility = "11"
 
 dependencies {
-    compile('org.apache.jena:jena-arq:4.3.2')
-    compile('com.marklogic:marklogic-client-api:5.5.3')
+  api 'org.apache.jena:jena-arq:4.3.2'
+  api 'com.marklogic:marklogic-client-api:5.5.3'
 
-    compile("org.slf4j:slf4j-api:$slf4jVersion")
-    compile "ch.qos.logback:logback-classic:$logbackVersion"
-    compile "org.slf4j:jcl-over-slf4j:$slf4jVersion"
+  implementation "org.slf4j:slf4j-api:1.7.36"
+  implementation "ch.qos.logback:logback-classic:1.2.11"
+  implementation "org.slf4j:jcl-over-slf4j:1.7.36"
 
-    testCompile 'com.jayway.restassured:rest-assured:2.9.0'
-    testCompile 'org.hamcrest:hamcrest-all:1.3'
-}
-
-sourceSets {
-    test {
-        java {
-            srcDir 'src/test/resources'
-        }
-    }
-}
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
+  testImplementation 'com.jayway.restassured:rest-assured:2.9.0'
+  testImplementation 'org.hamcrest:hamcrest-all:1.3'
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
+  classifier = 'sources'
+  from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+  classifier "javadoc"
+  from javadoc
 }
 
 javadoc {
-    options.overview = "src/main/java/com/marklogic/semantics/jena/overview.html"
+  options.overview = "src/main/java/com/marklogic/semantics/jena/overview.html"
+}
+// Ignores warnings on params that don't have descriptions, which is a little too noisy
+javadoc.options.addStringOption('Xdoclint:none', '-quiet')
+
+
+artifacts {
+  archives javadocJar, sourcesJar
 }
 
-Node pomCustomizations = new NodeBuilder(). project {
-        name 'marklogic-jena'
-        packaging 'jar'
-        textdescription 'Adapter for using MarkLogic with the jena RDF Framework'
-        url 'https://github.com/marklogic/marklogic-jena'
-
-        scm {
-            url 'git@github.com:marklogic/marklogic-jena.git'
-                connection 'scm:git@github.com:marklogic/marklogic-jena.git'
-                developerConnection 'scm:git@github.com:marklogic/marklogic-jena.git'
-        }
-
-        licenses {
-            license {
-                name 'The Apache Software License, Version 2.0'
-                    url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-            }
-        }
- 
-        developers {
-            developer {
-                name 'MarkLogic'
-                    email 'java-sig@marklogic.com'
-                    organization 'MarkLogic'
-                    organizationUrl 'https://www.marklogic.com'
-            }
-            developer {
-                name 'MarkLogic Github Contributors'
-                    email 'general@developer.marklogic.com'
-                    organization 'Github Contributors'
-                    organizationUrl 'https://github.com/marklogic/marklogic-jena/graphs/contributors'
-            }
-        }
+signing {
+  sign configurations.archives
 }
 
 publishing {
   publications {
     mainJava(MavenPublication) {
-      from components.java
-        
-      pom.withXml { 
-        asNode().append(pomCustomizations.developers)
-        asNode().append(pomCustomizations.name)
-        asNode().append(pomCustomizations.packaging)
-        asNode().append(pomCustomizations.url)
-        asNode().append(pomCustomizations.scm)
-        asNode().append(pomCustomizations.licenses)
-        asNode().appendNode("description", pomCustomizations.textdescription.text())
+      pom {
+        name = "${group}:${project.name}"
+        description = "Adapter for using MarkLogic with the jena RDF Framework"
+        packaging = "jar"
+        url = "https://github.com/marklogic/${project.name}"
+        licenses {
+          license {
+            name = "The Apache License, Version 2.0"
+            url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+        developers {
+          developer {
+            name = 'MarkLogic'
+            email = 'java-sig@marklogic.com'
+            organization = 'MarkLogic'
+            organizationUrl = 'https://www.marklogic.com'
+          }
+          developer {
+            name = 'MarkLogic Github Contributors'
+            email = 'general@developer.marklogic.com'
+            organization = 'Github Contributors'
+            organizationUrl = 'https://github.com/marklogic/marklogic-jena/graphs/contributors'
+          }
+        }
+        scm {
+          url = "git@github.com:marklogic/${project.name}.git"
+          connection = "scm:git@github.com:marklogic/${project.name}.git"
+          developerConnection = "scm:git@github.com:marklogic/${project.name}.git"
+        }
       }
-
-      artifact sourcesJar 
-
-      artifact javadocJar 
-
+      from components.java
+      artifact sourcesJar
+      artifact javadocJar
     }
   }
   repositories {
     maven {
-      if ( project.hasProperty("mavenUser")) { 
-        credentials {
-          username mavenUser
-          password mavenPassword
-        }
+      name = "central"
+      url = mavenCentralUrl
+      credentials {
+        username mavenCentralUsername
+        password mavenCentralPassword
       }
-      url publishUrl
     }
   }
 }

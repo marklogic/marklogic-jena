@@ -21,20 +21,20 @@ https://github.com/marklogic/marklogic-jena/tree/develop
 2) Run the gradle target that provisions a testing database for this project.  The command and tests use values recorded in `./gradle.properties`.
 
 ```
-gradle :marklogic-jena:mlDeploy
+./gradlew :marklogic-jena:mlDeploy
 ```
 
 3) Build MarkLogic Jena.
 
 ```
-gradle :marklogic-jena:test
+./gradlew :marklogic-jena:test
 
 ```
 
 To use `marklogic-jena` in your own projects, deploy into local maven repo or copy snapshot jars from /build directory.
 
 ```
-gradle install
+./gradlew publishToMavenLocal
 
 ```
 
@@ -45,7 +45,7 @@ gradle install
 For gradle-based projects include this dependency in `build.gradle`:
 ```
 dependencies {
-   compile 'com.marklogic:marklogic-jena:3.0.3'
+   implementation 'com.marklogic:marklogic-jena:3.1.0'
 }
 ```
 
@@ -55,7 +55,7 @@ Maven-based projects use this block in `pom.xml`:
 <dependency>
     <groupId>com.marklogic</groupId>
     <artifactId>marklogic-jena</artifactId>
-    <version>3.0.3</version>
+    <version>3.1.0</version>
 </dependency>
 ```
 
