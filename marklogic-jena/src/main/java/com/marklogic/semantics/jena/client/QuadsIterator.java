@@ -22,8 +22,8 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
+import org.apache.jena.query.ResultSetFactory;
 import org.apache.jena.sparql.core.Quad;
-import org.apache.jena.sparql.resultset.JSONInput;
 
 /**
  * Returns quads as elements in an iterator, by processing the special purpose
@@ -35,12 +35,12 @@ public class QuadsIterator implements Iterator<Quad> {
     private String graphName = null;
 
     public QuadsIterator(InputStream inputStream) {
-        results = JSONInput.fromJSON(inputStream);
+        results = ResultSetFactory.fromJSON(inputStream);
     }
 
     public QuadsIterator(String graphName, InputStream inputStream) {
         this.graphName = graphName;
-        results = JSONInput.fromJSON(inputStream);
+        results = ResultSetFactory.fromJSON(inputStream);
     }
 
     @Override

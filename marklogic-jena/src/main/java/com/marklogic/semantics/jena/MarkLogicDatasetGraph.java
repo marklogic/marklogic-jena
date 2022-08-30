@@ -25,6 +25,8 @@ import java.util.Iterator;
 import java.util.Locale;
 
 import org.apache.jena.query.TxnType;
+import org.apache.jena.riot.system.PrefixMap;
+import org.apache.jena.riot.system.PrefixMapFactory;
 import org.apache.jena.sparql.core.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -658,6 +660,11 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads {
         checkIsOpen();
         this.client.close();
         this.client = null;
+    }
+
+    @Override
+    public PrefixMap prefixes() {
+        return PrefixMapFactory.create();
     }
 
     @Override

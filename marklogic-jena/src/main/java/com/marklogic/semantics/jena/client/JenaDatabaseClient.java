@@ -25,8 +25,12 @@ import org.apache.jena.query.ReadWrite;
 import org.apache.jena.query.TxnType;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.RDFWriterRegistry;
 import org.apache.jena.riot.WriterGraphRIOT;
+import org.apache.jena.riot.RDFFormat;
 import org.apache.jena.sparql.graph.GraphFactory;
+import org.apache.jena.update.Update;
+import org.apache.jena.update.UpdateRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -122,6 +126,19 @@ public class JenaDatabaseClient {
         return writeBuffer.cacheMillis;
     }
 
+    /**
+     * Create a new {@link com.marklogic.client.semantics.SPARQLQueryDefinition}
+     * from Update. You can use the resulting object to configure
+     * various aspects of the query or set binding variables.
+     *
+     * @param update
+     *            SPARQL Update
+     * @return A new
+     *         {@link com.marklogic.client.semantics.SPARQLQueryDefinition}
+     */
+    public SPARQLQueryDefinition newQueryDefinition(Update update) {
+        return newQueryDefinition(new UpdateRequest(update).toString());
+    }
 
     /**
      * Create a new {@link com.marklogic.client.semantics.SPARQLQueryDefinition}
@@ -186,7 +203,7 @@ public class JenaDatabaseClient {
     }
 
     public void mergeGraph(String uri, Graph graph) {
-        WriterGraphRIOT writer = RDFDataMgr.createGraphWriter(Lang.NTRIPLES);
+        WriterGraphRIOT writer = RDFWriterRegistry.getWriterGraphFactory(RDFFormat.NTRIPLES).create(RDFFormat.NTRIPLES);
         OutputStreamRIOTSender sender = new OutputStreamRIOTSender(writer);
         sender.setGraph(graph);
         OutputStreamHandle handle = new OutputStreamHandle(sender);
@@ -239,7 +256,7 @@ public class JenaDatabaseClient {
     }
 
     public void writeGraph(String uri, Graph graph) {
-        WriterGraphRIOT writer = RDFDataMgr.createGraphWriter(Lang.NTRIPLES);
+        WriterGraphRIOT writer = RDFWriterRegistry.getWriterGraphFactory(RDFFormat.NTRIPLES).create(RDFFormat.NTRIPLES);
         OutputStreamRIOTSender sender = new OutputStreamRIOTSender(writer);
         sender.setGraph(graph);
         OutputStreamHandle handle = new OutputStreamHandle(sender);
