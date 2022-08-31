@@ -2,6 +2,7 @@ plugins {
   id "java-library"
   id "maven-publish"
   id "signing"
+  id "io.snyk.gradle.plugin.snykplugin" version "0.4"
 }
 
 apply plugin: 'com.marklogic.ml-gradle'
@@ -98,4 +99,13 @@ publishing {
       }
     }
   }
+}
+
+// See https://github.com/snyk/gradle-plugin for more information
+snyk {
+  //arguments = '--all-sub-projects'
+  severity = 'low'
+  api = snykToken
+  autoDownload = true
+  autoUpdate = true
 }
