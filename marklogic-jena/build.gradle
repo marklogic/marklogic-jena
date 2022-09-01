@@ -3,12 +3,13 @@ plugins {
   id "maven-publish"
   id "signing"
   id "io.snyk.gradle.plugin.snykplugin" version "0.4"
+  id "com.github.jk1.dependency-license-report" version "2.1"
 }
 
 apply plugin: 'com.marklogic.ml-gradle'
 
 group = "com.marklogic"
-version = "3.1.0-SNAPSHOT"
+version = "4.0.0"
 
 sourceCompatibility = "11"
 targetCompatibility = "11"
