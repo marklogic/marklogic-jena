@@ -45,7 +45,7 @@ To use `marklogic-jena` in your own projects, deploy into local maven repo or co
 For gradle-based projects include this dependency in `build.gradle`:
 ```
 dependencies {
-   implementation 'com.marklogic:marklogic-jena:3.1.0'
+   implementation 'com.marklogic:marklogic-jena:4.0.0'
 }
 ```
 
@@ -55,7 +55,7 @@ Maven-based projects use this block in `pom.xml`:
 <dependency>
     <groupId>com.marklogic</groupId>
     <artifactId>marklogic-jena</artifactId>
-    <version>3.1.0</version>
+    <version>4.0.0</version>
 </dependency>
 ```
 
