@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2018 MarkLogic Corporation
+ * Copyright 2014-2019 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,8 +40,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
 
-import ch.qos.logback.classic.Logger;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -52,14 +50,6 @@ import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.client.io.DocumentMetadataHandle.Capability;
 
 import java.net.InetAddress;
-
-
-
-//import org.json.JSONObject;
-import org.junit.Test;
-
-import static org.junit.Assert.*;
-
 
 /**
  * @author gvaidees

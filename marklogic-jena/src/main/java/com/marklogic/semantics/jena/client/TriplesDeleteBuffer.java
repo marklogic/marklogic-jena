@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 MarkLogic Corporation
+ * Copyright 2016-2019 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A Timer task that accumulates triples to remove from

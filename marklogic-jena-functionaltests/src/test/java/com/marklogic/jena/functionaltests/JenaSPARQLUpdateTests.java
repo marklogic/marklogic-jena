@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 MarkLogic Corporation
+ * Copyright 2015-2019 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -150,7 +150,7 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 
 	@Test
 	public void testBaseURi() throws Exception {
-		dataSet = DatasetFactory.create(markLogicDatasetGraph);
+		dataSet = DatasetFactory.wrap(markLogicDatasetGraph);
 		UpdateRequest update = new UpdateRequest();
 		update.add("DROP ALL").add("BASE <http://examplebase.org/> INSERT DATA { GRAPH <BaseUriTest> { <S1> <P1> <O1>  } }");
 		UpdateAction.execute(update, dataSet);
@@ -174,37 +174,22 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 
 		Query q2 = QueryFactory.create(query, "null");
 		exec = QueryExecutionFactory.create(q2, dataSet);
-		try {
-			results = exec.execSelect();
-			subjects = parseResults(results, "o");
-			assertEquals("No base, got back list of size 0", 0, subjects.size());
-		} catch (Exception e) {
-			System.out.println(e);
-		}
+		results = exec.execSelect();
+		subjects = parseResults(results, "o");
+		assertEquals("No base, got back list of size 0", 0, subjects.size());
 
 		Query q3 = QueryFactory.create(query, "");
 		exec = QueryExecutionFactory.create(q3, dataSet);
-		try {
-			results = exec.execSelect();
-			subjects = parseResults(results, "o");
-			assertEquals("No base, got back list of size 0", 0, subjects.size());
-		} catch (Exception e) {
-			System.out.println(e);
-		}
+		results = exec.execSelect();
+		subjects = parseResults(results, "o");
+		assertEquals("No base, got back list of size 0", 0, subjects.size());
 
 		Query q4 = QueryFactory.create(query, "<http://examplebase.org/>");
 		exec = QueryExecutionFactory.create(q4, dataSet);
 		Exception exp = null;
-		try {
-			results = exec.execSelect();
-			subjects = parseResults(results, "o");
-			assertEquals("No base, got back list of size 0", 0, subjects.size());
-		} catch (Exception e) {
-			System.out.println(e);
-			exp = e;
-		}
-		assertTrue("Unexpected Exception ", exp.toString().contains("The character violates the grammar rules for URIs/IRIs")
-				&& exp != null);
+		results = exec.execSelect();
+		subjects = parseResults(results, "o");
+		assertEquals("No base, got back list of size 0", 0, subjects.size());
 	}
 
 	@Test
@@ -213,7 +198,7 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 		// Read triples into dataset
 		RDFDataMgr.read(markLogicDatasetGraph, file);
 		markLogicDatasetGraph.sync();
-		dataSet = DatasetFactory.create(markLogicDatasetGraph);
+		dataSet = DatasetFactory.wrap(markLogicDatasetGraph);
 
 		String query1 = "PREFIX  bb: <http://marklogic.com/baseball/players#>" + " ASK " + " WHERE" + " {" + " ?id bb:lastname  ?name ."
 				+ " FILTER  EXISTS { ?id bb:country ?countryname }" + " }";
@@ -240,7 +225,7 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 		Graph g = markLogicDatasetGraph.getDefaultGraph();
 		Node newgraph = NodeFactory.createURI("http://marklogic.com/Graph1");
 		markLogicDatasetGraph.addGraph(newgraph, g);
-		dataSet = DatasetFactory.create(markLogicDatasetGraph);
+		dataSet = DatasetFactory.wrap(markLogicDatasetGraph);
 
 		String query1 = "ASK FROM <http://marklogic.com/Graph1>" + " WHERE" + " {" + " ?player ?team <#Tigers>." + " }";
 		QueryExecution queryExec = QueryExecutionFactory.create(query1, dataSet);
@@ -258,8 +243,7 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 	public void test001ConstructQuery_withbinding() {
 		markLogicDatasetGraph.clear();
 		Node newgraph = NodeFactory.createURI("http://marklogic.com/graph1");
-
-		dataSet = DatasetFactory.create(markLogicDatasetGraph);
+		dataSet = DatasetFactory.wrap(markLogicDatasetGraph);
 
 		markLogicDatasetGraph.add(null, NodeFactory.createURI("john"), NodeFactory.createURI("fname"), NodeFactory.createURI("johnfname"));
 
@@ -321,7 +305,7 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 		Graph g = markLogicDatasetGraph.getDefaultGraph();
 		Node newgraph = NodeFactory.createURI("http://marklogic.com/Graph1");
 		markLogicDatasetGraph.addGraph(newgraph, g);
-		dataSet = DatasetFactory.create(markLogicDatasetGraph);
+		dataSet = DatasetFactory.wrap(markLogicDatasetGraph);
 
 		String query1 = "PREFIX  bb: <http://marklogic.com/baseball/players#> ASK FROM <http://marklogic.com/Graph1> WHERE {"
 				+ " ?s bb:position ?o." + "}";
@@ -351,7 +335,7 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 		  while (results3.hasNext()) {
 			  QuerySolution qs = results3.next();
 		  System.out.println(qs.toString()); 
-		  assertTrue("Expecting Object node to be empty :: ", qs.toString().isEmpty());
+		  assertTrue("Expecting Object node to be empty :: ", qs.toString().equals("()"));
 		  }
 		 
 		// ASK
@@ -404,7 +388,7 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 		String file = datasource + "property-paths.ttl";
 		RDFDataMgr.read(markLogicDatasetGraph, file);
 		markLogicDatasetGraph.sync();
-		dataSet = DatasetFactory.create(markLogicDatasetGraph);
+		dataSet = DatasetFactory.wrap(markLogicDatasetGraph);
 
 		StringBuilder queryBuilder = new StringBuilder(128);
 		queryBuilder.append(" prefix : <http://learningsparql.com/ns/papers#> ");
@@ -446,7 +430,7 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 		// Read triples into dataset
 		RDFDataMgr.read(markLogicDatasetGraph, file);
 		markLogicDatasetGraph.sync();
-		dataSet = DatasetFactory.create(markLogicDatasetGraph);
+		dataSet = DatasetFactory.wrap(markLogicDatasetGraph);
 		queryManager = writerClient.newQueryManager();
 
 		String query1 = "ASK WHERE {?s ?p \"Nathan\" .}";
@@ -491,7 +475,7 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 		// Read triples into dataset
 		RDFDataMgr.read(markLogicDatasetGraph, file);
 		markLogicDatasetGraph.sync();
-		dataSet = DatasetFactory.create(markLogicDatasetGraph);
+		dataSet = DatasetFactory.wrap(markLogicDatasetGraph);
 		queryManager = writerClient.newQueryManager();
 
 		String query1 = "ASK WHERE {?s ?p \"Nathan\" .}";
@@ -527,7 +511,7 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 		MarkLogicDatasetGraph graphstore = markLogicDatasetGraph;
 		markLogicDatasetGraph.sync();
 
-		dataSet = DatasetFactory.create(markLogicDatasetGraph);
+		dataSet = DatasetFactory.wrap(markLogicDatasetGraph);
 
 		UpdateRequest update = new UpdateRequest();
 		update.add("INSERT DATA { <s1> <p1> <o1> }");
@@ -820,7 +804,7 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 		String file = datasource + "tigers.ttl";
 		RDFDataMgr.read(markLogicDatasetGraph, file);
 		markLogicDatasetGraph.sync();
-		dataSet = DatasetFactory.create(markLogicDatasetGraph);
+		dataSet = DatasetFactory.wrap(markLogicDatasetGraph);
 
 		Query query = QueryFactory.create("PREFIX  bb: <http://marklogic.com/baseball/players#>  SELECT ?o  WHERE"
 				+ "{ ?s bb:position ?o.}");
@@ -1004,7 +988,7 @@ public class JenaSPARQLUpdateTests extends ConnectedRESTQA {
 		Graph g = markLogicDatasetGraph.getDefaultGraph();
 		Node newgraph = NodeFactory.createURI("http://marklogic.com/JenaRuleSetTest");
 		markLogicDatasetGraph.addGraph(newgraph, g);
-		dataSet = DatasetFactory.create(markLogicDatasetGraph);
+		dataSet = DatasetFactory.wrap(markLogicDatasetGraph);
 
 		String query1 = "SELECT ?s ?p ?o  from <http://marklogic.com/JenaRuleSetTest> WHERE {?s ?p ?o .}";
 		QueryExecution queryExec = QueryExecutionFactory.create(query1, dataSet);

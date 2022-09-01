@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 MarkLogic Corporation
+ * Copyright 2016-2019 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,10 +22,15 @@ import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.query.ReadWrite;
+import org.apache.jena.query.TxnType;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.RDFWriterRegistry;
 import org.apache.jena.riot.WriterGraphRIOT;
+import org.apache.jena.riot.RDFFormat;
 import org.apache.jena.sparql.graph.GraphFactory;
+import org.apache.jena.update.Update;
+import org.apache.jena.update.UpdateRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -121,6 +126,19 @@ public class JenaDatabaseClient {
         return writeBuffer.cacheMillis;
     }
 
+    /**
+     * Create a new {@link com.marklogic.client.semantics.SPARQLQueryDefinition}
+     * from Update. You can use the resulting object to configure
+     * various aspects of the query or set binding variables.
+     *
+     * @param update
+     *            SPARQL Update
+     * @return A new
+     *         {@link com.marklogic.client.semantics.SPARQLQueryDefinition}
+     */
+    public SPARQLQueryDefinition newQueryDefinition(Update update) {
+        return newQueryDefinition(new UpdateRequest(update).toString());
+    }
 
     /**
      * Create a new {@link com.marklogic.client.semantics.SPARQLQueryDefinition}
@@ -185,7 +203,7 @@ public class JenaDatabaseClient {
     }
 
     public void mergeGraph(String uri, Graph graph) {
-        WriterGraphRIOT writer = RDFDataMgr.createGraphWriter(Lang.NTRIPLES);
+        WriterGraphRIOT writer = RDFWriterRegistry.getWriterGraphFactory(RDFFormat.NTRIPLES).create(RDFFormat.NTRIPLES);
         OutputStreamRIOTSender sender = new OutputStreamRIOTSender(writer);
         sender.setGraph(graph);
         OutputStreamHandle handle = new OutputStreamHandle(sender);
@@ -238,7 +256,7 @@ public class JenaDatabaseClient {
     }
 
     public void writeGraph(String uri, Graph graph) {
-        WriterGraphRIOT writer = RDFDataMgr.createGraphWriter(Lang.NTRIPLES);
+        WriterGraphRIOT writer = RDFWriterRegistry.getWriterGraphFactory(RDFFormat.NTRIPLES).create(RDFFormat.NTRIPLES);
         OutputStreamRIOTSender sender = new OutputStreamRIOTSender(writer);
         sender.setGraph(graph);
         OutputStreamHandle handle = new OutputStreamHandle(sender);
@@ -303,16 +321,25 @@ public class JenaDatabaseClient {
     }
 
     public void begin(ReadWrite readWrite) {
-        if (readWrite == ReadWrite.READ) {
+        if (readWrite != ReadWrite.WRITE) {
             throw new MarkLogicTransactionException(
                     "MarkLogic only supports write transactions");
-        } else {
-            if (this.currentTransaction != null) {
-                throw new MarkLogicTransactionException(
-                        "Only one open transaction per MarkLogicDatasetGraph instance.");
-            }
-            this.currentTransaction = openTransaction();
         }
+        begin();
+    }
+    public void begin(TxnType type) {
+        if (type != TxnType.WRITE) {
+            throw new MarkLogicTransactionException(
+                    "MarkLogic only supports write transactions");
+        }
+        begin();
+    }
+    private void begin() {
+        if (this.currentTransaction != null) {
+            throw new MarkLogicTransactionException(
+                    "Only one open transaction per MarkLogicDatasetGraph instance.");
+        }
+        this.currentTransaction = openTransaction();
     }
 
     public void commit() {
