@@ -42,7 +42,7 @@ public class ModelCRUDExample {
         dsg.clear();
         Dataset dataset = dsg.toDataset();
         String modelName = "http://example.org/graphs/charles";
-        
+
         String turtle = "@prefix foaf: <http://xmlns.com/foaf/0.1/> ."
                 + "@prefix : <http://example.org/> ."
                 +":charles a foaf:Person ; "
@@ -51,7 +51,7 @@ public class ModelCRUDExample {
                 + ":jim    a foaf:Person ;"
                 + "        foaf:name \"Jim\" ;"
                 + "        foaf:knows :charles .";
-        
+
         System.out.println("Make a model and load the turtle into it (client-side)");
         Model model = ModelFactory.createDefaultModel();
         RDFDataMgr.read(model,  new StringReader(turtle), "", Lang.TURTLE);
@@ -74,11 +74,12 @@ public class ModelCRUDExample {
 
         System.out.println("Get it back into a new model (union of two original ones)");
         Model retrievedModel = dataset.getNamedModel(modelName);
-        
+
         System.out.println("Remove model from MarkLogic");
         dataset.removeNamedModel(modelName);
+        dsg.close();
     }
-    
+
     public static void main(String... args) {
         ModelCRUDExample example = new ModelCRUDExample();
         example.run();
