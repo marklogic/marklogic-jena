@@ -1,39 +1,37 @@
 plugins {
   id "java-library"
   id "maven-publish"
-  id "signing"
-  id "io.snyk.gradle.plugin.snykplugin" version "0.4"
   id "com.github.jk1.dependency-license-report" version "2.1"
 }
 
 apply plugin: 'com.marklogic.ml-gradle'
 
 group = "com.marklogic"
-version = "4.0.0"
+version = "4.1.0"
 
-sourceCompatibility = "11"
-targetCompatibility = "11"
+java {
+  sourceCompatibility = 11
+  targetCompatibility = 11
+}
 
 dependencies {
-  api 'org.apache.jena:jena-arq:4.3.2'
-  api 'com.marklogic:marklogic-client-api:5.5.3'
+  api 'org.apache.jena:jena-arq:4.10.0'
 
-  implementation "org.slf4j:slf4j-api:1.7.36"
-  implementation "ch.qos.logback:logback-classic:1.2.11"
-  implementation "org.slf4j:jcl-over-slf4j:1.7.36"
+  // Can't bump to 7.0 yet as it removes the deprecated Authentication class, which this project still depends on.
+  api 'com.marklogic:marklogic-client-api:6.6.1'
+
+  implementation "org.slf4j:slf4j-api:2.0.16"
+  implementation "ch.qos.logback:logback-classic:1.3.14"
+  implementation "org.slf4j:jcl-over-slf4j:2.0.16"
 
   testImplementation 'com.jayway.restassured:rest-assured:2.9.0'
   testImplementation 'org.hamcrest:hamcrest-all:1.3'
 }
 
-task sourcesJar(type: Jar, dependsOn: classes) {
-  classifier = 'sources'
-  from sourceSets.main.allSource
-}
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-  classifier "javadoc"
-  from javadoc
+// Publishing setup - see https://docs.gradle.org/current/userguide/publishing_setup.html .
+java {
+  withJavadocJar()
+  withSourcesJar()
 }
 
 javadoc {
@@ -43,20 +41,15 @@ javadoc {
 javadoc.options.addStringOption('Xdoclint:none', '-quiet')
 
 
-artifacts {
-  archives javadocJar, sourcesJar
-}
-
-signing {
-  sign configurations.archives
-}
-
 publishing {
   publications {
     mainJava(MavenPublication) {
+      groupId = group
+      version = version
+      from components.java
       pom {
         name = "${group}:${project.name}"
-        description = "Adapter for using MarkLogic with the jena RDF Framework"
+        description = "Adapter for using MarkLogic with the Apache Jena RDF Framework"
         packaging = "jar"
         url = "https://github.com/marklogic/${project.name}"
         licenses {
@@ -66,12 +59,6 @@ publishing {
           }
         }
         developers {
-          developer {
-            name = 'MarkLogic'
-            email = 'java-sig@marklogic.com'
-            organization = 'MarkLogic'
-            organizationUrl = 'https://www.marklogic.com'
-          }
           developer {
             name = 'MarkLogic Github Contributors'
             email = 'general@developer.marklogic.com'
@@ -85,28 +72,25 @@ publishing {
           developerConnection = "scm:git@github.com:marklogic/${project.name}.git"
         }
       }
-      from components.java
-      artifact sourcesJar
-      artifact javadocJar
     }
   }
   repositories {
     maven {
-      name = "central"
-      url = mavenCentralUrl
-      credentials {
-        username mavenCentralUsername
-        password mavenCentralPassword
+      if (project.hasProperty("mavenUser")) {
+        credentials {
+          username mavenUser
+          password mavenPassword
+        }
+        url publishUrl
+        allowInsecureProtocol = true
+      } else {
+        name = "central"
+        url = mavenCentralUrl
+        credentials {
+          username mavenCentralUsername
+          password mavenCentralPassword
+        }
       }
     }
   }
-}
-
-// See https://github.com/snyk/gradle-plugin for more information
-snyk {
-  //arguments = '--all-sub-projects'
-  severity = 'low'
-  api = snykToken
-  autoDownload = true
-  autoUpdate = true
 }

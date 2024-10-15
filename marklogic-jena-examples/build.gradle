@@ -7,10 +7,8 @@ apply plugin: 'com.marklogic.ml-gradle'
 apply plugin: 'java'
 
 dependencies {
-  // For testing these examples during development, uncomment the following line and comment out the one below it
-  // that depends on a published release of marklogic-jena
-  //implementation project(':marklogic-jena')
-  implementation 'com.marklogic:marklogic-jena:4.0.0'
+  implementation project(':marklogic-jena')
+//  implementation 'com.marklogic:marklogic-jena:4.1.0'
 
   implementation 'org.openjdk.jmh:jmh-core:1.35'
   implementation 'org.openjdk.jmh:jmh-generator-annprocess:1.35'
