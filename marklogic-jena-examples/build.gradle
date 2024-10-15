@@ -8,6 +8,8 @@ apply plugin: 'java'
 
 dependencies {
   implementation project(':marklogic-jena')
+//  implementation 'com.marklogic:marklogic-jena:4.1.0'
+
   implementation 'org.openjdk.jmh:jmh-core:1.35'
   implementation 'org.openjdk.jmh:jmh-generator-annprocess:1.35'
 }

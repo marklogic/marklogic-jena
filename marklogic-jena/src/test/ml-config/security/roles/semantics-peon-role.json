@@ -2,18 +2,23 @@
   "role-name": "semantics-peon-role",
   "description": "Role for testing graph permissions",
   "role": [
-      "rest-extension-user"
+    "rest-extension-user"
   ],
   "privilege": [
     {
-        "privilege-name":"rest-reader",
-        "action":"http://marklogic.com/xdmp/privileges/rest-reader",
-        "kind":"execute"
+      "privilege-name": "rest-reader",
+      "action": "http://marklogic.com/xdmp/privileges/rest-reader",
+      "kind": "execute"
     },
     {
-        "privilege-name":"sem:sparql",
-        "action":"http://marklogic.com/xdmp/privileges/sem-sparql",
-        "kind":"execute"
+      "privilege-name": "sem:sparql",
+      "action": "http://marklogic.com/xdmp/privileges/sem-sparql",
+      "kind": "execute"
+    },
+    {
+      "privilege-name": "term-query",
+      "action": "http://marklogic.com/xdmp/privileges/term-query",
+      "kind": "execute"
     }
   ]
 }
