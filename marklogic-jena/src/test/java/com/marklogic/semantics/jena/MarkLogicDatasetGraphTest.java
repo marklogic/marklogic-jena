@@ -91,7 +91,7 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
         Graph g1 = markLogicDatasetGraph.getGraph(NodeFactory
                 .createURI("http://example.org/g1"));
 
-        Triple triple = new Triple(NodeFactory.createURI("s10"),
+        Triple triple = Triple.create(NodeFactory.createURI("s10"),
                 NodeFactory.createURI("p10"), NodeFactory.createURI("o10"));
         g1.add(triple);
 
@@ -159,7 +159,7 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
         // note, untyped literals are rdf 1.0 and do not round-trip
         Node newValue = NodeFactory.createLiteral("All New Value!");
         Node newGraph = NodeFactory.createURI("http://newGraph");
-        Quad newQuad = new Quad(newGraph, new Triple(newSubject, newProperty,
+        Quad newQuad = new Quad(newGraph, Triple.create(newSubject, newProperty,
                 newValue));
 
         DatasetGraph markLogicDatasetGraph = getMarkLogicDatasetGraph();
@@ -292,7 +292,7 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
         MarkLogicDatasetGraph markLogicDatasetGraph = getMarkLogicDatasetGraph();
 
         Node g1 = NodeFactory.createURI("perms1");
-        Triple triple = new Triple(NodeFactory.createURI("s232"),
+        Triple triple = Triple.create(NodeFactory.createURI("s232"),
                 NodeFactory.createURI("p232"), NodeFactory.createURI("o232"));
         Graph transGraph = GraphFactory.createGraphMem();
         transGraph.add(triple);
@@ -341,7 +341,7 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
         MarkLogicDatasetGraph markLogicDatasetGraph = getMarkLogicDatasetGraph();
 
         Node g1 = NodeFactory.createURI("http://transact1");
-        Triple triple = new Triple(NodeFactory.createURI("s10"),
+        Triple triple = Triple.create(NodeFactory.createURI("s10"),
                 NodeFactory.createURI("p10"), NodeFactory.createURI("o10"));
         Graph transGraph = GraphFactory.createGraphMem();
         transGraph.add(triple);
@@ -419,7 +419,7 @@ public class MarkLogicDatasetGraphTest extends JenaTestBase {
     @Test(expected = MarkLogicJenaException.class)
     public void testLifeCycle() {
         MarkLogicDatasetGraph dsg = getMarkLogicDatasetGraph("testdata/testData.trig");
-        Triple triple = new Triple(NodeFactory.createURI("s5"),
+        Triple triple = Triple.create(NodeFactory.createURI("s5"),
                 NodeFactory.createURI("p5"), NodeFactory.createURI("o5"));
         Graph g1 = GraphFactory.createDefaultGraph();
         g1.add(triple);

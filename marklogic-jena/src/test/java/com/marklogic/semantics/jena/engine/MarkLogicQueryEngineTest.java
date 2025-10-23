@@ -147,7 +147,7 @@ public class MarkLogicQueryEngineTest extends JenaTestBase {
         // add a graph during transaction
         try {
             ds.begin(ReadWrite.WRITE);
-            Triple triple = new Triple(NodeFactory.createURI("http://s529"),
+            Triple triple = Triple.create(NodeFactory.createURI("http://s529"),
                     NodeFactory.createURI("http://p104"),
                     NodeFactory.createURI("http://o22"));
             Graph transGraph = GraphFactory.createGraphMem();

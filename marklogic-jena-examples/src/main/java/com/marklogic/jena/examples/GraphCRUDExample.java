@@ -58,7 +58,7 @@ public class GraphCRUDExample {
 
         System.out.println("Make a triple by hand.");
         Graph moreTriples = GraphFactory.createDefaultGraph();
-        moreTriples.add(new Triple(
+        moreTriples.add(Triple.create(
                 NodeFactory.createURI("http://example.org/charles"),
                 NodeFactory.createURI("http://example.org/hasDog"),
                 NodeFactory.createURI("http://example.org/vashko")));

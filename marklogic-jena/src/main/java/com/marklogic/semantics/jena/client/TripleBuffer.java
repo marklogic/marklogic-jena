@@ -85,7 +85,7 @@ public abstract class TripleBuffer extends TimerTask {
     }
 
     public synchronized void add(Node g, Node s, Node p, Node o) {
-        Triple newTiple = new Triple(s, p, o);
+        Triple newTiple = Triple.create(s, p, o);
         if (g == null) {
             g = DEFAULT_GRAPH_NODE;
         }

@@ -93,7 +93,7 @@ public class JenaGraphTests extends ConnectedRESTQA {
 		if(markLogicDatasetGraphReader.getDatabaseClient() != null){
 			markLogicDatasetGraphReader.close();
 		}
-	
+
 		clearDB(restPort);
 		adminClient.release();
 		writerClient.release();
@@ -128,7 +128,7 @@ public class JenaGraphTests extends ConnectedRESTQA {
 		Graph g1 = markLogicDatasetGraphAdmin.getDefaultGraph();
 		assertTrue(g1.isEmpty());
 		assertNotNull(g1);
-		Triple triple = new Triple(NodeFactory.createURI("s5"), NodeFactory.createURI("p5"), NodeFactory.createURI("o5"));
+		Triple triple = Triple.create(NodeFactory.createURI("s5"), NodeFactory.createURI("p5"), NodeFactory.createURI("o5"));
 		g1.add(triple);
 		Node n1 = NodeFactory.createURI("http://example.org/jenaAdd");
 		Quad quad = new Quad(n1, triple);
@@ -315,7 +315,7 @@ public class JenaGraphTests extends ConnectedRESTQA {
 	public void testAdd_ReadUser() throws FileNotFoundException {
 		Exception exp = null;
 		try {
-			Quad quad = new Quad(NodeFactory.createURI("http://originalGraph1"), new Triple(NodeFactory.createURI("#electricVehicle3"),
+			Quad quad = new Quad(NodeFactory.createURI("http://originalGraph1"), Triple.create(NodeFactory.createURI("#electricVehicle3"),
 					NodeFactory.createURI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type1"),
 					NodeFactory.createLiteral("http://people.aifb.kit.edu/awa/2011/smartgrid/schema/smartgrid#ElectricVehicle1")));
 			markLogicDatasetGraphReader.add(quad);
@@ -337,7 +337,7 @@ public class JenaGraphTests extends ConnectedRESTQA {
 	@Test
 	public void testAddRead_AdminUser() throws Exception {
 
-		Quad quad = new Quad(NodeFactory.createURI("http://originalGraph1"), new Triple(NodeFactory.createURI("#electricVehicle3"),
+		Quad quad = new Quad(NodeFactory.createURI("http://originalGraph1"), Triple.create(NodeFactory.createURI("#electricVehicle3"),
 				NodeFactory.createURI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type1"),
 				NodeFactory.createLiteral("http://people.aifb.kit.edu/awa/2011/smartgrid/schema/smartgrid#ElectricVehicle1")));
 		markLogicDatasetGraphAdmin.add(quad);
@@ -407,7 +407,7 @@ public class JenaGraphTests extends ConnectedRESTQA {
 		assertTrue("did not match Triples", g1.toString().contains("#electricVehicle2"));
 
 		// Create New graph and add triples from defaultgraph to new graph
-		Triple triple = new Triple(NodeFactory.createURI("s5"), NodeFactory.createURI("p5"), NodeFactory.createURI("o5"));
+		Triple triple = Triple.create(NodeFactory.createURI("s5"), NodeFactory.createURI("p5"), NodeFactory.createURI("o5"));
 		Quad quad = new Quad(NodeFactory.createURI("new-graph-fordefault"), triple);
 		Node n1 = NodeFactory.createURI("new-graph-fordefault");
 		markLogicDatasetGraphWriter.add(quad);
@@ -425,7 +425,7 @@ public class JenaGraphTests extends ConnectedRESTQA {
 	 */
 	@Test
 	public void testDelete_admin() {
-		Triple triple = new Triple(NodeFactory.createURI("s5"), NodeFactory.createURI("p5"), NodeFactory.createURI("o5"));
+		Triple triple = Triple.create(NodeFactory.createURI("s5"), NodeFactory.createURI("p5"), NodeFactory.createURI("o5"));
 		Quad quad = new Quad(NodeFactory.createURI("new-graph-fordefault2"), triple);
 		Node n2 = NodeFactory.createURI("new-graph-fordefault2");
 		markLogicDatasetGraphWriter.add(quad);
@@ -468,7 +468,7 @@ public class JenaGraphTests extends ConnectedRESTQA {
 		System.out.println(" added one more capability ===="+markLogicDatasetGraphWriter.getPermissions(newgraph));
 		assertTrue(permissions.get("test-eval").size() == 2);
 		//
-		
+
 		markLogicDatasetGraphWriter.clearPermissions(newgraph);
 		markLogicDatasetGraphWriter.sync();
 		permissions = markLogicDatasetGraphWriter.getPermissions(newgraph);
@@ -661,15 +661,15 @@ public class JenaGraphTests extends ConnectedRESTQA {
 		}
 		assertTrue(exp.toString().contains("RiotException") && exp != null);
 	}
-	
-	
+
+
 	/*
-	 * Add Triples to dataset using multiple threads wihtout a tracsaction, 
-	 * Adds 400 triples to datastore 
+	 * Add Triples to dataset using multiple threads wihtout a tracsaction,
+	 * Adds 400 triples to datastore
 	 */
 	@Test
 	public void testMultiThreadAdd1() throws InterruptedException{
-		final Node uri = NodeFactory.createURI("http://multithreadgraph");  
+		final Node uri = NodeFactory.createURI("http://multithreadgraph");
 
 		class MyRunnable implements Runnable {
 			@Override
@@ -689,7 +689,7 @@ public class JenaGraphTests extends ConnectedRESTQA {
 				}
 			}
 
-		}  
+		}
 
 		Thread t1,t2,t3,t4;
 		t1 = new Thread(new MyRunnable());
@@ -726,7 +726,7 @@ public class JenaGraphTests extends ConnectedRESTQA {
 	 */
 	@Test
 	public void testMultiThreadAdd_Trx() throws InterruptedException{
-		final Node uri = NodeFactory.createURI("http://multithreadgraph");  
+		final Node uri = NodeFactory.createURI("http://multithreadgraph");
 		final int graphSize;
 
 		class MyRunnable implements Runnable {
@@ -766,7 +766,7 @@ public class JenaGraphTests extends ConnectedRESTQA {
 				}
 			}
 
-		}  
+		}
 
 		Thread t1,t2,t3,t4,t5;
 		t1 = new Thread(new MyRunnable());
@@ -805,12 +805,12 @@ public class JenaGraphTests extends ConnectedRESTQA {
 
 	/*
 	 * Add same triples set to datastore using multiple threads and same interface,
-	 * should only add three set's of 100 triples to datastore but query should only return 100 triples 
+	 * should only add three set's of 100 triples to datastore but query should only return 100 triples
 	 * eliminating the duplicates
 	 */
 	@Test
 	public void testMultiThreadAddDuplicate_Trx() throws InterruptedException{
-		final Node uri = NodeFactory.createURI("http://multithreadgraph");  
+		final Node uri = NodeFactory.createURI("http://multithreadgraph");
 		final int graphSize;
 
 		class MyRunnable implements Runnable {
@@ -850,7 +850,7 @@ public class JenaGraphTests extends ConnectedRESTQA {
 				}
 			}
 
-		}  
+		}
 
 		Thread t1,t2,t3;
 		t1 = new Thread(new MyRunnable());
@@ -875,6 +875,6 @@ public class JenaGraphTests extends ConnectedRESTQA {
 		assertTrue("Graph Size is not Expected seize , Got"+mergedgraph.size(), mergedgraph.size() == 100);
 
 	}
-	
-	
+
+
 }

@@ -5,7 +5,7 @@
 <p>
     marklogic-jena enables applications based on Apache Jena 2.13 to use
     MarkLogic as a persistence layer for triples, and as a source for SPARQL
-    queries.  In addition to basic support for graph CRUD and SPARQL query and update, 
+    queries.  In addition to basic support for graph CRUD and SPARQL query and update,
     marklogic-jena also exposes the following MarkLogic capabilities to the Jena
     framework:
     <ul>
@@ -26,7 +26,7 @@
         <li>credentials to read/write/administer the database as needed</li>
     </ul>
     If you need something to help you configure and deploy MarkLogic
-    application servers, try 
+    application servers, try
     <a href="https://github.com/rjrudin/ml-gradle">ml-gradle</a>.
 
     Note: If you are starting with 8.0-4 MarkLogic installation on your local
@@ -54,7 +54,7 @@ String password = "password";
 // either make a DatabaseClient first
 DatabseClient client = DatabaseClientFactory.newClient(
     host, port, username, password, Authentication.DIGEST);
-    
+
 DatasetGraph dsg;
 dsg = MarkLogicDatasetGraphFactory.createDatasetGraph(client);
 
@@ -89,7 +89,7 @@ dsg.addGraph(graphNode,  graph);
 
 // Make a triple by hand
 Graph moreTriples = GraphFactory.createDefaultGraph();
-moreTriples.add(new Triple(
+moreTriples.add(Triple.create(
         NodeFactory.createURI("http://example.org/charles"),
         NodeFactory.createURI("http://example.org/hasDog"),
         NodeFactory.createURI("http://example.org/vashko")));
@@ -124,7 +124,7 @@ for (ResultSet results = execution.execSelect();
     QuerySolution solution = results.next();
     System.out.println("Solution #" + n ": "
             + solution.get("aname").asLiteral().getString()
-            +" knows " 
+            +" knows "
             + solution.get("bname").asLiteral().getString());
 }
 dsg.close();

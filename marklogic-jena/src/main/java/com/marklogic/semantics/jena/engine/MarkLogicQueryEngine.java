@@ -102,7 +102,7 @@ public class MarkLogicQueryEngine extends QueryEngineMain {
             Binding initial, Context context) {
         super(query, datasetGraph, initial, context);
         bgp = new BasicPattern();
-        bgp.add(new Triple(
+        bgp.add(Triple.create(
                 Var.alloc("s"),
                 Var.alloc("p"),
                 Var.alloc("o")));

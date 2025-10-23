@@ -114,7 +114,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads {
 
     /**
      * MarkLogicDatasetGraph does not make use of locks.
-     * 
+     *
      * @return An instance of org.apache.jena.shared.LockNone
      */
     @Override
@@ -137,7 +137,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads {
      * Maps Jena bindings defined by a variable name and a
      * {@link org.apache.jena.graph.Node} to MarkLogic
      * {@link com.marklogic.client.semantics.SPARQLQueryDefinition} bindings.
-     * 
+     *
      * @param qdef
      *            A {@link com.marklogic.client.semantics.SPARQLQueryDefinition}
      *            to decorate with a binding.
@@ -328,7 +328,6 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads {
         return new QuadsIterator(results.get());
     }
 
-    @Override
     /**
      * @see org.apache.jena.sparql.core.DatasetGraph
      */
@@ -492,7 +491,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads {
 
     /**
      * Gets the permissions associated with this graph.
-     * 
+     *
      * @param graphName
      *            the node with the graph's name.
      * @return A {@link com.marklogic.client.semantics.GraphPermissions} object
@@ -505,7 +504,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads {
 
     /**
      * Adds permissions to a graph.
-     * 
+     *
      * @param graphName
      *            the node with the graph's name.
      * @param permissions
@@ -519,7 +518,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads {
 
     /**
      * Removes all but the default permissions from a graph.
-     * 
+     *
      * @param graphName
      *            the node with the graph's name.
      */
@@ -530,7 +529,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads {
 
     /**
      * Sets the permissions on a graph.
-     * 
+     *
      * @param graphName
      *            the node with the graph's name.
      * @param permissions
@@ -562,7 +561,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads {
      * Specifies a set of inferencing rulesets to apply to a query. These
      * rulesets either come with MarkLogic server or were installed by an
      * administrator.
-     * 
+     *
      * @param rulesets
      *            Zero-or-more rulesets to apply to queries.
      */
@@ -572,7 +571,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads {
 
     /**
      * Returns the array or rulesets currently used for SPARQL queries.
-     * 
+     *
      * @return An array of SPARQLRulesets.
      */
     public SPARQLRuleset[] getRulesets() {
@@ -581,7 +580,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads {
 
     /**
      * Fluent setter for rulesets.
-     * 
+     *
      * @param rulesets
      *            Zero-or-more rulesets to apply to queries.
      * @return The MarkLogicDatasetGraph, with rulesets set.
@@ -601,7 +600,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads {
     /**
      * Sets a MarkLogic Java API QueryDefinition that is applied to SPARQL
      * queries to restrict documents upon which queries are run.
-     * 
+     *
      * @param constrainingQueryDefinition
      *            A query definition. Use raw query definitions or QueryBuilder.
      */
@@ -613,7 +612,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads {
     /**
      * Return the query defintion currently associated with SPARQL Queries
      * against this DatasetGraph.
-     * 
+     *
      * @return the QueryDefinition.
      */
     public QueryDefinition getConstrainingQueryDefinition() {
@@ -622,7 +621,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads {
 
     /**
      * Return the com.marklogic.semantics.jena.client.JenaDatabaseClient
-     * 
+     *
      * @return THe active client associated with this graph.
      */
     public JenaDatabaseClient getDatabaseClient() {
@@ -632,7 +631,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads {
     /**
      * Set the permissions for graphs created by this DatasetGraph during SPARQL
      * update operations. Set to null for default permissions.
-     * 
+     *
      * @param permissions
      *            One or more permissions to add to graphs created during SPARQL
      *            updates.
@@ -644,7 +643,7 @@ public class MarkLogicDatasetGraph extends DatasetGraphTriplesQuads {
     /**
      * Get the permissions that are to be written to new graphs during SPARQL
      * update.
-     * 
+     *
      * @return the permissions associated with updates.
      */
     public GraphPermissions getSPARQLUpdatePermissions() {
